@@ -25,7 +25,7 @@ IsaacSim as the demo:
 ```bash
 httrack "https://docs.isaacsim.omniverse.nvidia.com/5.0.0/installation/index.html" \
   -O docs/isaac-sim-5.0.0-httrack \
-  "+https://docs.isaacsim.omniverse.nvidia.com/5.0.0/*" "-*" \
+   "-*" "+https://docs.isaacsim.omniverse.nvidia.com/5.0.0/*" \
   --keep-alive --sockets=4
 ```
 
