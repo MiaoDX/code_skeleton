@@ -15,7 +15,7 @@
 
 # Custom
 
-1. Our network maybe not so good, if Fetch fails, use curl instead.
+1. Our network maybe not so good, for claude code, prefer curl to get remote files, instead of Fetch operation
 2. We may run the code remotely, so code env can be messy, DO NOT run python codes with isaac related logic, the user will run for you.
 3. You can read any files without further permission, and write to any file not being tracked by git. But for files with git, please with caution.
 4. Reduce the usage of try-catch, we prefer crash early and aloud instead of silent failure.
@@ -31,20 +31,16 @@
 
 ## Sources to consult BEFORE proposing code
 
-You are coding for **NVIDIA Isaac Sim 5.0** (Kit 107+). Do **not** use 4.x/4.5-only APIs.
+You are coding for **NVIDIA Isaac Sim 5.x** (Kit 107+). Do **not** use 4.x/4.5-only APIs.
 
-- `refs/isaac-sim-doc.md`  (mirrored 5.0 docs pages: release_notes, requirements, templates, ROS/Perception/etc.)
-- `refs/isaac-sim-code.md` (checked-out Isaac Sim codes/samples)
-- `refs/isaaclab.md` (checked-out Isaac Lab codes/samples)
+- `refs/isaac-sim-doc.<VERSION>.md`  (mirrored 5.x docs pages: release_notes, requirements, templates, ROS/Perception/etc.)
+- `refs/isaac-sim-code.<VERSION>.md` (checked-out Isaac Sim codes/samples)
+- `refs/isaaclab.<VERSION>.md` (checked-out Isaac Lab codes/samples)
 
-### Python env
+## Python env
 
-We are using venv as in:
+Prefer to use **uv** for Python environment management.
 
-`/root/miniforge3/envs/mi/` or `venv` or `.venv`
+## VLM API
 
-### VLM API
-
-Always add unique request IDs to MIFY VLM API calls to prevent response caching: `extra_headers={"X-Model-Request-Id": str(uuid.uuid4()), "X-Conversation-Id": str(uuid.uuid4())}`. Shared VLM prompts are in `endless_testing/prompts/` and loaded via `file://` references in configs.
-
-
+For MIFY LLM API, wlways add unique request IDs calls to prevent response caching: `extra_headers={"X-Model-Request-Id": str(uuid.uuid4()), "X-Conversation-Id": str(uuid.uuid4())}`. 

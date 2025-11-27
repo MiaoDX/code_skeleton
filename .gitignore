@@ -1,3 +1,7 @@
 gits
 refs
+refs_bak
+docs
+.venv
+uv.lock
 

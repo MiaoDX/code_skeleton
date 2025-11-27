@@ -15,7 +15,10 @@ And we use IsaacSim as example, it is:
 ## Fetch API/source code from git
 
 ```bash
-git clone https://github.com/isaac-sim/IsaacSim.git -b v5.0.0 --depth=1
+cd gits
+git clone https://github.com/isaac-sim/IsaacSim.git
+cd IsaacSim
+git checkout v5.1.0
 ```
 
 ## Fetch dos on the website
@@ -23,10 +26,11 @@ git clone https://github.com/isaac-sim/IsaacSim.git -b v5.0.0 --depth=1
 IsaacSim as the demo:
 
 ```bash
-httrack "https://docs.isaacsim.omniverse.nvidia.com/5.0.0/installation/index.html" \
-  -O docs/isaac-sim-5.0.0-httrack \
-   "-*" "+https://docs.isaacsim.omniverse.nvidia.com/5.0.0/*" \
-  --keep-alive --sockets=4
+wget --mirror --page-requisites --adjust-extension \
+  --no-parent --convert-links \
+  --reject-regex '.*(pdf|zip|tar\.gz)$' \
+  -P docs/isaac-sim-5.1.0 \
+  https://docs.isaacsim.omniverse.nvidia.com/5.1.0/index.html
 ```
 
 ## Converts codes/HTML documentation to XML format for LLM consumption
@@ -34,20 +38,8 @@ httrack "https://docs.isaacsim.omniverse.nvidia.com/5.0.0/installation/index.htm
 ### Usage
 
 ```bash
-pip install rendergit
-python rendergit_llm_only.py <directory> <output.xml>
-```
-
-### Example
-
-```bash
-mkdir -p ./refs/
-
-# Export Isaac Sim codes
-python rendergit_llm_only.py IsaacSim ./refs/isaac-sim-code.xml
-
-# Export Isaac Sim docs
-python rendergit_llm_only.py docs/isaac-sim-5.0.0-httrack/docs.isaacsim.omniverse.nvidia.com ./refs/isaac-sim-doc.xml
+./convert_markitdown.sh --in ./gits/IsaacSim --out ./refs/isaacsim-code.md
+./convert_markitdown.sh --in ./docs/isaac-sim-5.1.0 --out ./refs/isaacsim-doc.md
 ```
 
 # Use the doc and code as ref
