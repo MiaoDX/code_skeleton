@@ -1,13 +1,14 @@
 #!/bin/bash
 
-target_dir=$PWD
+PROJECT_DIR=$PWD
 
-# current dir
-src_dir=
+# script's own directory (where code_skeleton lives)
+SKELETON_DIR=$(dirname "$0")
 
 # softlink these cli md
-ln -s $src_dir/*md .
+ln -s $SKELETON_DIR/CLAUDE.md .
+ln -s $SKELETON_DIR/AGENTS.md .
+ln -s $SKELETON_DIR/GEMINI.md .
 
 # softlink the refs
-ln -s $src_dir/refs .
-
+ln -s $SKELETON_DIR/refs .
