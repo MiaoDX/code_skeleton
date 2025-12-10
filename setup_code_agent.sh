@@ -12,3 +12,6 @@ ln -s $SKELETON_DIR/GEMINI.md .
 
 # softlink the refs
 ln -s $SKELETON_DIR/refs .
+
+# softlink gemini config to make sure zen click usage
+ln -s ~/.gemini/ .

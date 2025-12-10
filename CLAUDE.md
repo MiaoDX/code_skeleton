@@ -18,7 +18,7 @@
 1. Our network maybe not so good, for claude code, prefer curl to get remote files, instead of Fetch operation
 2. We may run the code remotely, so code env can be messy, DO NOT run python codes with isaac related logic, the user will run for you.
 3. You can read any files without further permission, and write to any file not being tracked by git. But for files with git, please with caution.
-4. Reduce the usage of try-catch, we prefer crash early and aloud instead of silent failure.
+4. Do less try-catch, just fail aloud and early. Fail explict is much better than silient fake-success
 5. When updating `todo_xx.md`, if it's too long, clean it too.
 
 # Project context
@@ -44,3 +44,4 @@ Prefer to use **uv** for Python environment management.
 ## VLM API
 
 For MIFY LLM API, wlways add unique request IDs calls to prevent response caching: `extra_headers={"X-Model-Request-Id": str(uuid.uuid4()), "X-Conversation-Id": str(uuid.uuid4())}`. 
+- DO NOT SHOW previous chats' history unless necessary, concentrate on current problem
