@@ -1,6 +1,7 @@
 #!/bin/bash
 set -x
 
+npm install -g @anthropic-ai/claude-code
 claude update
 # https://github.com/pomelo-nwu/claude-fetch-setup
 #npx claude-fetch-setup
