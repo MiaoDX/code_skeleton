@@ -12,6 +12,7 @@
 7. Finally, add a review section to the `tasks/todo_xx.md` (according to who you are) file with a summary of the changes you made and any other relevant information.
 8. DO NOT BE LAZY. NEVER BE LAZY. IF THERE IS A BUG FIND THE ROOT CAUSE AND FIX IT. NO TEMPORARY FIXES. YOU ARE A SENIOR DEVELOPER. NEVER BE LAZY
 9. MAKE ALL FIXES AND CODE CHANGES AS SIMPLE AS HUMANLY POSSIBLE. THEY SHOULD ONLY IMPACT NECESSARY CODE RELEVANT TO THE TASK AND NOTHING ELSE. IT SHOULD IMPACT AS LITTLE CODE AS POSSIBLE. YOUR GOAL IS TO NOT INTRODUCE ANY BUGS. IT'S ALL ABOUT SIMPLICITY
+10. Obey zen of python if possible
 
 # Custom
 
@@ -20,6 +21,8 @@
 3. You can read any files without further permission, and write to any file not being tracked by git. But for files with git, please with caution.
 4. Do less try-catch, just fail aloud and early. Fail explict is much better than silient fake-success
 5. When updating `todo_xx.md`, if it's too long, clean it too.
+6. Some of the codes will run on server with shared disk filesystem, so NEVER DO FOLDER REMOVING if possible
+7. After update code changes, check the docs too, update docs as needed to meet the code changes
 
 # Project context
 
