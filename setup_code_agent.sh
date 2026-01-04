@@ -25,9 +25,11 @@ ln -sf $SKELETON_DIR/refs .
 echo "Linking gemini config..."
 ln -sf ~/.gemini/ .
 
-# softlink entire .claude directory (commands, hooks, settings)
-echo "Linking .claude directory..."
-ln -sf $SKELETON_DIR/.claude .claude
+# create .claude if needed, then symlink commands subdirectory
+echo "Linking .claude/commands directory..."
+mkdir -p .claude
+[ -L .claude/commands ] && rm -f .claude/commands
+ln -sf $SKELETON_DIR/.claude/commands .claude/commands
 
 # Add claude_yolo alias to shell rc file (if not already present)
 echo "Setting up claude_yolo alias..."

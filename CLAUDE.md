@@ -16,13 +16,14 @@
 
 # Custom
 
-1. Our network maybe not so good, for claude code, prefer curl to get remote files, instead of Fetch operation
+1. After update code changes, check the docs too, update docs as needed to meet the code changes
 2. We may run the code remotely, so code env can be messy, DO NOT run python codes with isaac related logic, the user will run for you.
 3. You can read any files without further permission, and write to any file not being tracked by git. But for files with git, please with caution.
 4. Do less try-catch, just fail aloud and early. Fail explict is much better than silient fake-success
 5. When updating `todo_xx.md`, if it's too long, clean it too.
 6. Some of the codes will run on server with shared disk filesystem, so NEVER DO FOLDER REMOVING if possible
-7. After update code changes, check the docs too, update docs as needed to meet the code changes
+7. All `tasks/todo_xx.md` and `XXX.md` softlinks should not be included in git control
+
 
 # Project context
 
