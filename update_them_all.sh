@@ -40,20 +40,8 @@ else
     cd - > /dev/null
 fi
 
-# Set CLAUDE_PROJECT_DIR for Continuous-Claude skills to work globally
-# This is the standard env var used by CC skills like research-external, recall, etc.
-export CLAUDE_PROJECT_DIR="$CC_DIR"
-echo "CLAUDE_PROJECT_DIR set to: $CLAUDE_PROJECT_DIR"
-
-# Add CLAUDE_PROJECT_DIR to .bashrc if not already present
-if ! grep -q "CLAUDE_PROJECT_DIR" ~/.bashrc 2>/dev/null; then
-    echo "" >> ~/.bashrc
-    echo "# Continuous-Claude project directory (for skills to find opc/)" >> ~/.bashrc
-    echo "export CLAUDE_PROJECT_DIR=\"$CC_DIR\"" >> ~/.bashrc
-    echo "Added CLAUDE_PROJECT_DIR to ~/.bashrc"
-else
-    echo "CLAUDE_PROJECT_DIR already in ~/.bashrc"
-fi
+# Note: CLAUDE_OPC_DIR is now set by the CC wizard (scripts.setup.wizard)
+# See PR: fix: Skills use wrong Python venv - add CLAUDE_OPC_DIR setup
 
 # Copy API keys to ~/.claude/.env for CC skills to find them
 # CC scripts look for keys in ~/.claude/.env when running from any directory

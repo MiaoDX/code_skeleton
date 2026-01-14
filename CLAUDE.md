@@ -23,6 +23,7 @@
 5. When updating `todo_xx.md`, if it's too long, clean it too.
 6. Some of the codes will run on server with shared disk filesystem, so NEVER DO FOLDER REMOVING if possible
 7. All `tasks/todo_xx.md` and `XXX.md` softlinks should not be included in git control
+8. Never git amend unless specifically required
 
 
 # Project context
