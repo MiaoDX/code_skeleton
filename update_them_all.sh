@@ -40,19 +40,8 @@ else
     cd - > /dev/null
 fi
 
-# Note: CLAUDE_OPC_DIR is now set by the CC wizard (scripts.setup.wizard)
-# See PR: fix: Skills use wrong Python venv - add CLAUDE_OPC_DIR setup
-
-# Copy API keys to ~/.claude/.env for CC skills to find them
-# CC scripts look for keys in ~/.claude/.env when running from any directory
-if [ -f "$SCRIPT_DIR/.env" ]; then
-    mkdir -p ~/.claude
-    # Copy PERPLEXITY_API_KEY if it exists in project .env
-    if grep -q "PERPLEXITY_API_KEY" "$SCRIPT_DIR/.env"; then
-        grep "PERPLEXITY_API_KEY" "$SCRIPT_DIR/.env" > ~/.claude/.env
-        echo "Copied PERPLEXITY_API_KEY to ~/.claude/.env"
-    fi
-fi
+# Rename or delete the hook file
+mv ~/.claude/hooks/dist/tldr-read-enforcer.mjs ~/.claude/hooks/dist/tldr-read-enforcer.mjs.disabled
 
 npm install -g @google/gemini-cli
 npm install -g @openai/codex
