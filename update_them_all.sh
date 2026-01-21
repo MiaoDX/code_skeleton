@@ -27,7 +27,9 @@ CC_DIR="$SCRIPT_DIR/gits/Continuous-Claude-v3"
 
 if [ ! -d "$CC_DIR" ]; then
     echo "Installing Continuous-Claude-v3..."
-    git clone https://github.com/parcadei/Continuous-Claude-v3.git "$CC_DIR"
+    # git clone https://github.com/parcadei/Continuous-Claude-v3.git "$CC_DIR"
+    # Currently, the tldr opt out feature is not merged
+    git clone https://github.com/MiaoDX-fork-and-pruning/Continuous-Claude-v3.git "$CC_DIR" -b feat/tldr-opt-out --depth=1
     cd "$CC_DIR/opc"
     uv run python -m scripts.setup.wizard
     cd - > /dev/null
