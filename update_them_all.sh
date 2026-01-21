@@ -42,8 +42,5 @@ else
     cd - > /dev/null
 fi
 
-# Rename or delete the hook file
-mv ~/.claude/hooks/dist/tldr-read-enforcer.mjs ~/.claude/hooks/dist/tldr-read-enforcer.mjs.disabled
-
 npm install -g @google/gemini-cli
 npm install -g @openai/codex
