@@ -53,54 +53,66 @@ Please use fetch-mcp instead of Fetch and WebFetch tools! We have network issues
 - A good pushback saves more time than a bad implementation
 - Use `AskUserQuestion` tool when clarification or decisions are needed
 
-## GSD Workflow Integration
+## Modern Workflow Integration
 
-**Project Initialization**
-- Use `/gsd:new-project` to start new projects with proper structure
-- Creates `.planning/` directory with PROJECT.md, ROADMAP.md, STATE.md
-- Guides through questioning → research → requirements → roadmap
+**Task Management**
+- Use `TaskCreate`/`TaskUpdate` for complex multi-step work
+- Mark tasks `in_progress` when starting, `completed` when done
+- For simple tasks, skip task tracking and just do the work
 
-**Primary Commands**
-- `/gsd:progress` - Check current state, route to next action
-- `/gsd:discuss-phase N` - Gather context before planning phase
-- `/gsd:plan-phase N` - Create detailed execution plan for phase
-- `/gsd:execute-phase N` - Execute all plans in phase with atomic commits
-- `/gsd:verify-work` - Validate built features through conversational UAT
-- `/gsd:quick` - Execute small tasks with GSD guarantees (atomic commits, state tracking)
+**Built-in Workflows**
+- `/explore` - Understand codebase structure
+- `/build` - Plan and implement features
+- `/fix` - Debug and resolve issues
+- `/commit` - Create git commits (no Claude attribution)
+- `/recall` - Query past session learnings
 
-**Quick Tasks vs Planned Work**
-- Use `/gsd:quick` for small, well-understood tasks (refactors, bug fixes, doc updates)
-- Use full planning cycle (`/gsd:plan-phase` → `/gsd:execute-phase`) for features requiring design decisions
-- Quick tasks live in `.planning/quick/`, planned phases in `.planning/phases/`
+**Plan Before Code**
+- Use `EnterPlanMode` for non-trivial implementation
+- Research first (read files, explore patterns)
+- Get plan approval before coding
+- Iterate on plan based on feedback
 
-**State Management**
-- GSD tracks project state in `.planning/STATE.md` automatically
-- All commits are atomic with proper attribution
-- Phase execution creates detailed summaries and verification reports
+## Agent Delegation
 
-**When to Plan**
-- Use `/gsd:discuss-phase N` for context gathering and approach clarification
-- Use `/gsd:plan-phase N` to create detailed execution plans with research and verification
-- Use `EnterPlanMode` for ad-hoc non-GSD tasks requiring plan approval
-- For brownfield codebases, use `/gsd:map-codebase` before planning
+**Keep Main Context Clean**
+- Delegate exploration → `scout` agent
+- Delegate research → `oracle` agent
+- Delegate implementation → `kraken` or `spark` agent
+- Delegate testing → `arbiter` agent
 
-**Working Outside GSD**
-- For exploratory work or one-off questions, work directly without GSD commands
-- Use GSD when building features that fit into the project roadmap
-- Use `/gsd:quick` when you want GSD guarantees (atomic commits, state tracking) but don't need full planning cycle
-- Check `.planning/STATE.md` first to understand if work aligns with active phase
+**When to Delegate**
+- Reading 3+ files
+- External documentation research
+- Complex multi-file changes
+- Running test suites
+
+**Main Context For**
+- Understanding user intent
+- Coordinating agents
+- Making architectural decisions
+- Presenting summaries
+
+## Memory System
+
+**Before Starting Work**
+```bash
+# Check if we've solved similar problems
+(cd $CLAUDE_OPC_DIR && uv run python scripts/core/recall_learnings.py --query "topic" --k 3 --text-only)
+```
+
+**After Solving Tricky Problems**
+```bash
+# Store learnings for future sessions
+cd $CLAUDE_OPC_DIR && uv run python scripts/core/store_learning.py \
+  --session-id "short-id" \
+  --type WORKING_SOLUTION \
+  --content "what worked" \
+  --tags "tag1,tag2" \
+  --confidence high
+```
 
 ## Project-Specific Rules
-
-**GSD Project Structure**
-- `.planning/PROJECT.md` - Living project context (core value, requirements, constraints)
-- `.planning/ROADMAP.md` - Phase breakdown with success criteria
-- `.planning/STATE.md` - Current project state and progress tracking
-- `.planning/config.json` - Workflow preferences (mode, depth, parallelization)
-- `.planning/phases/NN/` - Phase-specific plans, summaries, verification reports
-- `.planning/quick/NNN-slug/` - Quick task artifacts (plan, summary)
-- `.planning/research/` - Domain research (stack, features, architecture, pitfalls)
-- `.planning/codebase/` - Codebase analysis (for brownfield projects)
 
 **Remote Execution**
 - Code may run remotely in messy environments
@@ -112,12 +124,9 @@ Please use fetch-mcp instead of Fetch and WebFetch tools! We have network issues
 - Keep README, comments, and docs in sync with implementation, use ADR (arch decisions records) way if proper
 
 **Git Management**
-- GSD creates atomic commits automatically during phase execution
-- Each task in a plan gets its own commit with descriptive message
 - Read files before writing (especially git-tracked files)
 - Never amend commits unless explicitly requested
-- Planning artifacts (`.planning/`) committed by default unless `commit_docs: false` in config
-- Quick task artifacts committed to `.planning/quick/NNN-slug/`
+- `tasks/todo_*.md` and `*.md` symlinks → not in git
 
 **Python Environment**
 - Prefer `uv` for environment management
