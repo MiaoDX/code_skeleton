@@ -2,6 +2,10 @@
 
 > Address me as **MiaoDX** in all responses
 
+## Project Tool Preferences
+
+Please use fetch-mcp instead of Fetch and WebFetch tools! We have network issues in China Mainland.
+
 ## Core Principles
 
 **Simplicity First**

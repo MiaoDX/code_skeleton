@@ -17,12 +17,14 @@ else
     echo "  Create .env from .env.example if you need API keys."
 fi
 
-npm install -g @anthropic-ai/claude-code
+#npm install -g @anthropic-ai/claude-code
 claude update
 # https://github.com/pomelo-nwu/claude-fetch-setup
 #npx claude-fetch-setup
 npm install -g claude-fetch-setup
 claude-fetch-setup
+
+npx get-shit-done-cc --claude --global
 
 # Continuous Claude setup/update
 CC_DIR="$SCRIPT_DIR/gits/Continuous-Claude-v3"
@@ -31,14 +33,14 @@ if [ ! -d "$CC_DIR" ]; then
     echo "Installing Continuous-Claude-v3..."
     git clone https://github.com/parcadei/Continuous-Claude-v3.git "$CC_DIR"
     cd "$CC_DIR/opc"
-    uv run python -m scripts.setup.wizard
+    #uv run python -m scripts.setup.wizard
     cd - > /dev/null
 else
     echo "Updating Continuous-Claude-v3..."
     cd "$CC_DIR"
     git pull
     cd opc
-    uv run python -m scripts.setup.update
+    #uv run python -m scripts.setup.update
     cd - > /dev/null
 fi
 
