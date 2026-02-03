@@ -2,137 +2,42 @@
 
 > Address me as **MiaoDX** in all responses
 
-## Project Tool Preferences
+## Tool Preferences
 
-Please use fetch-mcp instead of Fetch and WebFetch tools! We have network issues in China Mainland.
+- Use `fetch-mcp` instead of Fetch/WebFetch (network issues in China Mainland)
 
 ## Core Principles
 
-**Simplicity First**
-- Keep changes minimal - impact only necessary code
-- Avoid over-engineering, premature abstractions, or "improvements" beyond the ask
-- Three similar lines > one premature abstraction
+| Principle | Practice |
+|-----------|----------|
+| **Simplicity First** | Minimal changes; no premature abstractions; three similar lines > one bad abstraction |
+| **Root Cause** | Fix causes, not symptoms; no workarounds; be thorough |
+| **Chesterton's Fence** | Understand why code exists before changing it |
+| **Fail Fast** | Minimize try-catch; explicit errors > silent failures |
 
-**Root Cause Analysis**
-- Find and fix the root cause, not symptoms
-- No temporary fixes or workarounds
-- Act as a senior developer - thorough, not lazy
-
-**Chesterton's Fence**
-- Understand why something exists before removing or changing it
-- Code that looks "useless" may serve a non-obvious purpose
-- Ask "why is this here?" before "let me delete this"
-
-**Fail Fast & Explicit**
-- Minimize try-catch blocks - let errors surface early
-- Explicit failures > silent fake-success
-- Follow Zen of Python principles
-
-## Critical Collaboration
+## Collaboration
 
 **Challenge Before Implementing**
-- User suggestions may be based on incomplete context or outdated understanding
-- Question assumptions, don't blindly execute instructions
-- If something seems wrong, say so before writing code
-
-**When to Push Back**
-- Approach contradicts existing codebase patterns
-- Suggestion would introduce technical debt or complexity
-- There's a simpler/better alternative
-- Requirements seem inconsistent or unclear
-
-**How to Discuss**
-- "I notice X contradicts Y in the codebase - should we align?"
-- "This would work, but have you considered [alternative]?"
-- "Before implementing, I want to flag a concern about..."
-- "This feels like it might be solving a symptom - is the root cause actually Z?"
-
-**Don't Just Obey**
+- Question assumptions; push back on technical debt or inconsistent requirements
 - Treat instructions as intent, not commands
-- The goal is the best solution, not exact compliance
-- A good pushback saves more time than a bad implementation
-- Use `AskUserQuestion` tool when clarification or decisions are needed
+- Use `AskUserQuestion` when unclear
 
-## GSD Workflow Integration
+**How to Push Back**
+> "I notice X contradicts Y - should we align?"
+> "Have you considered [alternative]?"
+> "This feels like solving a symptom - is the root cause Z?"
 
-**Project Initialization**
-- Use `/gsd:new-project` to start new projects with proper structure
-- Creates `.planning/` directory with PROJECT.md, ROADMAP.md, STATE.md
-- Guides through questioning → research → requirements → roadmap
+## Project Rules
 
-**Primary Commands**
-- `/gsd:progress` - Check current state, route to next action
-- `/gsd:discuss-phase N` - Gather context before planning phase
-- `/gsd:plan-phase N` - Create detailed execution plan for phase
-- `/gsd:execute-phase N` - Execute all plans in phase with atomic commits
-- `/gsd:verify-work` - Validate built features through conversational UAT
-- `/gsd:quick` - Execute small tasks with GSD guarantees (atomic commits, state tracking)
+**Development**
+- Use `uv` and `.venv` for python execution instead of system default one
+- After each big change, make sure the related UTs are not broken, in case we bring bugs
+- Remote execution: Don't run heavy simulations; **NEVER remove folders**
+- Git: GSD creates atomic commits; read files before writing; never amend unless asked
 
-**Quick Tasks vs Planned Work**
-- Use `/gsd:quick` for small, well-understood tasks (refactors, bug fixes, doc updates)
-- Use full planning cycle (`/gsd:plan-phase` → `/gsd:execute-phase`) for features requiring design decisions
-- Quick tasks live in `.planning/quick/`, planned phases in `.planning/phases/`
+## Pre-Submission Checklist
 
-**State Management**
-- GSD tracks project state in `.planning/STATE.md` automatically
-- All commits are atomic with proper attribution
-- Phase execution creates detailed summaries and verification reports
-
-**When to Plan**
-- Use `/gsd:discuss-phase N` for context gathering and approach clarification
-- Use `/gsd:plan-phase N` to create detailed execution plans with research and verification
-- Use `EnterPlanMode` for ad-hoc non-GSD tasks requiring plan approval
-- For brownfield codebases, use `/gsd:map-codebase` before planning
-
-**Working Outside GSD**
-- For exploratory work or one-off questions, work directly without GSD commands
-- Use GSD when building features that fit into the project roadmap
-- Use `/gsd:quick` when you want GSD guarantees (atomic commits, state tracking) but don't need full planning cycle
-- Check `.planning/STATE.md` first to understand if work aligns with active phase
-
-## Project-Specific Rules
-
-**GSD Project Structure**
-- `.planning/PROJECT.md` - Living project context (core value, requirements, constraints)
-- `.planning/ROADMAP.md` - Phase breakdown with success criteria
-- `.planning/STATE.md` - Current project state and progress tracking
-- `.planning/config.json` - Workflow preferences (mode, depth, parallelization)
-- `.planning/phases/NN/` - Phase-specific plans, summaries, verification reports
-- `.planning/quick/NNN-slug/` - Quick task artifacts (plan, summary)
-- `.planning/research/` - Domain research (stack, features, architecture, pitfalls)
-- `.planning/codebase/` - Codebase analysis (for brownfield projects)
-
-**Remote Execution**
-- Code may run remotely in messy environments
-- Don't execute heavy simulation logic - user will run it
-- Assume shared disk filesystem - **NEVER remove folders**
-
-**Documentation Sync**
-- After code changes, check and update docs accordingly
-- Keep README, comments, and docs in sync with implementation, use ADR (arch decisions records) way if proper
-
-**Git Management**
-- GSD creates atomic commits automatically during phase execution
-- Each task in a plan gets its own commit with descriptive message
-- Read files before writing (especially git-tracked files)
-- Never amend commits unless explicitly requested
-- Planning artifacts (`.planning/`) committed by default unless `commit_docs: false` in config
-- Quick task artifacts committed to `.planning/quick/NNN-slug/`
-
-**Python Environment**
-- Prefer `uv` for environment management
-
-**Communication**
-- Provide high-level explanations at each step
-- Focus on what changed and why
-- Keep responses concise
-
-## Code Review Before Submission
-
-✅ **Checklist**
-- [ ] Changes are minimal and focused
-- [ ] Root cause addressed (not just symptoms)
-- [ ] Documentation updated if needed
-- [ ] No unnecessary abstractions added
-- [ ] Errors fail explicitly
-- [ ] Git-tracked files modified with caution
+- [ ] Changes minimal and focused
+- [ ] Root cause addressed
+- [ ] No unnecessary abstractions
+- [ ] Errors fail explicitly and loudly
