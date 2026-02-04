@@ -16,6 +16,11 @@ claude-fetch-setup
 
 npx get-shit-done-cc --claude --global
 
-npm install -g @google/gemini-cli
-npm install -g @openai/codex
-npm install -g happy-coder
+# Install all global npm packages in parallel (npm handles this internally)
+npm install -g \
+    @google/gemini-cli \
+    @openai/codex \
+    happy-coder \
+    opencode-ai@latest
+
+echo "All updates completed"
