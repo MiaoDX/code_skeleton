@@ -35,6 +35,18 @@
 - Remote execution: Don't run heavy simulations; **NEVER remove folders**
 - Git: GSD creates atomic commits; read files before writing; never amend unless asked
 
+**Anti-Patterns to Avoid**
+- **NO `hasattr`/`getattr` for known types** — Use direct attribute access. These patterns hide bugs by returning None/default instead of raising AttributeError. If a field might not exist, the type design is wrong.
+  ```python
+  # BAD: hides typos and missing fields silently
+  if hasattr(plan, 'q_grasp') and plan.q_grasp is not None:
+  value = getattr(config, 'waist_active', False)
+
+  # GOOD: fails fast on typos, explicit None checks
+  if plan.q_grasp is not None:
+  value = config.waist_active
+  ```
+
 ## Pre-Submission Checklist
 
 - [ ] Changes minimal and focused
