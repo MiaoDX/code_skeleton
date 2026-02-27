@@ -22,6 +22,12 @@ section "Global CLI tools"
 npm install -g --silent @google/gemini-cli @openai/codex happy-coder opencode-ai@latest
 echo "  ✓ gemini-cli, codex, happy-coder, opencode-ai"
 
+# ─── Claude Code Plugins ────────────────────────
+section "Claude Code Plugins"
+claude plugin update ralph-wiggum@claude-code-plugins 2>/dev/null || \
+    claude plugin install ralph-wiggum@claude-code-plugins 2>/dev/null || true
+echo "  ✓ ralph-wiggum"
+
 # ─── Skills (all agents, global) ───────────────
 section "Skills"
 npx -y skills add anthropics/skills -a '*' -g -y --skill skill-creator --skill mcp-builder --skill pdf --skill xlsx --skill docx 2>&1 | grep -E "✓|Done"
