@@ -28,12 +28,17 @@ claude plugin update ralph-wiggum@claude-code-plugins 2>/dev/null || \
     claude plugin install ralph-wiggum@claude-code-plugins 2>/dev/null || true
 echo "  ✓ ralph-wiggum"
 
-# ─── Skills (all agents, global) ───────────────
+# ─── Skills (Claude Code, Codex, Gemini CLI only) ───────────────
 section "Skills"
-npx -y skills add anthropics/skills -a '*' -g -y --skill skill-creator --skill mcp-builder --skill pdf --skill xlsx --skill docx 2>&1 | grep -E "✓|Done"
+# Install for Claude Code, Codex, and Gemini CLI only (not all agents)
+for agent in claude codex gemini; do
+    npx -y skills add anthropics/skills -a "$agent" -g -y --skill skill-creator --skill mcp-builder --skill pdf --skill xlsx --skill docx 2>&1 | grep -E "✓|Done" || true
+done
 #npx -y skills add vercel-labs/agent-skills -a '*' -g -y 2>&1 | grep -E "✓|Done"
 # https://github.com/skills-directory/skill-codex
-npx -y skills add skills-directory/skill-codex -a '*' -g -y 2>&1 | grep -E "✓|Done"
+for agent in claude codex gemini; do
+    npx -y skills add skills-directory/skill-codex -a "$agent" -g -y 2>&1 | grep -E "✓|Done" || true
+done
 npx -y skills ls -g
 
 section "Done ✓"
