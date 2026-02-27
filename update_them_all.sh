@@ -28,6 +28,13 @@ claude plugin update ralph-wiggum@claude-code-plugins 2>/dev/null || \
     claude plugin install ralph-wiggum@claude-code-plugins 2>/dev/null || true
 echo "  ✓ ralph-wiggum"
 
+# ─── Local Skills Check ─────────────────────────
+section "Local Skills"
+# Verify local skills exist (gemini is a local dir, codex is a symlink)
+[ -d ~/.claude/skills/gemini ] && echo "  ✓ gemini skill (local)"
+[ -L ~/.claude/skills/codex ] && echo "  ✓ codex skill (linked)"
+echo "  ✓ Local skills ready"
+
 # ─── Skills (Claude Code, Codex, Gemini CLI only) ───────────────
 section "Skills"
 # Install for Claude Code, Codex, and Gemini CLI only (not all agents)
