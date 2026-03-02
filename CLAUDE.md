@@ -14,6 +14,7 @@
 | **Root Cause** | Fix causes, not symptoms; no workarounds; be thorough |
 | **Chesterton's Fence** | Understand why code exists before changing it |
 | **Fail Fast** | Minimize try-catch; explicit errors > silent failures |
+| **Demand Elegance** | For non-trivial changes, pause and ask "is there a more elegant way?" (Skip for simple fixes — don't over-engineer) |
 
 ## Collaboration
 
@@ -27,6 +28,42 @@
 > "Have you considered [alternative]?"
 > "This feels like solving a symptom - is the root cause Z?"
 
+## Parallel Execution & Subagent Strategy
+
+- **Always maximize parallelism.** Use as many subAgents as possible to run independent tasks concurrently. Sequential execution of parallelizable work is unacceptable.
+- Use subagents liberally to keep the main context window clean.
+- Offload research, exploration, and parallel analysis to subagents. For complex problems, throw more compute at it.
+- **One task per subagent** for focused execution.
+
+## Task Orchestration Model
+
+Operate with a virtual engineering organization structure:
+
+- **Engineering Manager**: Orchestrates the overall task, breaks it into workstreams, and assigns to leads.
+- **Tech Lead**: Owns implementation of assigned workstreams and coordinates specialist engineers.
+- **Architect**: All significant implementation decisions must be validated against architectural best practices before execution.
+- **Specialist Engineers** (use as subAgents): DX Engineer, UI Engineer, Design Engineer, Ops Engineer, QA Engineer, Security Engineer, Performance Engineer, and any other domain specialist as needed.
+
+Leverage this structure to parallelize research, implementation, review, and testing across multiple specialist agents simultaneously.
+
+## Workflow Practices
+
+**Self-Improvement Loop**
+- After ANY correction from the user: update `tasks/lessons.md` with the pattern.
+- Write rules for yourself that prevent the same mistake.
+- Ruthlessly iterate on these lessons until mistake rate drops.
+- Review lessons at session start for the relevant project.
+
+**Verification Before Done**
+- Never mark a task complete without proving it works.
+- Diff behavior between main and your changes when relevant.
+- Run tests, check logs, demonstrate correctness.
+
+**Autonomous Bug Fixing**
+- When given a bug report: just fix it. Don't ask for hand-holding.
+- Point at logs, errors, failing tests — then resolve them.
+- Go fix failing CI tests without being told how.
+
 ## Project Rules
 
 **Development**
@@ -37,19 +74,4 @@
 
 **Anti-Patterns to Avoid**
 - **NO `hasattr`/`getattr` for known types** — Use direct attribute access. These patterns hide bugs by returning None/default instead of raising AttributeError. If a field might not exist, the type design is wrong.
-  ```python
-  # BAD: hides typos and missing fields silently
-  if hasattr(plan, 'q_grasp') and plan.q_grasp is not None:
-  value = getattr(config, 'waist_active', False)
 
-  # GOOD: fails fast on typos, explicit None checks
-  if plan.q_grasp is not None:
-  value = config.waist_active
-  ```
-
-## Pre-Submission Checklist
-
-- [ ] Changes minimal and focused
-- [ ] Root cause addressed
-- [ ] No unnecessary abstractions
-- [ ] Errors fail explicitly and loudly
