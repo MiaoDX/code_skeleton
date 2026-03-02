@@ -1,9 +1,4 @@
-gits
-refs
-refs_bak
-docs
-.venv
+vendor/
+.venv/
 uv.lock
 .env
-vis
-

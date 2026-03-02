@@ -1,51 +1,81 @@
-# Code Skeleton Demos
+# AI Agent Toolkit
 
-[https://intuitive-dynamics.notion.site/CodeSkeleton](https://intuitive-dynamics.notion.site/CodeSkeleton-27d7049f66a6805ca6c9e49fc657aec6)
+> Best practices for coding with AI agents — Claude Code, Gemini CLI, Codex, and friends.
 
-This is one small repo, show some practices we are using, to better use the AI coding tools.
-
-And we use IsaacSim as example, it is:
-
-* The very important lib for robot dev
-* The APIs and best practices change pretty quick
-* Good codes on it are hard to write (for human)
-
-# Get Doc/API as references
-
-## Fetch API/source code from git
+## 30-Second Setup
 
 ```bash
-cd gits
-git clone https://github.com/isaac-sim/IsaacSim.git
-cd IsaacSim
-git checkout v5.1.0
+# Clone
+git clone https://github.com/MiaoDX/code_skeleton.git ~/code_skeleton
+
+# In any project:
+~/code_skeleton/scripts/setup.sh
 ```
 
-## Fetch dos on the website
+That's it. Your project now shares:
+- Unified guidelines (`CLAUDE.md` → linked as `AGENTS.md`, `GEMINI.md`)
+- Custom commands (`/gsd_squash`, `/gsd_status`, `/zen_check`)
+- Custom skills (`gemini`, `gsd-codex-ralph-review`)
 
-IsaacSim as the demo:
+## What You Get
+
+### Guidelines
+
+Core principles that make AI coding actually work:
+
+| Principle | In Practice |
+|-----------|-------------|
+| **Simplicity First** | Minimal changes, no premature abstractions |
+| **Root Cause** | Fix causes, not symptoms |
+| **Challenge First** | Question assumptions before implementing |
+| **Parallel Execution** | Maximize subagents for concurrent work |
+
+### Commands
+
+| Command | Does |
+|---------|------|
+| `/gsd_squash` | Clean up noisy GSD commits |
+| `/gsd_status` | Show recent phase statuses |
+| `/zen_check` | Double-check with Gemini + Codex |
+
+### Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/setup.sh` | Link configs to your project |
+| `scripts/update.sh` | Update all AI CLI tools |
+| `scripts/convert-docs.sh` | Convert code/docs → LLM-ready markdown |
+
+## Structure
+
+```
+.
+├── CLAUDE.md              # Main guidelines
+├── AGENTS.md → CLAUDE.md  # Shared across agents
+├── GEMINI.md → CLAUDE.md
+├── .claude/
+│   ├── commands/          # Custom slash commands
+│   └── skills/            # Custom skills
+├── context/               # Reference docs (LLM context)
+├── scripts/               # Setup & utility scripts
+├── docs/                  # Documentation
+└── vendor/                # Third-party tools
+```
+
+## Full Install
 
 ```bash
-wget --mirror --page-requisites --adjust-extension \
-  --no-parent --convert-links \
-  --reject-regex '.*(pdf|zip|tar\.gz)$' \
-  -P docs/isaac-sim-5.1.0 \
-  https://docs.isaacsim.omniverse.nvidia.com/5.1.0/index.html
+scripts/update.sh
 ```
 
-## Converts codes/HTML documentation to XML format for LLM consumption
+Installs: Claude Code, Gemini CLI, Codex, GSD workflow, MCP servers, essential skills.
 
-### Usage
+## Why This Exists
 
-```bash
-./convert_markitdown.sh --in ./gits/IsaacSim --out ./refs/isaacsim-code.md
-./convert_markitdown.sh --in ./docs/isaac-sim-5.1.0 --out ./refs/isaacsim-doc.md
-```
+AI coding tools are powerful but chaotic. This toolkit provides:
 
-# Use the doc and code as ref
+1. **Consistency** — Same guidelines across all your projects
+2. **Speed** — Pre-configured commands that actually help
+3. **Portability** — Share configs via symlinks, not copy-paste
 
-The `CLAUDE.md` is copied from https://www.youtube.com/watch?v=vqdomISes4o, he has tons of videos on AI coding, pretty good.
-
-And tweaks to add `./refs` folder and custom prompt to it.
-
-
+Built from real usage patterns. Nothing fancy, just what works.

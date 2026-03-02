@@ -2,8 +2,8 @@
 
 PROJECT_DIR=$PWD
 
-# script's own directory (where code_skeleton lives) - use absolute path
-SKELETON_DIR=$(cd "$(dirname "$0")" && pwd)
+# toolkit's root directory (one level up from scripts/)
+SKELETON_DIR=$(cd "$(dirname "$0")/.." && pwd)
 
 # Prevent running from code_skeleton directory itself (would create self-referential symlinks)
 if [ "$PROJECT_DIR" = "$SKELETON_DIR" ]; then
@@ -17,9 +17,9 @@ ln -sf $SKELETON_DIR/CLAUDE.md .
 ln -sf $SKELETON_DIR/AGENTS.md .
 ln -sf $SKELETON_DIR/GEMINI.md .
 
-# softlink the refs
-echo "Linking refs directory..."
-ln -sf $SKELETON_DIR/refs .
+# symlink the context folder for reference docs
+echo "Linking context directory..."
+ln -sf $SKELETON_DIR/context .
 
 # softlink gemini config to make sure zen click usage
 echo "Linking gemini config..."

@@ -3,7 +3,7 @@ set -e
 
 usage() {
     echo "Usage: $0 --in <input_dir> --out <output_file>"
-    echo "Example: $0 --in ./gits/IsaacSim --out ./refs/isaacsim-code.md"
+    echo "Example: $0 --in ./vendor/repo --out ./context/repo.md"
     exit 1
 }
 

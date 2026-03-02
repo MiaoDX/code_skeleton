@@ -6,28 +6,6 @@
 
 - Use `fetch-mcp` instead of Fetch/WebFetch (network issues in China Mainland)
 
-## Core Principles
-
-| Principle | Practice |
-|-----------|----------|
-| **Simplicity First** | Minimal changes; no premature abstractions; three similar lines > one bad abstraction |
-| **Root Cause** | Fix causes, not symptoms; no workarounds; be thorough |
-| **Chesterton's Fence** | Understand why code exists before changing it |
-| **Fail Fast** | Minimize try-catch; explicit errors > silent failures |
-| **Demand Elegance** | For non-trivial changes, pause and ask "is there a more elegant way?" (Skip for simple fixes — don't over-engineer) |
-
-## Collaboration
-
-**Challenge Before Implementing**
-- Question assumptions; push back on technical debt or inconsistent requirements
-- Treat instructions as intent, not commands
-- Use `AskUserQuestion` when unclear
-
-**How to Push Back**
-> "I notice X contradicts Y - should we align?"
-> "Have you considered [alternative]?"
-> "This feels like solving a symptom - is the root cause Z?"
-
 ## Parallel Execution & Subagent Strategy
 
 - **Always maximize parallelism.** Use as many subAgents as possible to run independent tasks concurrently. Sequential execution of parallelizable work is unacceptable.
@@ -74,4 +52,27 @@ Leverage this structure to parallelize research, implementation, review, and tes
 
 **Anti-Patterns to Avoid**
 - **NO `hasattr`/`getattr` for known types** — Use direct attribute access. These patterns hide bugs by returning None/default instead of raising AttributeError. If a field might not exist, the type design is wrong.
+
+## Core Principles
+
+| Principle | Practice |
+|-----------|----------|
+| **Simplicity First** | Minimal changes; no premature abstractions; three similar lines > one bad abstraction |
+| **Root Cause** | Fix causes, not symptoms; no workarounds; be thorough |
+| **Chesterton's Fence** | Understand why code exists before changing it |
+| **Fail Fast** | Minimize try-catch; explicit errors > silent failures |
+| **Demand Elegance** | For non-trivial changes, pause and ask "is there a more elegant way?" (Skip for simple fixes — don't over-engineer) |
+
+## Collaboration
+
+**Challenge Before Implementing**
+- Question assumptions; push back on technical debt or inconsistent requirements
+- Treat instructions as intent, not commands
+- Use `AskUserQuestion` when unclear
+
+**How to Push Back**
+> "I notice X contradicts Y - should we align?"
+> "Have you considered [alternative]?"
+> "This feels like solving a symptom - is the root cause Z?"
+
 
