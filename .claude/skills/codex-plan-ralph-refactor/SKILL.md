@@ -54,6 +54,14 @@ If not found, error with available phases.
 
 ### 3. Ralph Loop (1 to MAX_ITERATIONS)
 
+Initialize loop state:
+```python
+COVERED_ANGLES = []        # Categories Codex has already explored
+PREV_HAD_FIXES = False     # Did previous iteration revise plans?
+PREV_ALL_CLEAN = False     # Were all previous findings minor/none?
+CODEX_SESSION_ID = None    # Session ID for resume capability
+```
+
 Display:
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -67,9 +75,65 @@ Focus: {FOCUS}
 
 For each iteration:
 
-#### A. Run Codex Review
+#### A. Run Codex Review (Auto-Choose Resume vs New)
 
-Use Bash to run Codex CLI:
+**Session mode auto-selection**:
+
+| Condition | Mode | Rationale |
+|-----------|------|-----------|
+| Iteration 1 | `exec` (new) | No prior session exists |
+| Previous iter revised plans | `resume` | Codex needs context of what changed to verify revisions |
+| Previous iter found only MINOR or nothing (stalling) | `exec` (new) | Fresh perspective breaks stuck patterns |
+| Every 3rd iteration | Force `exec` (new) | Diversity injection |
+
+Display the choice:
+```
+◆ Session mode: {resume|new} — {reason}
+```
+
+**Build the review prompt** with angle expansion (after iteration 1):
+
+```
+Review the GSD phase plans in .planning/phases/{PHASE}-*/ for:
+{FOCUS_PROMPT}.
+
+Categorize findings as:
+- CRITICAL: Safety bugs, data corruption, architectural blockers
+- MAJOR: API inconsistencies, significant test gaps, coupling issues
+- MINOR: Style, documentation, hygiene
+
+Report specific file paths and line numbers.
+If no CRITICAL or MAJOR issues found, state 'NO_CRITICAL_MAJOR_ISSUES'.
+
+{ANGLE_EXPANSION_BLOCK if COVERED_ANGLES is non-empty}
+```
+
+The `ANGLE_EXPANSION_BLOCK` (only included after iteration 1):
+
+```
+## Expand Your Review Angles
+
+Prior iterations already covered these categories:
+{for each angle in COVERED_ANGLES}
+- {angle}
+{end for}
+
+You MUST explore NEW angles not yet covered. Consider:
+- Concurrency & race conditions in the planned approach
+- Error recovery & rollback strategies
+- Edge cases not addressed in the plan
+- Missing integration points between components
+- Scalability assumptions
+- Security implications of the design
+- Dependency risks & version constraints
+- Observability & debugging gaps in the architecture
+- Backward compatibility concerns
+
+Focus on angles NOT in the "already covered" list above.
+If you have genuinely exhausted all angles, state 'NO_CRITICAL_MAJOR_ISSUES'.
+```
+
+**If using `exec` (new session)**:
 
 ```bash
 codex exec --skip-git-repo-check \
@@ -78,29 +142,44 @@ codex exec --skip-git-repo-check \
   --sandbox read-only \
   --full-auto \
   -C $(pwd) \
-  "Review the GSD phase plans in .planning/phases/{PHASE}-*/ for:
-   {FOCUS_PROMPT}.
-
-   Categorize findings as:
-   - CRITICAL: Safety bugs, data corruption, architectural blockers
-   - MAJOR: API inconsistencies, significant test gaps, coupling issues
-   - MINOR: Style, documentation, hygiene
-
-   Report specific file paths and line numbers.
-   If no CRITICAL or MAJOR issues found, state 'NO_CRITICAL_MAJOR_ISSUES'."
+  "<REVIEW_PROMPT>"
 ```
+
+Save the session ID from output as `CODEX_SESSION_ID` for potential future resume.
+
+**If using `resume` (continuing prior session)**:
+
+```bash
+codex resume {CODEX_SESSION_ID} --skip-git-repo-check \
+  -m gpt-5.3-codex \
+  --config model_reasoning_effort="high" \
+  --sandbox read-only \
+  --full-auto \
+  -C $(pwd) \
+  "<REVIEW_PROMPT>"
+```
+
+If `resume` fails (session expired, etc.), fall back to `exec` automatically.
 
 FOCUS_PROMPT mapping:
 - `critical`: "Critical safety issues, error handling bugs, architectural blockers"
 - `major`: "Major API inconsistencies, test coverage gaps, architectural coupling"
 - `all`: "API design consistency, error handling patterns, architecture violations, test coverage gaps"
 
-#### B. Check Early-Stop
+#### B. Check Early-Stop & Track Angles
 
 Parse Codex output:
 - If contains "NO_CRITICAL_MAJOR_ISSUES": Exit loop (early stop)
 - Count `[CRITICAL]` and `[MAJOR]` occurrences
 - If both counts are 0: Exit loop (early stop)
+
+**Track covered angles**: Extract categories Codex explored (e.g., "Architecture: coupling between X and Y", "Error handling: missing rollback") and add to `COVERED_ANGLES`.
+
+Update session state for next iteration's auto-choice:
+```python
+PREV_HAD_FIXES = True  # if planner revised plans
+PREV_ALL_CLEAN = (critical_count == 0 and major_count == 0)
+```
 
 Display findings:
 ```
@@ -206,6 +285,7 @@ Focus: all
  RALPH LOOP — Iteration 1 of 3
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+◆ Session mode: new — first iteration
 ◆ Running Codex review...
 ✓ Codex review complete
 
@@ -214,6 +294,7 @@ Focus: all
 - [CRITICAL] Stale state: phase mutation uses old variables
 
 Issues found: 2 critical, 0 major, 1 minor
+Angles covered: Safety (collision), Correctness (stale state)
 
 ◆ Spawning planner...
 ✓ Planner updated plans
@@ -225,7 +306,8 @@ Issues found: 2 critical, 0 major, 1 minor
  RALPH LOOP — Iteration 2 of 3
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-◆ Running Codex review...
+◆ Session mode: resume — verifying plan revisions from iteration 1
+◆ Running Codex review (exploring new angles)...
 ✓ Codex review complete
 
 ✓ Early stop: No critical or major issues found

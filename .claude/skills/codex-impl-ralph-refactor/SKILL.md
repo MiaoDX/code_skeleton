@@ -112,10 +112,14 @@ If no changes found, report and exit.
 
 ```python
 DISMISSED_HINTS = []       # Accumulates across iterations
+COVERED_ANGLES = []        # Categories Codex has already explored
 ITERATION = 0
 ALL_FIXES = []             # Track all fixes applied
 ALL_NITPICKS = []          # Track nitpicks for final report
 ALL_DISMISSED = []         # Track dismissed items for transparency
+PREV_HAD_FIXES = False     # Did previous iteration apply fixes?
+PREV_ALL_DISMISSED = False # Were all previous findings dismissed?
+CODEX_SESSION_ID = None    # Session ID for resume capability
 ```
 
 Display:
@@ -144,7 +148,7 @@ Display:
 
 #### A. Build Codex Review Prompt
 
-Construct the review prompt with hint injection:
+Construct the review prompt with hint injection and angle expansion:
 
 ```
 Review the following code changes for issues.
@@ -159,6 +163,8 @@ Review the following code changes for issues.
 - If no significant issues are found, state "NO_SIGNIFICANT_ISSUES"
 
 {HINT_BLOCK if DISMISSED_HINTS is non-empty}
+
+{ANGLE_EXPANSION_BLOCK if COVERED_ANGLES is non-empty}
 ```
 
 The `HINT_BLOCK` (only included when `DISMISSED_HINTS` is non-empty):
@@ -176,9 +182,49 @@ that was not considered before:
 {end for}
 ```
 
-#### B. Run Codex Review
+The `ANGLE_EXPANSION_BLOCK` (only included after iteration 1):
 
-Use Bash to run Codex CLI:
+```
+## Expand Your Review Angles
+
+Prior iterations already covered these categories:
+{for each angle in COVERED_ANGLES}
+- {angle}
+{end for}
+
+You MUST explore NEW angles not yet covered. Consider:
+- Concurrency & thread safety
+- Resource leaks (file handles, connections, memory)
+- Error recovery & partial failure states
+- API contract violations (pre/post conditions)
+- Edge cases (empty inputs, boundary values, unicode, large payloads)
+- Dependency version compatibility
+- Configuration & environment assumptions
+- Logging & observability gaps
+- Backward compatibility breaks
+- Type safety & implicit conversions
+
+Focus on angles NOT in the "already covered" list above.
+If you have genuinely exhausted all angles, state "NO_SIGNIFICANT_ISSUES".
+```
+
+#### B. Run Codex Review (Auto-Choose Resume vs New)
+
+**Session mode auto-selection** — choose `resume` or `exec` based on prior iteration:
+
+| Condition | Mode | Rationale |
+|-----------|------|-----------|
+| Iteration 1 | `exec` (new) | No prior session exists |
+| Previous iter applied fixes | `resume` | Codex needs context of what changed to verify fixes, catch regressions |
+| Previous iter all DISMISSED/NITPICK (stalling) | `exec` (new) | Fresh perspective breaks stuck patterns |
+| Every 3rd iteration | Force `exec` (new) | Diversity injection even when resume is productive |
+
+Display the choice:
+```
+◆ Session mode: {resume|new} — {reason}
+```
+
+**If using `exec` (new session)**:
 
 ```bash
 codex exec --skip-git-repo-check \
@@ -189,6 +235,22 @@ codex exec --skip-git-repo-check \
   -C $(pwd) \
   "<REVIEW_PROMPT>"
 ```
+
+Save the session ID from output as `CODEX_SESSION_ID` for potential future resume.
+
+**If using `resume` (continuing prior session)**:
+
+```bash
+codex resume {CODEX_SESSION_ID} --skip-git-repo-check \
+  -m gpt-5.3-codex \
+  --config model_reasoning_effort="high" \
+  --sandbox read-only \
+  --full-auto \
+  -C $(pwd) \
+  "<REVIEW_PROMPT>"
+```
+
+If `resume` fails (session expired, etc.), fall back to `exec` automatically.
 
 Capture the full Codex output as `CODEX_OUTPUT`.
 
@@ -210,6 +272,7 @@ This is done inline (NOT in a subagent) — Claude analyzes directly:
    - Does the project's existing patterns/conventions make this suggestion inapplicable?
 3. **Assign severity**: MUST-FIX / IMPROVE / NITPICK / DISMISSED
 4. **For DISMISSED**: Record the suggestion text and the reason for dismissal
+5. **Track covered angles**: Extract the categories Codex explored this iteration (e.g., "Security: SQL injection", "Performance: N+1 query") and add to `COVERED_ANGLES`
 
 Display triage results as a structured table:
 
@@ -283,7 +346,7 @@ ALL_FIXES.append({
 })
 ```
 
-#### G. Accumulate Hints & Loop
+#### G. Accumulate State & Loop
 
 Add DISMISSED items to `DISMISSED_HINTS`:
 ```python
@@ -292,6 +355,21 @@ for finding in dismissed_findings:
         "suggestion": finding.description,
         "reason": finding.dismissal_reason
     })
+```
+
+Update session state for next iteration's auto-choice:
+```python
+PREV_HAD_FIXES = len(fixes_applied_this_iteration) > 0
+PREV_ALL_DISMISSED = all(f.severity == "DISMISSED" for f in findings) or \
+                     all(f.severity in ("DISMISSED", "NITPICK") for f in findings)
+```
+
+Add covered angles from this iteration's findings:
+```python
+for finding in all_findings_this_iteration:
+    angle = f"{finding.category}: {finding.short_description}"
+    if angle not in COVERED_ANGLES:
+        COVERED_ANGLES.append(angle)
 ```
 
 Add NITPICKs to `ALL_NITPICKS` (for final report).
@@ -398,6 +476,7 @@ Scope: all
  REVIEW LOOP — Iteration 1 of 3
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+◆ Session mode: new — first iteration
 ◆ Running Codex review...
 ✓ Codex review complete (8 findings)
 
@@ -415,6 +494,7 @@ Scope: all
 | 8 | DISMISSED | test.py:5     | "Missing assertion" — uses pytest.raises |
 
 Summary: 2 MUST-FIX, 2 IMPROVE, 1 NITPICK, 3 DISMISSED
+Angles covered: Security (injection, session), Performance (query), Correctness (timeout, race)
 
 ◆ Fixing 4 issues (MUST-FIX + IMPROVE)...
   ✓ auth.py: SQL injection fix (commit abc1234)
@@ -428,25 +508,30 @@ Summary: 2 MUST-FIX, 2 IMPROVE, 1 NITPICK, 3 DISMISSED
  REVIEW LOOP — Iteration 2 of 3
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-◆ Running Codex review (with 3 dismissed hints)...
-✓ Codex review complete (1 finding)
+◆ Session mode: resume — verifying fixes from iteration 1
+◆ Running Codex review (with 3 dismissed hints, exploring new angles)...
+✓ Codex review complete (2 findings)
 
 ◆ Triage Results (Iteration 2):
 
-| # | Severity | File:Line   | Finding                           |
-|---|----------|-------------|-----------------------------------|
-| 1 | IMPROVE  | auth.py:45  | Parameterized query missing index |
+| # | Severity | File:Line    | Finding                                  |
+|---|----------|--------------|------------------------------------------|
+| 1 | IMPROVE  | auth.py:45   | Parameterized query missing index        |
+| 2 | IMPROVE  | cache.py:30  | Lock not released in exception path      |
 
-Summary: 0 MUST-FIX, 1 IMPROVE, 0 NITPICK, 0 DISMISSED
+Summary: 0 MUST-FIX, 2 IMPROVE, 0 NITPICK, 0 DISMISSED
+Angles covered: +Error Recovery (exception path)
 
-◆ Fixing 1 issue...
+◆ Fixing 2 issues...
   ✓ auth.py: Added query parameter index (commit 789abcd)
+  ✓ cache.py: Added finally block for lock release (commit bcd2345)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  REVIEW LOOP — Iteration 3 of 3
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-◆ Running Codex review (with 3 dismissed hints)...
+◆ Session mode: new — diversity injection (every 3rd iteration)
+◆ Running Codex review (with 3 dismissed hints, exploring new angles)...
 ✓ Codex review complete
 
 ✓ Early stop: No MUST-FIX or IMPROVE issues found
@@ -460,13 +545,18 @@ Early stopped: Yes — no actionable issues in iteration 3
 
 ## Issues by Iteration
 
-| Iter | MUST-FIX | IMPROVE | NITPICK | DISMISSED |
-|------|----------|---------|---------|-----------|
-| 1    | 2        | 2       | 1       | 3         |
-| 2    | 0        | 1       | 0       | 0         |
-| 3    | 0        | 0       | 0       | 0         |
+| Iter | Mode   | MUST-FIX | IMPROVE | NITPICK | DISMISSED |
+|------|--------|----------|---------|---------|-----------|
+| 1    | new    | 2        | 2       | 1       | 3         |
+| 2    | resume | 0        | 2       | 0       | 0         |
+| 3    | new    | 0        | 0       | 0       | 0         |
 
-## Fixes Applied (5 total)
+## Angles Explored
+
+Security (injection, session), Performance (query), Correctness (timeout, race),
+Error Recovery (exception path), Resource Leaks, Edge Cases — all clean by iter 3
+
+## Fixes Applied (6 total)
 
 | # | Iter | Severity | File       | Description               | Commit  |
 |---|------|----------|------------|---------------------------|---------|
@@ -475,6 +565,7 @@ Early stopped: Yes — no actionable issues in iteration 3
 | 3 | 1    | IMPROVE  | api.py     | Added request timeout     | 9ab0123 |
 | 4 | 1    | IMPROVE  | cache.py   | Lock around cache write   | 456cdef |
 | 5 | 2    | IMPROVE  | auth.py    | Query parameter index     | 789abcd |
+| 6 | 2    | IMPROVE  | cache.py   | Lock release in finally   | bcd2345 |
 
 ## Remaining NITPICKs (for your review)
 
