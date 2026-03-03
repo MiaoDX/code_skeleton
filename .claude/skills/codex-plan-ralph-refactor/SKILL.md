@@ -1,11 +1,11 @@
-# gsd-codex-ralph-review
+# codex-plan-ralph-refactor
 
 Review GSD phase plans with Codex and auto-refactor using Ralph Loop with early-stop detection.
 
 ## Usage
 
 ```
-/gsd-codex-ralph-review <phase-number> [--max-iterations N] [--focus critical|major|all]
+/codex-plan-ralph-refactor <phase-number> [--max-iterations N] [--focus critical|major|all]
 ```
 
 ## Parameters
@@ -19,9 +19,9 @@ Review GSD phase plans with Codex and auto-refactor using Ralph Loop with early-
 ## Examples
 
 ```
-/gsd-codex-ralph-review 38                    # Default: 3 iterations, all issues
-/gsd-codex-ralph-review 38 --max-iterations 5  # More iterations
-/gsd-codex-ralph-review 38 --focus critical    # Only critical issues
+/codex-plan-ralph-refactor 38                    # Default: 3 iterations, all issues
+/codex-plan-ralph-refactor 38 --max-iterations 5  # More iterations
+/codex-plan-ralph-refactor 38 --focus critical    # Only critical issues
 ```
 
 ## When to Use
@@ -57,7 +57,7 @@ If not found, error with available phases.
 Display:
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► CODEX RALPH REVIEW
+ CODEX PLAN RALPH REFACTOR
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Phase: {PHASE}
@@ -191,11 +191,11 @@ Consider:
 ## Example Session
 
 ```
-User: /gsd-codex-ralph-review 38
+User: /codex-plan-ralph-refactor 38
 
 Claude:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- GSD ► CODEX RALPH REVIEW
+ CODEX PLAN RALPH REFACTOR
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Phase: 38
