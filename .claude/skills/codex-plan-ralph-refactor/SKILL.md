@@ -34,6 +34,72 @@ Use this skill when:
 
 ---
 
+## Agent Strategy
+
+Maximize parallelism at every stage. The orchestrator (main Claude context) coordinates; specialist agents do the work.
+
+### Agent Roles
+
+| Role | Agent Type | When Used |
+|------|-----------|-----------|
+| **Codex Reviewer** | Bash (codex CLI) via subagent | Each angle cluster gets its own Codex call |
+| **Plan Reviser** | `general-purpose` subagent | Revises plan files to address findings |
+| **Plan Checker** | `gsd-plan-checker` subagent | Verifies revised plans meet requirements |
+
+### Parallelization Points
+
+```
+Iteration 1 (broad sweep):
+├── Codex Review: 2-3 parallel calls, each with different angle cluster
+│   ├── Agent A: Safety + Correctness + Error Handling
+│   ├── Agent B: Architecture + Coupling + Integration Points
+│   └── Agent C: Test Coverage + Edge Cases + Scalability
+├── Planner: parallel subagents if multiple PLAN.md files
+│   ├── Planner Agent 1: revise PLAN-task-A.md
+│   └── Planner Agent 2: revise PLAN-task-B.md
+└── Checker: runs after all planners complete
+
+Iteration 2+ (targeted):
+├── Single Codex call (resume or new, focused on uncovered angles)
+├── Planner: single subagent (targeted revisions)
+└── Checker: single subagent
+```
+
+### Codex Multi-Angle Strategy (Iteration 1 Only)
+
+On the first iteration, spawn **2-3 parallel subagents** instead of one broad Codex call. Each runs `codex exec` focused on a different angle cluster:
+
+```python
+# Spawn in parallel — all run concurrently
+Agent(
+    prompt="Run codex exec to review .planning/phases/{PHASE}-*/ "
+           "focusing on: Safety bugs, correctness errors, error handling. "
+           "{FOCUS_PROMPT_FRAGMENT}",
+    subagent_type="general-purpose",
+    description="Codex review: Safety+Correctness"
+)
+Agent(
+    prompt="Run codex exec to review .planning/phases/{PHASE}-*/ "
+           "focusing on: Architecture violations, component coupling, integration gaps. "
+           "{FOCUS_PROMPT_FRAGMENT}",
+    subagent_type="general-purpose",
+    description="Codex review: Architecture+Coupling"
+)
+Agent(
+    prompt="Run codex exec to review .planning/phases/{PHASE}-*/ "
+           "focusing on: Test coverage gaps, edge cases, scalability assumptions. "
+           "{FOCUS_PROMPT_FRAGMENT}",
+    subagent_type="general-purpose",
+    description="Codex review: Tests+EdgeCases"
+)
+```
+
+The orchestrator merges all findings, deduplicates, then proceeds to early-stop check.
+
+**After iteration 1**: Use a single Codex call targeting uncovered angles.
+
+---
+
 ## Workflow
 
 ### 1. Parse Arguments
@@ -75,9 +141,12 @@ Focus: {FOCUS}
 
 For each iteration:
 
-#### A. Run Codex Review (Auto-Choose Resume vs New)
+#### A. Run Codex Review (Auto-Choose Resume vs New, Multi-Angle on Iter 1)
 
-**Session mode auto-selection**:
+**Iteration 1: Multi-angle parallel review** (see Agent Strategy above).
+Spawn 2-3 parallel subagents, each running `codex exec` with a focused angle cluster. Merge all findings before proceeding to early-stop check.
+
+**Iteration 2+: Single Codex call** with session mode auto-selection:
 
 | Condition | Mode | Rationale |
 |-----------|------|-----------|
@@ -190,30 +259,46 @@ Display findings:
 Issues found: X critical, Y major, Z minor
 ```
 
-#### C. Spawn Planner (if issues remain)
+#### C. Spawn Planner(s) (if issues remain)
 
-Use Task tool to spawn planner subagent:
+**If phase has multiple PLAN.md files** — spawn parallel planner subagents, one per plan file that has findings:
 
 ```python
-Task(
+# Parallel — each planner handles its own plan file
+Agent(
+    prompt="Revise {plan_file} to address these Codex findings:\n\n{findings_for_this_file}",
+    subagent_type="general-purpose",
+    description=f"Revise {plan_file}"
+)
+Agent(
+    prompt="Revise {other_plan_file} to address these Codex findings:\n\n{findings_for_other_file}",
+    subagent_type="general-purpose",
+    description=f"Revise {other_plan_file}"
+)
+```
+
+**If phase has a single PLAN.md** — spawn one planner subagent:
+
+```python
+Agent(
     prompt="Revise Phase {PHASE} plans to address Codex findings:\n\n{CODEX_OUTPUT}",
     subagent_type="general-purpose",
     description=f"Revise Phase {PHASE} plans"
 )
 ```
 
-The planner should:
-1. Read all existing PLAN.md files
+Each planner should:
+1. Read its assigned PLAN.md file(s)
 2. Update plans to address findings (CRITICAL first, then MAJOR)
 3. Make minimal targeted changes
 4. Return "## PLANNING COMPLETE"
 
 #### D. Spawn Plan-Checker
 
-Use Task tool to spawn checker:
+Use Agent tool to spawn checker (after all planners complete):
 
 ```python
-Task(
+Agent(
     prompt="Verify Phase {PHASE} plans address the requirements",
     subagent_type="gsd-plan-checker",
     description=f"Verify Phase {PHASE} plans"

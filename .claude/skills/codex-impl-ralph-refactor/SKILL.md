@@ -55,6 +55,83 @@ Claude triages every Codex finding into one of four levels:
 
 ---
 
+## Agent Strategy
+
+Maximize parallelism at every stage. The orchestrator (main Claude context) coordinates; specialist agents do the work.
+
+### Agent Roles
+
+| Role | Agent Type | When Used |
+|------|-----------|-----------|
+| **Codex Reviewer** | Bash (codex CLI) | Each angle cluster gets its own Codex call |
+| **Triage Analyst** | `general-purpose` subagent | Evaluates a batch of findings against actual code |
+| **Fix Engineer** | `general-purpose` subagent | Applies a targeted fix + atomic commit |
+| **Verification Engineer** | `general-purpose` subagent | Confirms fix correctness after application |
+
+### Parallelization Points
+
+```
+Iteration 1 (broad sweep):
+├── Codex Review: 2-3 parallel calls, each with different angle cluster
+│   ├── Agent A: Security + Correctness
+│   ├── Agent B: Performance + Concurrency + Resource Leaks
+│   └── Agent C: Maintainability + Edge Cases + Error Recovery
+├── Triage: parallel subagents (one per Codex reviewer's findings)
+│   ├── Triage Agent A: evaluate findings from Codex A
+│   ├── Triage Agent B: evaluate findings from Codex B
+│   └── Triage Agent C: evaluate findings from Codex C
+├── Fix: parallel subagents (one per independent fix)
+│   ├── Fix Agent 1: auth.py fix
+│   ├── Fix Agent 2: session.py fix
+│   └── Fix Agent 3: api.py + cache.py fixes (same module, sequential)
+└── Verify: parallel subagents (one per fix, run while accumulating state)
+    ├── Verify Agent 1: confirm auth.py fix
+    └── Verify Agent 2: confirm session.py fix
+
+Iteration 2+ (targeted):
+├── Single Codex call (resume or new, focused on uncovered angles)
+├── Triage inline if few findings, subagent if 5+
+├── Fix: parallel subagents
+└── Verify: parallel subagents
+```
+
+### When to Use Team Agents vs Inline
+
+| Finding count | Triage approach |
+|---------------|----------------|
+| 1-4 findings | Inline — orchestrator triages directly (fast, no overhead) |
+| 5-9 findings | 2 triage subagents, split by file cluster |
+| 10+ findings | 3+ triage subagents, split by category (Security, Perf, Maintainability) |
+
+### Codex Multi-Angle Strategy (Iteration 1 Only)
+
+On the first iteration, spawn **2-3 parallel Codex reviews** instead of one broad call. Each focuses on a different angle cluster:
+
+```python
+# Spawn in parallel — all three run concurrently
+Agent(
+    prompt="<REVIEW_PROMPT focused on Security + Correctness>",
+    subagent_type="general-purpose",
+    description="Codex review: Security+Correctness"
+)
+Agent(
+    prompt="<REVIEW_PROMPT focused on Performance + Concurrency + Resources>",
+    subagent_type="general-purpose",
+    description="Codex review: Perf+Concurrency"
+)
+Agent(
+    prompt="<REVIEW_PROMPT focused on Maintainability + Edge Cases + Error Recovery>",
+    subagent_type="general-purpose",
+    description="Codex review: Maintain+EdgeCases"
+)
+```
+
+Each agent runs `codex exec` internally with its focused prompt. The orchestrator merges all findings, deduplicates, then proceeds to triage.
+
+**After iteration 1**: Use a single Codex call targeting uncovered angles (the angle expansion mechanism handles focus). Multi-angle is too expensive for diminishing returns in later iterations.
+
+---
+
 ## Workflow
 
 ### 1. Parse Arguments
@@ -208,9 +285,12 @@ Focus on angles NOT in the "already covered" list above.
 If you have genuinely exhausted all angles, state "NO_SIGNIFICANT_ISSUES".
 ```
 
-#### B. Run Codex Review (Auto-Choose Resume vs New)
+#### B. Run Codex Review (Auto-Choose Resume vs New, Multi-Angle on Iter 1)
 
-**Session mode auto-selection** — choose `resume` or `exec` based on prior iteration:
+**Iteration 1: Multi-angle parallel review** (see Agent Strategy above).
+Spawn 2-3 parallel subagents, each running `codex exec` with a focused angle cluster. Merge all findings before proceeding to triage.
+
+**Iteration 2+: Single Codex call** with session mode auto-selection:
 
 | Condition | Mode | Rationale |
 |-----------|------|-----------|
@@ -261,9 +341,11 @@ If Codex CLI fails or times out, report the error and offer to retry or skip.
 Parse `CODEX_OUTPUT`:
 - If contains `NO_SIGNIFICANT_ISSUES`: proceed to early-stop (but still go through triage to confirm)
 
-#### D. Claude Triage
+#### D. Claude Triage (Inline or Subagent Team)
 
-This is done inline (NOT in a subagent) — Claude analyzes directly:
+**Choose triage approach based on finding count** (see Agent Strategy above):
+
+**Inline (1-4 findings)** — Claude analyzes directly in main context:
 
 1. **Read referenced files**: For each file:line cited by Codex, read the actual code
 2. **Evaluate each finding**: For every Codex suggestion:
@@ -273,6 +355,34 @@ This is done inline (NOT in a subagent) — Claude analyzes directly:
 3. **Assign severity**: MUST-FIX / IMPROVE / NITPICK / DISMISSED
 4. **For DISMISSED**: Record the suggestion text and the reason for dismissal
 5. **Track covered angles**: Extract the categories Codex explored this iteration (e.g., "Security: SQL injection", "Performance: N+1 query") and add to `COVERED_ANGLES`
+
+**Subagent team (5+ findings)** — Spawn parallel triage agents:
+
+```python
+# Split findings into clusters (by file group or category)
+# Spawn one triage agent per cluster — all run in parallel
+
+Agent(
+    prompt="""You are a Triage Analyst. Evaluate these Codex findings against the actual code.
+
+For each finding:
+1. Read the cited file:line
+2. Determine if the code actually has the issue Codex claims
+3. Assign severity: MUST-FIX / IMPROVE / NITPICK / DISMISSED
+4. For DISMISSED: explain why it's a false positive
+
+Findings to evaluate:
+{cluster_findings}
+
+Return a structured table:
+| # | Severity | File:Line | Finding | Rationale |
+""",
+    subagent_type="general-purpose",
+    description="Triage: {cluster_label}"
+)
+```
+
+The orchestrator merges triage results from all agents, deduplicates, and builds the unified triage table.
 
 Display triage results as a structured table:
 
@@ -302,7 +412,7 @@ If early-stopping:
 ✓ Early stop: {reason}
 ```
 
-#### F. Fix Phase
+#### F. Fix Phase (Parallel Subagents)
 
 Determine what to fix based on `FIX_LEVEL`:
 - `must`: Fix only MUST-FIX
@@ -335,6 +445,28 @@ After fixing, create an atomic commit with message:
 **If fixes overlap** (same file, adjacent lines):
 Spawn a single subagent to handle them together to avoid conflicts.
 
+**After all fix agents complete — spawn parallel verification agents:**
+
+```python
+# One verification agent per fix, all run in parallel
+Agent(
+    prompt="""Verify the fix applied in commit {commit_hash}:
+
+Original issue: {finding_description}
+File: {file}:{line}
+
+1. Read the file at the fixed location
+2. Confirm the issue is actually resolved
+3. Check the fix didn't introduce new problems (regressions, broken imports, etc.)
+4. Return: VERIFIED / REGRESSION_FOUND / INCOMPLETE_FIX with explanation
+""",
+    subagent_type="general-purpose",
+    description="Verify fix: {short_description}"
+)
+```
+
+If any verification returns REGRESSION_FOUND or INCOMPLETE_FIX, add it to the next iteration's fix queue.
+
 Track each fix in `ALL_FIXES`:
 ```python
 ALL_FIXES.append({
@@ -342,7 +474,8 @@ ALL_FIXES.append({
     "severity": severity,
     "file": file,
     "description": description,
-    "commit": commit_hash
+    "commit": commit_hash,
+    "verified": verification_result
 })
 ```
 
