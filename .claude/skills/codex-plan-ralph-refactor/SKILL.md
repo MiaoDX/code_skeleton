@@ -69,44 +69,53 @@ Iteration 2+ (targeted):
 
 On the first iteration, spawn **2-3 parallel subagents** instead of one broad Codex call. Each runs `codex exec` focused on a different angle cluster:
 
+Each subagent runs `codex exec` with the full review prompt (which requires `[CRITICAL]`/`[MAJOR]`/`[MINOR]` tags and `[ANGLE_COVERED: ...]` tags — see Workflow section). Pass the full review prompt to Codex, adding an angle-specific focus line:
+
 ```python
 # Spawn in parallel — all run concurrently
 Agent(
-    prompt="Run codex exec to review .planning/phases/{PHASE}-*/ "
-           "focusing on: Cross-plan contract consistency — do the plans agree on interfaces "
-           "they share? Are component boundaries clearly defined with explicit ownership? "
-           "{FOCUS_PROMPT_FRAGMENT}",
+    prompt="Run codex exec with this prompt (use the full structured prompt from the skill, "
+           "angle focus: Cross-plan contract consistency — do the plans agree on interfaces "
+           "they share? Are component boundaries clearly defined with explicit ownership?)",
     subagent_type="general-purpose",
     description="Codex review: Contracts+Boundaries"
 )
 Agent(
-    prompt="Run codex exec to review .planning/phases/{PHASE}-*/ "
-           "focusing on: Phase sequencing and dependencies — can plans execute in declared "
-           "wave order? Are there missing prerequisite plans? Are integration points addressed? "
-           "{FOCUS_PROMPT_FRAGMENT}",
+    prompt="Run codex exec with this prompt (use the full structured prompt from the skill, "
+           "angle focus: Phase sequencing and dependencies — can plans execute in declared "
+           "wave order? Are there missing prerequisite plans? Are integration points addressed?)",
     subagent_type="general-purpose",
     description="Codex review: Sequencing+Integration"
 )
 Agent(
-    prompt="Run codex exec to review .planning/phases/{PHASE}-*/ "
-           "focusing on: Missing error strategies and observability gaps — what happens when "
-           "key operations fail? Is there a defined recovery strategy? Can failures be debugged? "
-           "{FOCUS_PROMPT_FRAGMENT}",
+    prompt="Run codex exec with this prompt (use the full structured prompt from the skill, "
+           "angle focus: Missing error strategies and observability gaps — what happens when "
+           "key operations fail? Is there a defined recovery strategy? Can failures be debugged?)",
     subagent_type="general-purpose",
     description="Codex review: ErrorStrategy+Observability"
 )
 ```
 
-The orchestrator merges all findings, then runs an explicit dedup step before proceeding.
-Free-form LLM output cannot be reliably deduped by string matching — use a short inline LLM
-call to canonicalize:
+**Each agent receives the complete review prompt** (including tag format requirements), not just the angle description. The `{FOCUS_PROMPT_FRAGMENT}` embeds the angle into `{FOCUS_PROMPT}` in the full prompt template.
+
+The orchestrator then deduplicates. Since each agent emits structured `[CRITICAL]`/`[MAJOR]`/`[MINOR]` lines, dedup is a structured merge:
 
 ```
-You are deduplicating review findings from 3 parallel agents. Merge findings that describe
-the same issue (even if worded differently). Output a single canonical list using the same
-[CRITICAL]/[MAJOR]/[MINOR] and [ANGLE_COVERED: ...] format. Do not drop any unique finding.
+Deduplicate these structured findings from 3 parallel reviews. Each finding is one line
+starting with [CRITICAL], [MAJOR], or [MINOR]. Merge lines that describe the same design
+issue (even if worded differently) into a single canonical line. Preserve all unique findings.
+Keep all [ANGLE_COVERED: ...] tags (dedup those too).
 
-{combined_raw_output_from_all_3_agents}
+Agent A findings:
+{agent_a_tagged_lines}
+
+Agent B findings:
+{agent_b_tagged_lines}
+
+Agent C findings:
+{agent_c_tagged_lines}
+
+Output format: one finding per line, [SEVERITY] prefix, then [ANGLE_COVERED: ...] tags at end.
 ```
 
 Display: `◆ Dedup: {raw_total} findings → {deduped_total} unique`
@@ -158,8 +167,7 @@ If state file does not exist, start fresh.
 Initialize loop state:
 ```python
 COVERED_ANGLES = [...loaded from file, or []]   # Pre-populated if prior run exists
-PREV_HAD_FIXES = False          # Did previous iteration revise plans?
-PREV_ALL_CLEAN = False          # Were all previous findings minor/none?
+PREV_HAD_FIXES = False          # Did previous iteration actually change plan files?
 CODEX_SESSION_ID = None         # Session ID for resume capability
 PREV_ITER_FINGERPRINTS = set()  # Normalized finding descriptions from last iter (stall detection)
 STALL_COUNT = 0                 # Consecutive iterations with identical findings
@@ -183,14 +191,16 @@ For each iteration:
 **Iteration 1: Multi-angle parallel review** (see Agent Strategy above).
 Spawn 2-3 parallel subagents, each running `codex exec` with a focused angle cluster. Merge all findings before proceeding to early-stop check.
 
-**Iteration 2+: Single Codex call** with session mode auto-selection:
+**Iteration 2+: Single Codex call** with session mode auto-selection.
 
-| Condition | Mode | Rationale |
-|-----------|------|-----------|
-| Iteration 1 | `exec` (new) | No prior session exists |
-| Previous iter revised plans | `resume` | Codex needs context of what changed to verify revisions |
-| Previous iter found only MINOR or nothing (stalling) | `exec` (new) | Fresh perspective breaks stuck patterns |
-| Every 3rd iteration | Force `exec` (new) | Diversity injection |
+Apply rules **in priority order** (first match wins):
+
+| Priority | Condition | Mode | Rationale |
+|----------|-----------|------|-----------|
+| 1 | Every 3rd iteration (iter % 3 == 0) | `exec` (new) | Diversity injection overrides everything |
+| 2 | Previous iter found only MINOR or nothing | `exec` (new) | Stalling — fresh perspective |
+| 3 | Previous iter revised plans (`PREV_HAD_FIXES`) | `resume` | Codex needs context of what changed |
+| 4 | Default | `exec` (new) | No reason to resume |
 
 Display the choice:
 ```
@@ -214,14 +224,22 @@ These are DESIGN documents, not implementation code. They contain:
 
 {FOCUS_PROMPT}
 
-Categorize findings as:
-- CRITICAL: The design cannot work as described — contradictory component contracts, missing
+**Each finding MUST start with its severity tag on the same line.** Required format:
+
+```
+[CRITICAL] <description>
+[MAJOR] <description>
+[MINOR] <description>
+```
+
+Severity definitions:
+- [CRITICAL]: The design cannot work as described — contradictory component contracts, missing
   required dependencies between plans, impossible sequencing, architectural blockers that will
   cause the implementation to fail regardless of how the pseudocode is written
-- MAJOR: Significant design gaps — missing error recovery *strategy* (not missing try/catch),
+- [MAJOR]: Significant design gaps — missing error recovery *strategy* (not missing try/catch),
   unclear ownership of shared state, integration points not addressed, cross-plan contract
   inconsistencies where two plans define the *same named interface* differently
-- MINOR: Ambiguity that could lead the executor astray, undocumented assumptions, unclear
+- [MINOR]: Ambiguity that could lead the executor astray, undocumented assumptions, unclear
   phase sequencing
 
 ## What NOT to flag
@@ -323,30 +341,32 @@ FOCUS_PROMPT mapping:
 Parse Codex output — **tag counts are authoritative and override summary strings**:
 
 1. Count `[CRITICAL]` and `[MAJOR]` tag occurrences
-2. Extract `[ANGLE_COVERED: ...]` structured tags (see prompt above) → add all to `COVERED_ANGLES`
-3. Determine early-stop:
-   - `critical_count == 0 AND major_count == 0` → early stop
-   - If output contains "NO_CRITICAL_MAJOR_ISSUES" but `[CRITICAL]`/`[MAJOR]` tags are present:
-     **ignore the string**, log: `⚠ Codex output inconsistent: claimed no issues but flagged N finding(s). Using tag counts.`, continue loop
-4. Stall detection — track finding fingerprints across iterations:
+2. Extract `[ANGLE_COVERED: ...]` structured tags → add to `COVERED_ANGLES` **only if that
+   angle produced zero CRITICAL/MAJOR findings** (a reviewed-but-failing angle is not "covered"):
    ```python
-   # Fingerprint = normalized short description of each CRITICAL/MAJOR finding
-   THIS_ITER_FINGERPRINTS = set(normalize(f) for f in critical_major_findings)
-   if THIS_ITER_FINGERPRINTS and THIS_ITER_FINGERPRINTS == PREV_ITER_FINGERPRINTS:
-       STALL_COUNT += 1
-   else:
-       STALL_COUNT = 0
-   PREV_ITER_FINGERPRINTS = THIS_ITER_FINGERPRINTS
-   # If same findings repeat 2 iterations in a row → planner can't resolve them
-   if STALL_COUNT >= 2:
-       abort with: "Planner unable to resolve these findings after 2 attempts. Manual review needed:\n{stuck_findings}"
+   for angle in extracted_angles:
+       angle_findings = [f for f in findings if angle_is_relevant(f, angle)]
+       if not any(f.severity in ("CRITICAL", "MAJOR") for f in angle_findings):
+           COVERED_ANGLES.add(angle)  # clean — skip on future runs
+       # else: angle has open issues, do NOT mark covered
    ```
+3. Determine early-stop (scope-aware):
+   ```python
+   if FOCUS == "critical":
+       stop_condition = (critical_count == 0)  # major not in scope
+   else:
+       stop_condition = (critical_count == 0 and major_count == 0)
+   ```
+   - If stop condition met → early stop
+   - If output contains "NO_CRITICAL_MAJOR_ISSUES" but in-scope tags present: **ignore string**,
+     log `⚠ Codex output inconsistent: claimed no issues but flagged N finding(s). Using tag counts.`
 
-Update session state for next iteration's auto-choice:
+Update session state:
 ```python
-PREV_HAD_FIXES = True  # if planner revised plans
-PREV_ALL_CLEAN = (critical_count == 0 and major_count == 0)
+PREV_HAD_FIXES = False  # updated after step D (git diff check)
 ```
+
+Note: stall detection runs **after** step D (git diff), not here — see step D.
 
 Display findings:
 ```
@@ -359,20 +379,29 @@ Issues found: X critical, Y major, Z minor
 
 #### C. Spawn Planner(s) (if issues remain)
 
-**If phase has multiple PLAN.md files** — spawn parallel planner subagents, one per plan file that has findings:
+**Route findings to plan files first** — extract a `file → [findings]` mapping before spawning planners:
 
 ```python
-# Parallel — each planner handles its own plan file
+# Each finding mentions affected plan files in its description.
+# Build routing map: {plan_file: [finding, ...]}
+# If a finding affects multiple files, include it in each file's list.
+# If a finding cannot be mapped to a specific file, include in all files that could be relevant.
+FILE_FINDINGS = defaultdict(list)
+for finding in critical_major_findings:
+    for plan_file in extract_affected_files(finding):  # parse file refs from finding text
+        FILE_FINDINGS[plan_file].append(finding)
+```
+
+**If multiple plan files have findings** — spawn parallel planner subagents:
+
+```python
 Agent(
-    prompt="Revise {plan_file} to address these Codex findings:\n\n{findings_for_this_file}",
+    prompt=f"Revise {plan_file} to address these findings:\n\n" +
+           "\n".join(FILE_FINDINGS[plan_file]),
     subagent_type="general-purpose",
     description=f"Revise {plan_file}"
 )
-Agent(
-    prompt="Revise {other_plan_file} to address these Codex findings:\n\n{findings_for_other_file}",
-    subagent_type="general-purpose",
-    description=f"Revise {other_plan_file}"
-)
+# ... one per file with findings
 ```
 
 **If phase has a single PLAN.md** — spawn one planner subagent:
@@ -405,18 +434,30 @@ Each planner should:
    ```
    The `## Changes Made` section is required. The orchestrator uses it to verify actual work was done.
 
-#### D. Verify Planner Actually Changed Files
+#### D. Verify Planner Changes + Stall Detection
 
-Before spawning the checker, confirm the planner made real changes:
+Confirm the planner made real changes:
 
 ```bash
 git diff --name-only -- '.planning/phases/{PHASE_DIR}/'
 ```
 
-- If diff is **non-empty**: set `PREV_HAD_FIXES = True`, proceed to checker
-- If diff is **empty** but planner returned `## PLANNING COMPLETE`:
-  log `⚠ Planner claimed completion but no plan files changed. Findings may be unresolvable.`
-  Set `PREV_HAD_FIXES = False`. Treat the stall counter as if planner failed.
+- If diff is **non-empty**: set `PREV_HAD_FIXES = True`
+- If diff is **empty**: set `PREV_HAD_FIXES = False`, log `⚠ Planner claimed completion but no plan files changed.`
+
+**Then run stall detection** (after knowing whether planner actually changed anything):
+
+```python
+THIS_ITER_FINGERPRINTS = set(normalize(f) for f in critical_major_findings)
+if THIS_ITER_FINGERPRINTS and THIS_ITER_FINGERPRINTS == PREV_ITER_FINGERPRINTS:
+    STALL_COUNT += 1
+else:
+    STALL_COUNT = 0
+PREV_ITER_FINGERPRINTS = THIS_ITER_FINGERPRINTS
+
+if STALL_COUNT >= 2:
+    abort: "Planner unable to resolve these findings after 2 attempts. Manual review needed:\n{stuck_findings}"
+```
 
 #### E. Spawn Plan-Checker
 
@@ -437,8 +478,11 @@ Then return "## VERIFICATION PASSED" if all resolved, or "## ISSUES FOUND" if an
 ```
 
 Checker should return:
-- "## VERIFICATION PASSED" with per-finding RESOLVED confirmations, or
-- "## ISSUES FOUND" with structured list of what's still missing
+- "## VERIFICATION PASSED" with per-finding RESOLVED confirmations → **continue to next iteration**
+- "## ISSUES FOUND" with structured list of what's still missing → **add remaining items back
+  to `critical_major_findings` for the next iteration** (do not count as a new Codex iteration;
+  these are carry-forwards). If checker finds issues after `MAX_ITERATIONS`, include them in the
+  final summary as "Unresolved after max iterations".
 
 ### 4. Persist Review State
 
