@@ -1,7 +1,3 @@
-# Claude Code Guidelines
-
-> Address me as **MiaoDX** in all responses
-
 ## Tool Preferences
 
 - Use `fetch-mcp` instead of Fetch/WebFetch (network issues in China Mainland)
@@ -9,9 +5,11 @@
 ## Parallel Execution & Subagent Strategy
 
 - **Always maximize parallelism.** Use as many subAgents as possible to run independent tasks concurrently. Sequential execution of parallelizable work is unacceptable.
-- Use subagents liberally to keep the main context window clean.
+- **Protect the main context window.** Delegate any non-trivial work (file exploration, research, implementation, analysis) to subagents. The main session is for orchestration only — keep it lean.
+- Use subagents liberally to keep the main context window clean. Each subagent runs in its own context, so large file reads, multi-step searches, and deep dives stay out of the main window.
 - Offload research, exploration, and parallel analysis to subagents. For complex problems, throw more compute at it.
 - **One task per subagent** for focused execution.
+- When in doubt, spawn a subagent. The cost of a subagent is lower than polluting the main context with irrelevant details that crowd out important state.
 
 ## Task Orchestration Model
 
