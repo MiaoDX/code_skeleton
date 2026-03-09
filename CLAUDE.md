@@ -11,6 +11,12 @@
 - **One task per subagent** for focused execution.
 - When in doubt, spawn a subagent. The cost of a subagent is lower than polluting the main context with irrelevant details that crowd out important state.
 
+**Subagent Model Selection** — Don't default all subagents to Opus. Match model to task complexity:
+- **Opus**: Architecture decisions, complex refactors, nuanced code review, multi-file design work, ambiguous problems requiring deep reasoning.
+- **Sonnet**: File exploration, grep/glob searches, straightforward implementations, simple code edits, running tests, formatting, mechanical transformations, well-scoped bug fixes.
+- Rule of thumb: if the task has a clear, known solution — use Sonnet. If it requires judgment, creativity, or handling ambiguity — use Opus.
+- Running all subagents on Opus in parallel is slow and expensive. Be deliberate.
+
 ## Task Orchestration Model
 
 Operate with a virtual engineering organization structure:
