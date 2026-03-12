@@ -5,7 +5,7 @@ Review implemented code with Codex and iterative Ralph Loop — Claude triages f
 ## Usage
 
 ```
-/codex-impl-ralph-refactor <phase-number|git-ref> [--max-iterations N] [--fix-level must|improve|all] [--scope path/]
+/codex-impl-ralph-refactor <phase-number|git-ref> [mify] [--max-iterations N] [--fix-level must|improve|all] [--scope path/]
 ```
 
 ## Parameters
@@ -13,6 +13,7 @@ Review implemented code with Codex and iterative Ralph Loop — Claude triages f
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `phase-number` or `git-ref` | (required) | GSD phase number (e.g., 38) or git ref (e.g., `main`, `abc1234`) |
+| `mify` | (optional) | Use mify provider — auto-prepends `azure_openai/` to model name |
 | `--max-iterations` | 3 | Maximum review-triage-fix loop iterations |
 | `--fix-level` | improve | What to auto-fix: `must` (MUST-FIX only), `improve` (MUST-FIX + IMPROVE), `all` (everything including NITPICK) |
 | `--scope` | (none) | Optional path filter to restrict review (e.g., `src/auth/`) |
@@ -21,17 +22,18 @@ Review implemented code with Codex and iterative Ralph Loop — Claude triages f
 
 ```
 /codex-impl-ralph-refactor 42                              # Review phase 42 implementation
+/codex-impl-ralph-refactor 42 mify                          # Use mify provider
 /codex-impl-ralph-refactor 42 --max-iterations 5            # More iterations for thorough review
-/codex-impl-ralph-refactor main --scope src/core/            # Review changes since main, scoped to src/core/
+/codex-impl-ralph-refactor main mify --scope src/core/       # Mify + scoped review
 /codex-impl-ralph-refactor abc1234 --fix-level must          # Only auto-fix security/correctness bugs
-/codex-impl-ralph-refactor 38 --fix-level all                # Auto-fix everything including nitpicks
+/codex-impl-ralph-refactor 38 mify --fix-level all           # Mify + auto-fix everything
 ```
 
 ## When to Use
 
 Use this skill when:
 - A GSD phase has been executed and you want to review the **implemented code** (not plans)
-- You want Codex (gpt-5.3-codex, high reasoning) to find bugs in code changes
+- You want Codex (gpt-5.3-codex, high reasoning) to find bugs in code changes (use `mify` arg for mify provider)
 - You want Claude to triage findings (dismiss false positives, assign severity)
 - You want automatic fixing of real issues with iterative convergence
 - You want a feedback loop that prevents Codex from repeating dismissed suggestions
@@ -138,13 +140,28 @@ Each agent runs `codex exec` internally with its focused prompt. The orchestrato
 
 Extract from user command:
 - `TARGET`: Phase number or git ref (required)
+- `PROVIDER`: If the word `mify` appears as a positional arg, set `PROVIDER = "mify"`. Default: `"default"`
 - `MAX_ITERATIONS`: Default 3, override with `--max-iterations N`
 - `FIX_LEVEL`: Default "improve", choices: must, improve, all
 - `SCOPE`: Optional path filter
 
-Determine target type:
-- If numeric: treat as GSD phase number
-- Otherwise: treat as git ref
+Determine target type (parse in this order):
+1. If the word is exactly `mify`: treat as PROVIDER, not target
+2. If numeric: treat as GSD phase number
+3. Otherwise: treat as git ref
+
+#### Resolve Model Name
+
+```python
+BASE_MODEL = "gpt-5.3-codex"
+
+if PROVIDER == "mify":
+    CODEX_MODEL = f"azure_openai/{BASE_MODEL}"
+else:
+    CODEX_MODEL = BASE_MODEL
+```
+
+All `codex exec` and `codex resume` commands below use `{CODEX_MODEL}` instead of the hardcoded model name. No `OPENAI_BASE_URL` override is needed — `~/.codex/config.toml` already defines the mify provider with its `base_url`.
 
 ### 2. Collect Code Changes
 
@@ -206,6 +223,7 @@ Display:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Target: {TARGET} ({type: phase|git-ref})
+Provider: {PROVIDER} (model: {CODEX_MODEL})
 Changed files: {N}
 Max Iterations: {MAX_ITERATIONS}
 Fix Level: {FIX_LEVEL}
@@ -308,7 +326,7 @@ Display the choice:
 
 ```bash
 codex exec --skip-git-repo-check \
-  -m gpt-5.3-codex \
+  -m {CODEX_MODEL} \
   --config model_reasoning_effort="high" \
   --sandbox read-only \
   --full-auto \
@@ -322,7 +340,7 @@ Save the session ID from output as `CODEX_SESSION_ID` for potential future resum
 
 ```bash
 codex resume {CODEX_SESSION_ID} --skip-git-repo-check \
-  -m gpt-5.3-codex \
+  -m {CODEX_MODEL} \
   --config model_reasoning_effort="high" \
   --sandbox read-only \
   --full-auto \
@@ -600,6 +618,7 @@ Claude:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Target: Phase 42
+Provider: default (model: gpt-5.3-codex)
 Changed files: 12
 Max Iterations: 3
 Fix Level: improve

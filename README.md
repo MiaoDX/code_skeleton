@@ -57,8 +57,9 @@ Reusable skills that extend Claude's capabilities:
 |-------|-------------|
 | `gemini` | Delegate tasks to Gemini CLI — analysis, refactoring, editing |
 | `codex` | Delegate tasks to Codex CLI — code review, automated edits |
-| `codex-plan-ralph-refactor` | Review a GSD phase's **plans** with Codex + iterative fix loop |
-| `codex-impl-ralph-refactor` | Review **implemented code** with Codex + triage and auto-fix loop |
+| `codex-mify` | Codex via mify provider — auto-prepends `azure_openai/` model prefix |
+| `codex-plan-ralph-refactor` | Review a GSD phase's **plans** with Codex + iterative fix loop (supports `mify` arg) |
+| `codex-impl-ralph-refactor` | Review **implemented code** with Codex + triage and auto-fix loop (supports `mify` arg) |
 | `doc-keeper` | Audit architecture docs for drift; update stale claims against code |
 
 #### Ralph Loop Skills

@@ -5,7 +5,7 @@ Review GSD phase plans with Codex and auto-refactor using Ralph Loop with early-
 ## Usage
 
 ```
-/codex-plan-ralph-refactor <phase-number> [--max-iterations N] [--focus critical|major|all]
+/codex-plan-ralph-refactor <phase-number> [mify] [--max-iterations N] [--focus critical|major|all]
 ```
 
 ## Parameters
@@ -13,6 +13,7 @@ Review GSD phase plans with Codex and auto-refactor using Ralph Loop with early-
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `phase-number` | (required) | Phase to review (e.g., 38) |
+| `mify` | (optional) | Use mify provider — auto-prepends `azure_openai/` to model name |
 | `--max-iterations` | 3 | Maximum Ralph loop iterations |
 | `--focus` | all | Issue severity to focus on |
 
@@ -20,15 +21,16 @@ Review GSD phase plans with Codex and auto-refactor using Ralph Loop with early-
 
 ```
 /codex-plan-ralph-refactor 38                    # Default: 3 iterations, all issues
+/codex-plan-ralph-refactor 38 mify               # Use mify provider
 /codex-plan-ralph-refactor 38 --max-iterations 5  # More iterations
-/codex-plan-ralph-refactor 38 --focus critical    # Only critical issues
+/codex-plan-ralph-refactor 38 mify --focus critical # Mify + critical only
 ```
 
 ## When to Use
 
 Use this skill when:
 - You have existing GSD phase plans that need review
-- You want Codex (gpt-5.3-codex, high reasoning) to find issues
+- You want Codex (gpt-5.3-codex, high reasoning) to find issues (use `mify` arg for mify provider)
 - You want automatic plan refactoring via Ralph Loop
 - You want early-stop when no critical/major issues remain
 
@@ -130,8 +132,22 @@ Display: `◆ Dedup: {raw_total} findings → {deduped_total} unique`
 
 Extract from user command:
 - `PHASE`: Phase number (required)
+- `PROVIDER`: If the word `mify` appears as a positional arg, set `PROVIDER = "mify"`. Default: `"default"`
 - `MAX_ITERATIONS`: Default 3, override with `--max-iterations N`
 - `FOCUS`: Default "all", choices: critical, major, all
+
+#### Resolve Model Name
+
+```python
+BASE_MODEL = "gpt-5.3-codex"
+
+if PROVIDER == "mify":
+    CODEX_MODEL = f"azure_openai/{BASE_MODEL}"
+else:
+    CODEX_MODEL = BASE_MODEL
+```
+
+All `codex exec` and `codex resume` commands below use `{CODEX_MODEL}` instead of the hardcoded model name. No `OPENAI_BASE_URL` override is needed — `~/.codex/config.toml` already defines the mify provider with its `base_url`.
 
 ### 2. Validate Phase
 
@@ -180,6 +196,7 @@ Display:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Phase: {PHASE}
+Provider: {PROVIDER} (model: {CODEX_MODEL})
 Max Iterations: {MAX_ITERATIONS}
 Focus: {FOCUS}
 ```
@@ -302,7 +319,7 @@ If you have genuinely exhausted all design angles, state 'NO_CRITICAL_MAJOR_ISSU
 
 ```bash
 codex exec --skip-git-repo-check \
-  -m gpt-5.3-codex \
+  -m {CODEX_MODEL} \
   --config model_reasoning_effort="high" \
   --sandbox read-only \
   --full-auto \
@@ -316,7 +333,7 @@ Save the session ID from output as `CODEX_SESSION_ID` for potential future resum
 
 ```bash
 codex resume {CODEX_SESSION_ID} --skip-git-repo-check \
-  -m gpt-5.3-codex \
+  -m {CODEX_MODEL} \
   --config model_reasoning_effort="high" \
   --sandbox read-only \
   --full-auto \
@@ -592,6 +609,7 @@ Claude:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Phase: 38
+Provider: default (model: gpt-5.3-codex)
 Max Iterations: 3
 Focus: all
 
@@ -650,6 +668,7 @@ User: /codex-plan-ralph-refactor 38
   Angles: Cross-plan contracts, Error recovery strategy, Phase sequencing
 
 Phase: 38
+Provider: default (model: gpt-5.3-codex)
 Max Iterations: 3
 Focus: all
 
