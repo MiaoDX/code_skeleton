@@ -30,7 +30,7 @@ Review GSD phase plans with Codex and auto-refactor using Ralph Loop with early-
 
 Use this skill when:
 - You have existing GSD phase plans that need review
-- You want Codex (gpt-5.3-codex, high reasoning) to find issues (use `mify` arg for mify provider)
+- You want Codex (gpt-5.4 / gpt-5.4-pro, high reasoning) to find issues (use `mify` arg for mify provider)
 - You want automatic plan refactoring via Ralph Loop
 - You want early-stop when no critical/major issues remain
 
@@ -139,7 +139,7 @@ Extract from user command:
 #### Resolve Model Name
 
 ```python
-BASE_MODEL = "gpt-5.3-codex"
+BASE_MODEL = "gpt-5.4"
 
 if PROVIDER == "mify":
     CODEX_MODEL = f"azure_openai/{BASE_MODEL}"
@@ -609,7 +609,7 @@ Claude:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Phase: 38
-Provider: default (model: gpt-5.3-codex)
+Provider: default (model: gpt-5.4)
 Max Iterations: 3
 Focus: all
 
@@ -668,7 +668,7 @@ User: /codex-plan-ralph-refactor 38
   Angles: Cross-plan contracts, Error recovery strategy, Phase sequencing
 
 Phase: 38
-Provider: default (model: gpt-5.3-codex)
+Provider: default (model: gpt-5.4)
 Max Iterations: 3
 Focus: all
 

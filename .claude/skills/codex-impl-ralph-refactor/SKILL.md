@@ -33,7 +33,7 @@ Review implemented code with Codex and iterative Ralph Loop — Claude triages f
 
 Use this skill when:
 - A GSD phase has been executed and you want to review the **implemented code** (not plans)
-- You want Codex (gpt-5.3-codex, high reasoning) to find bugs in code changes (use `mify` arg for mify provider)
+- You want Codex (gpt-5.4 / gpt-5.4-pro, high reasoning) to find bugs in code changes (use `mify` arg for mify provider)
 - You want Claude to triage findings (dismiss false positives, assign severity)
 - You want automatic fixing of real issues with iterative convergence
 - You want a feedback loop that prevents Codex from repeating dismissed suggestions
@@ -153,7 +153,7 @@ Determine target type (parse in this order):
 #### Resolve Model Name
 
 ```python
-BASE_MODEL = "gpt-5.3-codex"
+BASE_MODEL = "gpt-5.4"
 
 if PROVIDER == "mify":
     CODEX_MODEL = f"azure_openai/{BASE_MODEL}"
@@ -618,7 +618,7 @@ Claude:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Target: Phase 42
-Provider: default (model: gpt-5.3-codex)
+Provider: default (model: gpt-5.4)
 Changed files: 12
 Max Iterations: 3
 Fix Level: improve
