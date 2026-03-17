@@ -16,6 +16,7 @@ claude-fetch-setup
 # ─── GSD workflow ───────────────────────────────
 section "GSD workflow"
 npx -y get-shit-done-cc --claude --global
+npx -y get-shit-done-cc --codex --global
 
 # ─── Global CLI tools ──────────────────────────
 section "Global CLI tools"
