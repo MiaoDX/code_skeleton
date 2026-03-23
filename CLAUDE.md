@@ -54,6 +54,9 @@ Leverage this structure to parallelize research, implementation, review, and tes
 - Remote execution: Don't run heavy simulations; **NEVER remove folders**
 - Git: GSD creates atomic commits; read files before writing; never amend unless asked
 
+**Testing**
+- **Real tests, not stub theater** — UTs must align with actual running scenarios and settings. Minimize stubs/mocks; prefer real dependencies and real data flows. Only stub truly external/expensive operations (network calls, hardware). If UTs pass but E2E fails, the UTs are misleading and do harm. The bar: "if these UTs pass, would I trust E2E works?"
+
 **Anti-Patterns to Avoid**
 - **NO `hasattr`/`getattr` for known types** — Use direct attribute access. These patterns hide bugs by returning None/default instead of raising AttributeError. If a field might not exist, the type design is wrong.
 
