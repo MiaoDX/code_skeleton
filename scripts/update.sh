@@ -2,39 +2,88 @@
 set -e
 
 section() { echo ""; echo "══ $1 ══"; }
+LOGDIR=$(mktemp -d)
+trap 'rm -rf "$LOGDIR"' EXIT
 
-# ─── Claude Code ────────────────────────────────
-section "Claude Code"
-command -v claude &>/dev/null || curl -fsSL https://claude.ai/install.sh | bash
-claude update
+# Run a task in the background, capturing output to a log file.
+# Usage: bg_task <name> <command...>
+bg_task() {
+    local name="$1"; shift
+    "$@" &>"$LOGDIR/$name.log" &
+    echo $!
+}
 
-# ─── MCP: fetch ─────────────────────────────────
-section "MCP: fetch"
-npm install -g claude-fetch-setup --silent 2>/dev/null
-claude-fetch-setup
+# Wait for a pid and print its captured output under a section header.
+await_task() {
+    local name="$1" pid="$2"
+    wait "$pid" 2>/dev/null || true
+    section "$name"
+    cat "$LOGDIR/$name.log"
+}
 
-# ─── GSD workflow ───────────────────────────────
-section "GSD workflow"
-npx -y get-shit-done-cc --claude --global
-npx -y get-shit-done-cc --codex --global
+# ── Phase 1: independent tasks in parallel ───────────────────────
 
-# ─── Global CLI tools ──────────────────────────
-section "Global CLI tools"
-npm install -g --silent @google/gemini-cli @openai/codex happy-coder opencode-ai@latest
-echo "  ✓ gemini-cli, codex, happy-coder, opencode-ai"
+pid_claude=$(bg_task "Claude Code" bash -c '
+    # npm is faster in China (mirrors) than `claude update` (Anthropic CDN).
+    npm install -g @anthropic-ai/claude-code 2>&1 | tail -1
+    echo "  ✓ claude $(claude --version 2>/dev/null)"
+')
 
-# ─── Claude Code Plugins ────────────────────────
+pid_fetch=$(bg_task "MCP: fetch" bash -c '
+    npm install -g claude-fetch-setup 2>&1 | tail -1
+    claude-fetch-setup 2>&1 || true
+    echo "  ✓ claude-fetch-setup"
+')
+
+pid_gsd=$(bg_task "GSD workflow" bash -c '
+    npx -y get-shit-done-cc --claude --global 2>&1 | tail -2 &
+    npx -y get-shit-done-cc --codex --global 2>&1 | tail -2 &
+    wait
+    echo "  ✓ gsd (claude + codex)"
+')
+
+pid_cli=$(bg_task "Global CLI tools" bash -c '
+    npm install -g @google/gemini-cli @openai/codex happy-coder opencode-ai@latest 2>&1 | tail -1
+    echo "  ✓ gemini-cli, codex, happy-coder, opencode-ai"
+')
+
+# Skills: 3 agents × 2 sources = 6 calls, all independent
+skills_pids=()
+for agent in claude-code codex gemini-cli; do
+    pid=$(bg_task "skills-anthro-$agent" bash -c "
+        npx -y skills add anthropics/skills -a '$agent' -g -y \
+            --skill skill-creator --skill mcp-builder --skill pdf --skill xlsx --skill docx \
+            2>&1 | grep -E '✓|Done' || true
+    ")
+    skills_pids+=("skills-anthro-$agent:$pid")
+
+    pid=$(bg_task "skills-codex-$agent" bash -c "
+        npx -y skills add skills-directory/skill-codex -a '$agent' -g -y \
+            2>&1 | grep -E '✓|Done' || true
+    ")
+    skills_pids+=("skills-codex-$agent:$pid")
+done
+
+# ── Collect results ──────────────────────────────────────────────
+
+await_task "Claude Code" "$pid_claude"
+
+# Plugin depends on claude being updated
 section "Claude Code Plugins"
 claude plugin update ralph-wiggum@claude-code-plugins 2>/dev/null || \
     claude plugin install ralph-wiggum@claude-code-plugins 2>/dev/null || true
 echo "  ✓ ralph-wiggum"
 
-# ─── Skills (Claude Code, Codex CLI, Gemini CLI) ───────────────
+await_task "MCP: fetch"      "$pid_fetch"
+await_task "GSD workflow"     "$pid_gsd"
+await_task "Global CLI tools" "$pid_cli"
+
 section "Skills"
-# Note: Claude Code's agent name is "claude-code", not "claude"
-for agent in claude-code codex gemini-cli; do
-    npx -y skills add anthropics/skills -a "$agent" -g -y --skill skill-creator --skill mcp-builder --skill pdf --skill xlsx --skill docx 2>&1 | grep -E "✓|Done" || true
-    npx -y skills add skills-directory/skill-codex -a "$agent" -g -y 2>&1 | grep -E "✓|Done" || true
+for entry in "${skills_pids[@]}"; do
+    name="${entry%%:*}"
+    pid="${entry##*:}"
+    wait "$pid" 2>/dev/null || true
+    cat "$LOGDIR/$name.log" 2>/dev/null
 done
 npx -y skills ls -g
 
