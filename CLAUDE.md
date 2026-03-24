@@ -56,6 +56,7 @@ Leverage this structure to parallelize research, implementation, review, and tes
 
 **Testing**
 - **Real tests, not stub theater** — UTs must align with actual running scenarios and settings. Minimize stubs/mocks; prefer real dependencies and real data flows. Only stub truly external/expensive operations (network calls, hardware). If UTs pass but E2E fails, the UTs are misleading and do harm. The bar: "if these UTs pass, would I trust E2E works?"
+- **Integrate visualization tests when possible** — Logs miss things that visual inspection catches instantly (wrong transforms, flipped axes, clipping, silent geometry errors). When the project supports it, add or suggest vis-based validation alongside numeric UTs. For robotics: IsaacLab, MuJoCo viewer, Meshcat, Rerun, etc. Vis tests don't replace UTs — they complement them by exposing issues that pure log/numeric checks are blind to.
 
 **Anti-Patterns to Avoid**
 - **NO `hasattr`/`getattr` for known types** — Use direct attribute access. These patterns hide bugs by returning None/default instead of raising AttributeError. If a field might not exist, the type design is wrong.
