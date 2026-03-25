@@ -1,5 +1,5 @@
 [project]
-name = "ai-agent-toolkit"
+name = "claude-devkit"
 version = "0.2.0"
 description = "Best practices and tools for AI coding agents"
 requires-python = ">=3.12"

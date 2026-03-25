@@ -1,131 +1,140 @@
-# 🧠 AI Agent Toolkit
+# claude-devkit
 
-> Best practices for coding with AI agents — Claude Code, Gemini CLI, Codex, and friends.
+**One config. Every project. All your AI coding agents in sync.**
 
-Bring consistency, speed, and real patterns to every project — without copy-pasting configs.
+Claude Code + Codex + Gemini CLI — shared guidelines, skills, and workflows via symlinks. Update once, propagate everywhere.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
 
-## ⚡ 30-Second Setup
+## 30-Second Setup
 
 ```bash
 # Clone once
-git clone https://github.com/MiaoDX/code_skeleton.git ~/code_skeleton
+git clone https://github.com/MiaoDX/claude-devkit.git ~/claude-devkit
 
-# In any project
-~/code_skeleton/scripts/setup.sh
+# In any project directory
+~/claude-devkit/scripts/setup.sh
 ```
 
-Your project now has shared guidelines, commands, and skills — all via symlinks. No drift.
-
----
-
-## 📦 What You Get
-
-### 📋 Guidelines
-
-Core principles baked into `CLAUDE.md` (symlinked as `AGENTS.md` and `GEMINI.md`):
-
-| Principle | In Practice |
-|-----------|-------------|
-| **Simplicity First** | Minimal changes, no premature abstractions |
-| **Root Cause** | Fix causes, not symptoms |
-| **Challenge First** | Question assumptions before implementing |
-| **Parallel Execution** | Subagents for everything — protect the main context |
-
----
-
-### 🛠 Commands
-
-Slash commands available in Claude Code:
-
-| Command | What it does |
-|---------|--------------|
-| `/gsd_squash` | Squash noisy GSD commits into a clean, logical git history |
-| `/gsd_status [N]` | Show status of last N GSD phases and quick tasks |
-
-> **Tip:** For second opinions, use `/gemini` or `/codex` directly — they each spawn a full
-> agent session with their respective CLIs, which is more flexible than a wrapper command.
-
----
-
-### 🎯 Skills
-
-Reusable skills that extend Claude's capabilities:
-
-| Skill | When to use |
-|-------|-------------|
-| `gemini` | Delegate tasks to Gemini CLI — analysis, refactoring, editing |
-| `codex` | Delegate tasks to Codex CLI — code review, automated edits |
-| `codex-mify` | Codex via mify provider — auto-prepends `azure_openai/` model prefix |
-| `codex-plan-ralph-refactor` | Review a GSD phase's **plans** with Codex + iterative fix loop (supports `mify` arg) |
-| `codex-impl-ralph-refactor` | Review **implemented code** with Codex + triage and auto-fix loop (supports `mify` arg) |
-| `doc-keeper` | Audit architecture docs for drift; update stale claims against code |
-
-#### Ralph Loop Skills
-
-The two `codex-*-ralph-refactor` skills use a review → fix → verify loop that:
-- Runs **parallel Codex agents** across multiple review angles
-- Auto-routes findings to the right plan/code files
-- Stops early once all critical issues are resolved
-- Persists state so a fresh session picks up where the last one left off
+Done. Your project now has shared guidelines, commands, and skills — all symlinked. Zero drift across projects.
 
 ```bash
-# Review plans before executing a phase
+# Install all AI CLI tools (Claude Code, Gemini, Codex, GSD, MCPs)
+~/claude-devkit/scripts/update.sh
+```
+
+---
+
+## What's Inside
+
+### Unified Guidelines (`CLAUDE.md`)
+
+One file, symlinked as `AGENTS.md` and `GEMINI.md` — every AI tool reads the same rules:
+
+- **Parallel-first execution** — subagents for everything, protect the main context window
+- **Model-matched subagents** — Opus for judgment, Sonnet for mechanical work
+- **Real tests, not stub theater** — UTs must predict E2E success, not just pass
+- **Vis-based validation** — complement numeric tests with IsaacLab, MuJoCo, Meshcat, Rerun
+- **Core principles** — Simplicity First, Root Cause, Chesterton's Fence, Fail Fast, Demand Elegance
+
+### Multi-Agent Skills
+
+Skills that teach Claude Code to orchestrate other AI tools:
+
+| Skill | What it does |
+|-------|-------------|
+| **gemini** | Delegate tasks to Gemini CLI — analysis, refactoring, code review |
+| **codex** / **codex-mify** | Delegate tasks to Codex CLI (with optional Azure OpenAI proxy) |
+| **doc-keeper** | Audit architecture docs for drift; auto-update stale claims |
+
+### The Ralph Loop
+
+Iterative `review -> triage -> fix -> verify` cycle across AI agents:
+
+| Skill | Reviews | Reviewer |
+|-------|---------|----------|
+| `codex-plan-ralph-refactor` | GSD phase plans | Codex |
+| `codex-impl-ralph-refactor` | Implemented code | Codex |
+| `agent-teams-plan-ralph-refactor` | GSD phase plans | Claude agents |
+| `agent-teams-impl-ralph-refactor` | Implemented code | Claude agents |
+
+Each variant runs parallel multi-angle review, auto-routes findings to the right files, persists state across sessions, and stops when issues converge to zero.
+
+```bash
+# Review plans before executing
 /codex-plan-ralph-refactor 38
 
-# Review code after a phase completes
+# Review code after implementation
 /codex-impl-ralph-refactor 42 --fix-level must
 ```
 
----
+### Slash Commands
 
-### 🔧 Scripts
+| Command | What it does |
+|---------|-------------|
+| `/gsd_squash` | Squash noisy commits into clean, logical git history |
+| `/gsd_status [N]` | Show status of last N GSD phases |
+| 55+ GSD commands | Full project lifecycle — plan, execute, verify, ship |
+
+### Scripts
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/setup.sh` | Symlink configs into your project |
-| `scripts/update.sh` | Update all AI CLI tools (Claude, Gemini, Codex, GSD, MCPs) |
-| `scripts/convert-docs.sh` | Convert code/docs → LLM-ready markdown for context |
+| `setup.sh` | Symlink configs into any project |
+| `update.sh` | Install/update all AI CLI tools in parallel |
+| `convert-docs.sh` | Convert code/docs to LLM-ready markdown |
 
 ---
 
-## 🗂 Structure
+## How It Works
 
 ```
-.
-├── CLAUDE.md              # Main guidelines (source of truth)
-├── AGENTS.md → CLAUDE.md  # Shared across agents
-├── GEMINI.md → CLAUDE.md
+claude-devkit/                    Your Project/
+├── CLAUDE.md ──────symlink────→ CLAUDE.md
+├── AGENTS.md ──────symlink────→ AGENTS.md      (Codex reads this)
+├── GEMINI.md ──────symlink────→ GEMINI.md      (Gemini reads this)
 ├── .claude/
-│   ├── commands/          # Slash commands (/gsd_squash, /gsd_status)
-│   └── skills/            # Skills (gemini, codex, doc-keeper, ralph loops)
-├── context/               # Reference docs for LLM context
-├── scripts/               # Setup & utility scripts
-├── docs/                  # Documentation & release notes
-└── vendor/                # Third-party tools (GSD, Zen MCP, etc.)
+│   ├── commands/ ──symlink────→ .claude/commands/
+│   └── skills/ ────symlink────→ .claude/skills/
+├── context/ ───────symlink────→ context/
+├── scripts/                     (run from anywhere)
+├── docs/                        (release notes, diagrams)
+└── vendor/                      (GSD v1.28.0, vendored)
 ```
+
+Edit `CLAUDE.md` once — every linked project picks it up immediately.
 
 ---
 
-## 🚀 Full Install
+## Supported Tools
 
-```bash
-scripts/update.sh
-```
-
-Installs: Claude Code, Gemini CLI, Codex, GSD workflow, MCP servers, and essential skills.
+| Tool | Integration |
+|------|------------|
+| **Claude Code** | Primary runtime — all skills and commands built for it |
+| **Codex CLI** | Skills for delegation and Ralph Loop code review |
+| **Gemini CLI** | Skill for task delegation with model selection |
+| **GSD (Get Shit Done)** | Vendored — 55 commands, 18 specialist agents |
+| **MCP Servers** | fetch-mcp installed via `update.sh` |
 
 ---
 
-## 💡 Why This Exists
+## Why This Exists
 
-AI coding tools are powerful but chaotic — inconsistent configs, copy-pasted prompts, no shared patterns.
+AI coding tools are powerful but chaotic — inconsistent configs, copy-pasted prompts, no shared patterns across projects.
 
-This toolkit solves it:
+`claude-devkit` fixes that:
 
-1. **Consistency** — Same guidelines across all your projects, always in sync
-2. **Speed** — Commands and skills that encode what actually works
+1. **Consistency** — Same guidelines across all projects, always in sync
+2. **Speed** — Skills and commands that encode what actually works
 3. **Portability** — Symlinks, not copies — update once, propagate everywhere
+4. **Multi-agent** — Claude, Codex, and Gemini working together, not in silos
 
-Built from real usage patterns. Nothing fancy, just what works.
+Built from real usage patterns across robotics, backend, and full-stack projects. Nothing fancy, just what works.
+
+---
+
+## License
+
+MIT
