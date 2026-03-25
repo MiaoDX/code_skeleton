@@ -20,6 +20,12 @@ Clone once, symlink into any project — works on macOS and Linux.
   <img src="docs/assets/terminal-setup.svg" alt="setup.sh on macOS" width="780">
 </p>
 
+### Use it anywhere
+
+<p align="center">
+  <img src="docs/assets/terminal-usage.svg" alt="setup.sh across multiple projects" width="780">
+</p>
+
 ### Install all AI tools
 
 <p align="center">
@@ -123,6 +129,14 @@ AI coding tools are powerful but chaotic — inconsistent configs, copy-pasted p
 4. **Multi-agent** — Claude, Codex, and Gemini working together, not in silos
 
 Built from real usage patterns across robotics, backend, and full-stack projects. Nothing fancy, just what works.
+
+---
+
+## Contributing
+
+PRs welcome — from both humans and AI agents.
+
+Whether you're adding a new skill, improving guidelines, fixing a bug, or your AI coding agent generated a useful improvement — open a PR. Good ideas don't care who (or what) wrote them.
 
 ---
 

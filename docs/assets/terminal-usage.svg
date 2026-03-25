@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="910" viewBox="0 0 780 910">
+  <defs>
+    <filter id="shadow" x="-3%" y="-3%" width="106%" height="106%">
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+    <style>
+      @keyframes blink {
+        0%, 49% { opacity: 1; }
+        50%, 100% { opacity: 0; }
+      }
+      .cursor { animation: blink 1.2s step-end infinite; }
+    </style>
+  </defs>
+
+  <!-- Window frame with shadow -->
+  <rect x="10" y="8" width="760" height="892" rx="8" ry="8" fill="#0D1117" filter="url(#shadow)"/>
+
+  <!-- Title bar -->
+  <rect x="10" y="8" width="760" height="36" rx="8" ry="8" fill="#2D2D2D"/>
+  <rect x="10" y="28" width="760" height="16" fill="#2D2D2D"/>
+
+  <!-- Traffic light dots (muted/minimal) -->
+  <circle cx="30" cy="26" r="5" fill="#5A5A5A"/>
+  <circle cx="48" cy="26" r="5" fill="#5A5A5A"/>
+  <circle cx="66" cy="26" r="5" fill="#5A5A5A"/>
+
+  <!-- Window title -->
+  <text x="390" y="30" font-family="'SF Mono', 'Cascadia Code', 'JetBrains Mono', Menlo, Monaco, Consolas, 'Courier New', monospace" font-size="12" fill="#6E7681" text-anchor="middle">bash</text>
+
+  <!-- Terminal content area (covers bottom rounded corners of title bar) -->
+  <rect x="10" y="44" width="760" height="846" fill="#0D1117"/>
+  <rect x="10" y="882" width="760" height="18" rx="8" ry="8" fill="#0D1117"/>
+
+  <!-- Terminal text content -->
+  <g font-family="'SF Mono', 'Cascadia Code', 'JetBrains Mono', Menlo, Monaco, Consolas, 'Courier New', monospace" font-size="13">
+
+    <!-- ===== Section 1: Clone ===== -->
+
+    <!-- Comment: clone one-time -->
+    <text x="24" y="74" fill="#6E7681"># First: clone claude-devkit (one-time)</text>
+
+    <!-- Prompt: ~ -->
+    <text x="24" y="94">
+      <tspan fill="#58A6FF">~</tspan>
+      <tspan fill="#3FB950"> $</tspan>
+      <tspan fill="#E6EDF3"> git clone https://github.com/MiaoDX/claude-devkit.git ~/claude-devkit</tspan>
+    </text>
+
+    <!-- Clone output -->
+    <text x="24" y="114" fill="#8B949E">Cloning into '/home/user/claude-devkit'... done.</text>
+
+    <!-- Blank line -->
+
+    <!-- Comment: use from anywhere -->
+    <text x="24" y="154" fill="#6E7681"># Now use it in any project -- just cd and run</text>
+
+    <!-- ===== Section 2: robotics-arm ===== -->
+
+    <!-- Prompt: cd -->
+    <text x="24" y="174">
+      <tspan fill="#58A6FF">~</tspan>
+      <tspan fill="#3FB950"> $</tspan>
+      <tspan fill="#E6EDF3"> cd ~/projects/robotics-arm</tspan>
+    </text>
+
+    <!-- Prompt: setup.sh -->
+    <text x="24" y="194">
+      <tspan fill="#58A6FF">~/projects/</tspan><tspan fill="#79C0FF" font-weight="bold">robotics-arm</tspan>
+      <tspan fill="#3FB950"> $</tspan>
+      <tspan fill="#E6EDF3"> ~/claude-devkit/scripts/setup.sh</tspan>
+    </text>
+
+    <!-- Output -->
+    <text x="24" y="214" fill="#8B949E">Linking CLI markdown files...</text>
+    <text x="24" y="234" fill="#8B949E">Linking context directory...</text>
+    <text x="24" y="254" fill="#8B949E">Linking gemini config...</text>
+    <text x="24" y="274" fill="#8B949E">Linking .claude/commands directory...</text>
+    <text x="24" y="294" fill="#8B949E">Linking .claude/skills directory...</text>
+    <text x="24" y="314" fill="#8B949E">Setting up claude_yolo alias...</text>
+    <text x="24" y="334" fill="#8B949E">claude_yolo alias already exists in /home/user/.bashrc</text>
+    <text x="24" y="354" fill="#3FB950" font-weight="bold">&#x2713; Ready -- 6 symlinks created</text>
+
+    <!-- Blank line -->
+
+    <!-- ===== Section 3: web-dashboard ===== -->
+
+    <!-- Comment -->
+    <text x="24" y="394" fill="#6E7681"># Same for another project</text>
+
+    <!-- Prompt: cd -->
+    <text x="24" y="414">
+      <tspan fill="#58A6FF">~/projects/</tspan><tspan fill="#79C0FF" font-weight="bold">robotics-arm</tspan>
+      <tspan fill="#3FB950"> $</tspan>
+      <tspan fill="#E6EDF3"> cd ~/projects/web-dashboard</tspan>
+    </text>
+
+    <!-- Prompt: setup.sh -->
+    <text x="24" y="434">
+      <tspan fill="#58A6FF">~/projects/</tspan><tspan fill="#79C0FF" font-weight="bold">web-dashboard</tspan>
+      <tspan fill="#3FB950"> $</tspan>
+      <tspan fill="#E6EDF3"> ~/claude-devkit/scripts/setup.sh</tspan>
+    </text>
+
+    <!-- Output -->
+    <text x="24" y="454" fill="#8B949E">Linking CLI markdown files...</text>
+    <text x="24" y="474" fill="#8B949E">Linking context directory...</text>
+    <text x="24" y="494" fill="#8B949E">Linking gemini config...</text>
+    <text x="24" y="514" fill="#8B949E">Linking .claude/commands directory...</text>
+    <text x="24" y="534" fill="#8B949E">Linking .claude/skills directory...</text>
+    <text x="24" y="554" fill="#8B949E">Setting up claude_yolo alias...</text>
+    <text x="24" y="574" fill="#8B949E">claude_yolo alias already exists in /home/user/.bashrc</text>
+    <text x="24" y="594" fill="#3FB950" font-weight="bold">&#x2713; Ready -- 6 symlinks created</text>
+
+    <!-- Blank line -->
+
+    <!-- ===== Section 4: ml-pipeline ===== -->
+
+    <!-- Comment -->
+    <text x="24" y="634" fill="#6E7681"># And another...</text>
+
+    <!-- Prompt: cd -->
+    <text x="24" y="654">
+      <tspan fill="#58A6FF">~/projects/</tspan><tspan fill="#79C0FF" font-weight="bold">web-dashboard</tspan>
+      <tspan fill="#3FB950"> $</tspan>
+      <tspan fill="#E6EDF3"> cd ~/projects/ml-pipeline</tspan>
+    </text>
+
+    <!-- Prompt: setup.sh -->
+    <text x="24" y="674">
+      <tspan fill="#58A6FF">~/projects/</tspan><tspan fill="#79C0FF" font-weight="bold">ml-pipeline</tspan>
+      <tspan fill="#3FB950"> $</tspan>
+      <tspan fill="#E6EDF3"> ~/claude-devkit/scripts/setup.sh</tspan>
+    </text>
+
+    <!-- Output -->
+    <text x="24" y="694" fill="#8B949E">Linking CLI markdown files...</text>
+    <text x="24" y="714" fill="#8B949E">Linking context directory...</text>
+    <text x="24" y="734" fill="#8B949E">Linking gemini config...</text>
+    <text x="24" y="754" fill="#8B949E">Linking .claude/commands directory...</text>
+    <text x="24" y="774" fill="#8B949E">Linking .claude/skills directory...</text>
+    <text x="24" y="794" fill="#8B949E">Setting up claude_yolo alias...</text>
+    <text x="24" y="814" fill="#8B949E">claude_yolo alias already exists in /home/user/.bashrc</text>
+    <text x="24" y="834" fill="#3FB950" font-weight="bold">&#x2713; Ready -- 6 symlinks created</text>
+
+    <!-- Blank line -->
+
+    <!-- Final prompt with blinking cursor -->
+    <text x="24" y="874">
+      <tspan fill="#58A6FF">~/projects/</tspan><tspan fill="#79C0FF" font-weight="bold">ml-pipeline</tspan>
+      <tspan fill="#3FB950"> $</tspan>
+    </text>
+    <rect class="cursor" x="220" y="861" width="8" height="16" fill="#E6EDF3"/>
+
+  </g>
+</svg>
