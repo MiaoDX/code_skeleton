@@ -14,23 +14,42 @@ Claude Code + Codex + Gemini CLI — shared guidelines, skills, and workflows vi
 
 ## 30-Second Setup
 
-Clone once, symlink into any project — works on macOS and Linux.
+```bash
+# Clone once
+git clone https://github.com/MiaoDX/claude-devkit.git ~/claude-devkit
 
-<p align="center">
-  <img src="docs/assets/terminal-setup.svg" alt="setup.sh on macOS" width="780">
-</p>
+# In any project directory
+cd ~/your-project
+~/claude-devkit/scripts/setup.sh
+```
 
-### Use it anywhere
+Works on macOS and Linux:
 
-<p align="center">
-  <img src="docs/assets/terminal-usage.svg" alt="setup.sh across multiple projects" width="780">
-</p>
+<table><tr>
+<td><img src="docs/assets/terminal-setup.svg" alt="setup.sh on macOS" width="400"></td>
+<td><img src="docs/assets/terminal-update.svg" alt="update.sh on Ubuntu" width="400"></td>
+</tr><tr>
+<td align="center"><b>macOS</b> — setup.sh</td>
+<td align="center"><b>Ubuntu</b> — update.sh</td>
+</tr></table>
+
+### Use it everywhere
+
+Run `setup.sh` from any project directory — same command, instant symlinks:
+
+```bash
+cd ~/projects/robotics-arm   && ~/claude-devkit/scripts/setup.sh
+cd ~/projects/web-dashboard   && ~/claude-devkit/scripts/setup.sh
+cd ~/projects/ml-pipeline     && ~/claude-devkit/scripts/setup.sh
+```
 
 ### Install all AI tools
 
-<p align="center">
-  <img src="docs/assets/terminal-update.svg" alt="update.sh on Ubuntu" width="780">
-</p>
+```bash
+~/claude-devkit/scripts/update.sh
+```
+
+Installs Claude Code, Gemini CLI, Codex, GSD, MCP servers, and skills — all in parallel.
 
 ---
 
