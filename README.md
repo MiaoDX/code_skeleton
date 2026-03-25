@@ -6,24 +6,25 @@ Claude Code + Codex + Gemini CLI — shared guidelines, skills, and workflows vi
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+<p align="center">
+  <img src="docs/assets/supported-tools.svg" alt="Supported Tools" width="700">
+</p>
+
 ---
 
 ## 30-Second Setup
 
-```bash
-# Clone once
-git clone https://github.com/MiaoDX/claude-devkit.git ~/claude-devkit
+Clone once, symlink into any project — works on macOS and Linux.
 
-# In any project directory
-~/claude-devkit/scripts/setup.sh
-```
+<p align="center">
+  <img src="docs/assets/terminal-setup.svg" alt="setup.sh on macOS" width="780">
+</p>
 
-Done. Your project now has shared guidelines, commands, and skills — all symlinked. Zero drift across projects.
+### Install all AI tools
 
-```bash
-# Install all AI CLI tools (Claude Code, Gemini, Codex, GSD, MCPs)
-~/claude-devkit/scripts/update.sh
-```
+<p align="center">
+  <img src="docs/assets/terminal-update.svg" alt="update.sh on Ubuntu" width="780">
+</p>
 
 ---
 
@@ -90,19 +91,9 @@ Each variant runs parallel multi-angle review, auto-routes findings to the right
 
 ## How It Works
 
-```
-claude-devkit/                    Your Project/
-├── CLAUDE.md ──────symlink────→ CLAUDE.md
-├── AGENTS.md ──────symlink────→ AGENTS.md      (Codex reads this)
-├── GEMINI.md ──────symlink────→ GEMINI.md      (Gemini reads this)
-├── .claude/
-│   ├── commands/ ──symlink────→ .claude/commands/
-│   └── skills/ ────symlink────→ .claude/skills/
-├── context/ ───────symlink────→ context/
-├── scripts/                     (run from anywhere)
-├── docs/                        (release notes, diagrams)
-└── vendor/                      (GSD v1.28.0, vendored)
-```
+<p align="center">
+  <img src="docs/assets/architecture.svg" alt="Architecture" width="800">
+</p>
 
 Edit `CLAUDE.md` once — every linked project picks it up immediately.
 

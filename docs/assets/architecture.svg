@@ -1,0 +1,184 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <style>
+      text { font-family: Inter, system-ui, -apple-system, sans-serif; }
+    </style>
+    <!-- Subtle shadow filter -->
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="112%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#1e293b" flood-opacity="0.12"/>
+    </filter>
+    <!-- Stronger shadow for the hub -->
+    <filter id="hub-shadow" x="-4%" y="-4%" width="108%" height="112%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#312e81" flood-opacity="0.25"/>
+    </filter>
+    <!-- Arrowhead marker -->
+    <marker id="arrow" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" rx="12" fill="#f8fafc"/>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--              CENTRAL HUB                    -->
+  <!-- ═══════════════════════════════════════════ -->
+  <g filter="url(#hub-shadow)">
+    <rect x="260" y="100" width="280" height="150" rx="14" fill="#312e81"/>
+    <rect x="260" y="100" width="280" height="150" rx="14" fill="url(#hub-grad)" opacity="0"/>
+  </g>
+  <!-- Hub gradient overlay for depth -->
+  <defs>
+    <linearGradient id="hub-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4338ca" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#1e1b4b" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="260" y="100" width="280" height="150" rx="14" fill="none" stroke="#4f46e5" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- Hub title -->
+  <text x="400" y="135" text-anchor="middle" fill="#e0e7ff" font-size="17" font-weight="700" letter-spacing="0.3">claude-devkit</text>
+  <!-- Divider line -->
+  <line x1="280" y1="148" x2="520" y2="148" stroke="#4f46e5" stroke-width="0.8" opacity="0.5"/>
+  <!-- Hub components -->
+  <text x="400" y="172" text-anchor="middle" fill="#a5b4fc" font-size="12" font-weight="500">CLAUDE.md</text>
+  <text x="400" y="190" text-anchor="middle" fill="#a5b4fc" font-size="12" font-weight="500">skills/ &nbsp; commands/</text>
+  <text x="400" y="208" text-anchor="middle" fill="#a5b4fc" font-size="12" font-weight="500">scripts/ &nbsp; hooks/</text>
+
+  <!-- Small icon hint on hub -->
+  <rect x="272" y="112" width="8" height="8" rx="2" fill="#6366f1" opacity="0.6"/>
+  <rect x="284" y="112" width="8" height="8" rx="2" fill="#818cf8" opacity="0.5"/>
+  <rect x="296" y="112" width="8" height="8" rx="2" fill="#a5b4fc" opacity="0.4"/>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--            PROJECT NODES                    -->
+  <!-- ═══════════════════════════════════════════ -->
+
+  <!-- Project 1: robotics-project (left) -->
+  <g filter="url(#shadow)">
+    <rect x="30" y="56" width="170" height="58" rx="10" fill="#ffffff" stroke="#99f6e4" stroke-width="1.5"/>
+  </g>
+  <circle cx="52" cy="78" r="6" fill="#14b8a6" opacity="0.7"/>
+  <text x="66" y="82" fill="#134e4a" font-size="13" font-weight="600">robotics-project</text>
+  <text x="115" y="98" text-anchor="middle" fill="#5eead4" font-size="10" font-weight="500">~/ws/robotics</text>
+
+  <!-- Project 2: web-app (top right) -->
+  <g filter="url(#shadow)">
+    <rect x="600" y="56" width="170" height="58" rx="10" fill="#ffffff" stroke="#93c5fd" stroke-width="1.5"/>
+  </g>
+  <circle cx="622" cy="78" r="6" fill="#3b82f6" opacity="0.7"/>
+  <text x="636" y="82" fill="#1e3a5f" font-size="13" font-weight="600">web-app</text>
+  <text x="685" y="98" text-anchor="middle" fill="#60a5fa" font-size="10" font-weight="500">~/ws/web-app</text>
+
+  <!-- Project 3: ml-pipeline (far right) -->
+  <g filter="url(#shadow)">
+    <rect x="600" y="192" width="170" height="58" rx="10" fill="#ffffff" stroke="#c4b5fd" stroke-width="1.5"/>
+  </g>
+  <circle cx="622" cy="214" r="6" fill="#8b5cf6" opacity="0.7"/>
+  <text x="636" y="218" fill="#3b0764" font-size="13" font-weight="600">ml-pipeline</text>
+  <text x="685" y="234" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="500">~/ws/ml-pipeline</text>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--            SYMLINK ARROWS                   -->
+  <!-- ═══════════════════════════════════════════ -->
+
+  <!-- Hub -> robotics-project -->
+  <path d="M 260 145 C 220 135, 210 105, 200 95" fill="none" stroke="#5eead4" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arrow-teal)"/>
+  <defs>
+    <marker id="arrow-teal" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#5eead4"/>
+    </marker>
+  </defs>
+  <!-- Label -->
+  <rect x="196" y="107" width="58" height="18" rx="4" fill="#f0fdfa"/>
+  <text x="225" y="119" text-anchor="middle" fill="#0d9488" font-size="10" font-weight="600">symlink</text>
+
+  <!-- Hub -> web-app -->
+  <path d="M 540 145 C 570 135, 580 105, 600 95" fill="none" stroke="#60a5fa" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arrow-blue)"/>
+  <defs>
+    <marker id="arrow-blue" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <!-- Label -->
+  <rect x="546" y="107" width="58" height="18" rx="4" fill="#eff6ff"/>
+  <text x="575" y="119" text-anchor="middle" fill="#2563eb" font-size="10" font-weight="600">symlink</text>
+
+  <!-- Hub -> ml-pipeline -->
+  <path d="M 540 200 C 565 205, 580 210, 600 215" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arrow-purple)"/>
+  <defs>
+    <marker id="arrow-purple" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#a78bfa"/>
+    </marker>
+  </defs>
+  <!-- Label -->
+  <rect x="546" y="196" width="58" height="18" rx="4" fill="#f5f3ff"/>
+  <text x="575" y="208" text-anchor="middle" fill="#7c3aed" font-size="10" font-weight="600">symlink</text>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--        "reads shared config" ZONE           -->
+  <!-- ═══════════════════════════════════════════ -->
+
+  <!-- Separator area -->
+  <line x1="80" y1="310" x2="720" y2="310" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4 4"/>
+  <rect x="310" y="298" width="180" height="22" rx="4" fill="#f8fafc"/>
+  <text x="400" y="314" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="500" letter-spacing="0.5">AI tools read shared config</text>
+
+  <!-- Vertical connector from hub down -->
+  <line x1="400" y1="250" x2="400" y2="310" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4 3"/>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--              AI TOOL CARDS                  -->
+  <!-- ═══════════════════════════════════════════ -->
+
+  <!-- Claude Code -->
+  <g filter="url(#shadow)">
+    <rect x="80" y="350" width="180" height="72" rx="10" fill="#ffffff" stroke="#fb923c" stroke-width="1.5"/>
+  </g>
+  <rect x="80" y="350" width="180" height="26" rx="10" fill="#fff7ed"/>
+  <rect x="80" y="366" width="180" height="10" fill="#fff7ed"/>
+  <!-- Orange accent bar -->
+  <rect x="80" y="350" width="4" height="72" rx="2" fill="#f97316"/>
+  <text x="170" y="368" text-anchor="middle" fill="#9a3412" font-size="14" font-weight="700">Claude Code</text>
+  <text x="170" y="390" text-anchor="middle" fill="#78716c" font-size="11">Anthropic</text>
+  <text x="170" y="407" text-anchor="middle" fill="#a8a29e" font-size="10">CLAUDE.md + skills/</text>
+
+  <!-- Connector up -->
+  <path d="M 170 350 L 170 330 C 170 318, 250 310, 400 310" fill="none" stroke="#fb923c" stroke-width="1" opacity="0.5"/>
+
+  <!-- Codex -->
+  <g filter="url(#shadow)">
+    <rect x="310" y="350" width="180" height="72" rx="10" fill="#ffffff" stroke="#4ade80" stroke-width="1.5"/>
+  </g>
+  <rect x="310" y="350" width="180" height="26" rx="10" fill="#f0fdf4"/>
+  <rect x="310" y="366" width="180" height="10" fill="#f0fdf4"/>
+  <!-- Green accent bar -->
+  <rect x="310" y="350" width="4" height="72" rx="2" fill="#22c55e"/>
+  <text x="400" y="368" text-anchor="middle" fill="#166534" font-size="14" font-weight="700">Codex</text>
+  <text x="400" y="390" text-anchor="middle" fill="#78716c" font-size="11">OpenAI</text>
+  <text x="400" y="407" text-anchor="middle" fill="#a8a29e" font-size="10">AGENTS.md + codex.md</text>
+
+  <!-- Connector up -->
+  <line x1="400" y1="350" x2="400" y2="310" stroke="#4ade80" stroke-width="1" opacity="0.5"/>
+
+  <!-- Gemini CLI -->
+  <g filter="url(#shadow)">
+    <rect x="540" y="350" width="180" height="72" rx="10" fill="#ffffff" stroke="#38bdf8" stroke-width="1.5"/>
+  </g>
+  <rect x="540" y="350" width="180" height="26" rx="10" fill="#f0f9ff"/>
+  <rect x="540" y="366" width="180" height="10" fill="#f0f9ff"/>
+  <!-- Blue accent bar -->
+  <rect x="540" y="350" width="4" height="72" rx="2" fill="#0ea5e9"/>
+  <text x="630" y="368" text-anchor="middle" fill="#0c4a6e" font-size="14" font-weight="700">Gemini CLI</text>
+  <text x="630" y="390" text-anchor="middle" fill="#78716c" font-size="11">Google</text>
+  <text x="630" y="407" text-anchor="middle" fill="#a8a29e" font-size="10">GEMINI.md + gemini/</text>
+
+  <!-- Connector up -->
+  <path d="M 630 350 L 630 330 C 630 318, 550 310, 400 310" fill="none" stroke="#38bdf8" stroke-width="1" opacity="0.5"/>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--              FOOTER LABEL                   -->
+  <!-- ═══════════════════════════════════════════ -->
+  <text x="400" y="468" text-anchor="middle" fill="#cbd5e1" font-size="10" font-weight="400">One source of truth &mdash; many projects, many AI tools</text>
+
+</svg>

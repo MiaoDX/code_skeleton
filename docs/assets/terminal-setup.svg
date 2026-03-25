@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="410" viewBox="0 0 780 410">
+  <defs>
+    <filter id="shadow" x="-3%" y="-3%" width="106%" height="106%">
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+    <style>
+      @keyframes blink {
+        0%, 49% { opacity: 1; }
+        50%, 100% { opacity: 0; }
+      }
+      .cursor { animation: blink 1.2s step-end infinite; }
+    </style>
+  </defs>
+
+  <!-- Window frame with shadow -->
+  <rect x="10" y="8" width="760" height="392" rx="10" ry="10" fill="#1E1E2E" filter="url(#shadow)"/>
+
+  <!-- Title bar -->
+  <rect x="10" y="8" width="760" height="36" rx="10" ry="10" fill="#E8E6E3"/>
+  <rect x="10" y="28" width="760" height="16" fill="#E8E6E3"/>
+
+  <!-- Traffic lights -->
+  <circle cx="32" cy="26" r="6" fill="#FF5F57"/>
+  <circle cx="52" cy="26" r="6" fill="#FEBC2E"/>
+  <circle cx="72" cy="26" r="6" fill="#28C840"/>
+
+  <!-- Window title -->
+  <text x="390" y="31" font-family="Menlo, Monaco, Consolas, 'Courier New', monospace" font-size="12" fill="#4B4B4B" text-anchor="middle">Terminal — zsh — 80x24</text>
+
+  <!-- Terminal content area -->
+  <rect x="10" y="44" width="760" height="356" rx="0" ry="0" fill="#1E1E2E"/>
+  <rect x="10" y="380" width="760" height="20" rx="0" ry="0" fill="#1E1E2E"/>
+  <rect x="10" y="390" width="760" height="10" rx="10" ry="10" fill="#1E1E2E"/>
+
+  <!-- Terminal text content -->
+  <g font-family="Menlo, Monaco, Consolas, 'Courier New', monospace" font-size="13">
+
+    <!-- Line 1: prompt + command -->
+    <text x="22" y="72">
+      <tspan fill="#A6E3A1">user@macbook ~/my-robotics-project $</tspan>
+      <tspan fill="#CDD6F4"> ~/claude-devkit/scripts/setup.sh</tspan>
+    </text>
+
+    <!-- Line 2 -->
+    <text x="22" y="92" fill="#7F849C">Linking CLI markdown files...</text>
+
+    <!-- Line 3 -->
+    <text x="22" y="112" fill="#7F849C">Linking context directory...</text>
+
+    <!-- Line 4 -->
+    <text x="22" y="132" fill="#7F849C">Linking gemini config...</text>
+
+    <!-- Line 5 -->
+    <text x="22" y="152" fill="#7F849C">Linking .claude/commands directory...</text>
+
+    <!-- Line 6 -->
+    <text x="22" y="172" fill="#7F849C">Linking .claude/skills directory...</text>
+
+    <!-- Line 7 -->
+    <text x="22" y="192" fill="#7F849C">Setting up claude_yolo alias...</text>
+
+    <!-- Line 8 -->
+    <text x="22" y="212" fill="#7F849C">claude_yolo alias already exists in /Users/user/.zshrc</text>
+
+    <!-- Line 9: empty -->
+
+    <!-- Line 10: prompt + command -->
+    <text x="22" y="252">
+      <tspan fill="#A6E3A1">user@macbook ~/my-robotics-project $</tspan>
+      <tspan fill="#CDD6F4"> ls -la CLAUDE.md AGENTS.md GEMINI.md</tspan>
+    </text>
+
+    <!-- Line 11: ls output -->
+    <text x="22" y="272">
+      <tspan fill="#7F849C">lrwxr-xr-x  user  staff  CLAUDE.md </tspan>
+      <tspan fill="#89DCEB">-> /Users/user/claude-devkit/CLAUDE.md</tspan>
+    </text>
+
+    <!-- Line 12: ls output -->
+    <text x="22" y="292">
+      <tspan fill="#7F849C">lrwxr-xr-x  user  staff  AGENTS.md </tspan>
+      <tspan fill="#89DCEB">-> /Users/user/claude-devkit/AGENTS.md</tspan>
+    </text>
+
+    <!-- Line 13: ls output -->
+    <text x="22" y="312">
+      <tspan fill="#7F849C">lrwxr-xr-x  user  staff  GEMINI.md </tspan>
+      <tspan fill="#89DCEB">-> /Users/user/claude-devkit/GEMINI.md</tspan>
+    </text>
+
+    <!-- Line 14: empty -->
+
+    <!-- Line 15: prompt with blinking cursor -->
+    <text x="22" y="352">
+      <tspan fill="#A6E3A1">user@macbook ~/my-robotics-project $</tspan>
+    </text>
+    <rect class="cursor" x="300" y="339" width="8" height="16" fill="#CDD6F4"/>
+
+  </g>
+</svg>

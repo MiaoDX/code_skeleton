@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 110" width="700" height="110">
+  <defs>
+    <style>
+      .tool-name { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12.5px; font-weight: 600; }
+      .icon-text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-weight: 700; }
+      .separator { stroke: #e2e8f0; stroke-width: 1; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="700" height="110" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+
+  <!-- ========== Claude Code ========== -->
+  <g transform="translate(70, 12)">
+    <!-- Tinted background circle -->
+    <circle cx="0" cy="30" r="24" fill="#D97757" opacity="0.08"/>
+    <!-- Abstract spark / asterisk -->
+    <g transform="translate(0, 30)">
+      <line x1="0" y1="-13" x2="0" y2="13" stroke="#D97757" stroke-width="2.8" stroke-linecap="round"/>
+      <line x1="-11" y1="-6.5" x2="11" y2="6.5" stroke="#D97757" stroke-width="2.8" stroke-linecap="round"/>
+      <line x1="-11" y1="6.5" x2="11" y2="-6.5" stroke="#D97757" stroke-width="2.8" stroke-linecap="round"/>
+      <circle cx="0" cy="0" r="3.5" fill="#D97757"/>
+    </g>
+    <text x="0" y="72" text-anchor="middle" class="tool-name" fill="#D97757">Claude Code</text>
+  </g>
+
+  <!-- Separator 1 -->
+  <line x1="140" y1="16" x2="140" y2="94" class="separator"/>
+
+  <!-- ========== Codex ========== -->
+  <g transform="translate(210, 12)">
+    <circle cx="0" cy="30" r="24" fill="#10A37F" opacity="0.08"/>
+    <!-- Code brackets icon -->
+    <g transform="translate(0, 30)">
+      <text x="0" y="6" text-anchor="middle" class="icon-text" font-size="21" fill="#10A37F">&lt;/&gt;</text>
+    </g>
+    <text x="0" y="72" text-anchor="middle" class="tool-name" fill="#10A37F">Codex</text>
+  </g>
+
+  <!-- Separator 2 -->
+  <line x1="280" y1="16" x2="280" y2="94" class="separator"/>
+
+  <!-- ========== Gemini CLI ========== -->
+  <g transform="translate(350, 12)">
+    <circle cx="0" cy="30" r="24" fill="#4285F4" opacity="0.08"/>
+    <!-- 4-pointed star -->
+    <g transform="translate(0, 30)">
+      <polygon points="0,-14 4.5,-4.5 14,0 4.5,4.5 0,14 -4.5,4.5 -14,0 -4.5,-4.5" fill="#4285F4"/>
+      <polygon points="0,-7 2.2,-2.2 7,0 2.2,2.2 0,7 -2.2,2.2 -7,0 -2.2,-2.2" fill="white" opacity="0.3"/>
+    </g>
+    <text x="0" y="72" text-anchor="middle" class="tool-name" fill="#4285F4">Gemini CLI</text>
+  </g>
+
+  <!-- Separator 3 -->
+  <line x1="420" y1="16" x2="420" y2="94" class="separator"/>
+
+  <!-- ========== GSD ========== -->
+  <g transform="translate(490, 12)">
+    <circle cx="0" cy="30" r="24" fill="#8B5CF6" opacity="0.08"/>
+    <!-- Checkmark with speed lines -->
+    <g transform="translate(0, 30)">
+      <polyline points="-9,1 -3.5,7.5 10,-8" fill="none" stroke="#8B5CF6" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="-14" y1="-4" x2="-8" y2="-4" stroke="#8B5CF6" stroke-width="1.5" stroke-linecap="round" opacity="0.45"/>
+      <line x1="-16" y1="1" x2="-11" y2="1" stroke="#8B5CF6" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+      <line x1="-14" y1="6" x2="-10" y2="6" stroke="#8B5CF6" stroke-width="1.5" stroke-linecap="round" opacity="0.25"/>
+    </g>
+    <text x="0" y="72" text-anchor="middle" class="tool-name" fill="#8B5CF6">GSD</text>
+  </g>
+
+  <!-- Separator 4 -->
+  <line x1="560" y1="16" x2="560" y2="94" class="separator"/>
+
+  <!-- ========== MCP ========== -->
+  <g transform="translate(630, 12)">
+    <circle cx="0" cy="30" r="24" fill="#64748B" opacity="0.08"/>
+    <!-- Plug / connection icon -->
+    <g transform="translate(0, 30)">
+      <rect x="-7" y="-3.5" width="14" height="7" rx="1.5" fill="none" stroke="#64748B" stroke-width="2.2"/>
+      <circle cx="-13" cy="0" r="2.5" fill="#64748B"/>
+      <line x1="-10.5" y1="0" x2="-7" y2="0" stroke="#64748B" stroke-width="2"/>
+      <circle cx="13" cy="0" r="2.5" fill="#64748B"/>
+      <line x1="7" y1="0" x2="10.5" y2="0" stroke="#64748B" stroke-width="2"/>
+      <circle cx="0" cy="0" r="1.5" fill="#64748B"/>
+    </g>
+    <text x="0" y="72" text-anchor="middle" class="tool-name" fill="#64748B">MCP</text>
+  </g>
+
+  <!-- Subtle bottom tagline -->
+  <text x="350" y="98" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="9" fill="#94a3b8" letter-spacing="1.5" text-transform="uppercase">SUPPORTED TOOLS &amp; INTEGRATIONS</text>
+</svg>

@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="560" viewBox="0 0 780 560">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono&amp;display=swap');
+      .term-text { font-family: 'Ubuntu Mono', 'DejaVu Sans Mono', Consolas, monospace; font-size: 13px; }
+      .prompt { fill: #4E9A06; }
+      .command { fill: #EEEEEC; }
+      .section-header { fill: #FCE94F; font-weight: bold; }
+      .checkmark { fill: #4E9A06; }
+      .tool-name { fill: #EEEEEC; }
+      .version { fill: #888A85; }
+      .title-text { fill: #AAAAAA; font-family: 'Ubuntu Mono', 'DejaVu Sans Mono', Consolas, monospace; font-size: 13px; }
+      .win-control { fill: #888A85; }
+      @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+      .cursor { animation: blink 1s step-end infinite; }
+    </style>
+  </defs>
+
+  <!-- Window outer border -->
+  <rect x="0" y="0" width="780" height="560" rx="10" ry="10" fill="#3C3C3C"/>
+
+  <!-- Window body (inset 1px for border effect) -->
+  <rect x="1" y="1" width="778" height="558" rx="10" ry="10" fill="#300A24"/>
+
+  <!-- Title bar background -->
+  <rect x="1" y="1" width="778" height="38" rx="10" ry="10" fill="#2C2C2C"/>
+  <!-- Square off the bottom corners of the title bar -->
+  <rect x="1" y="29" width="778" height="10" fill="#2C2C2C"/>
+
+  <!-- Title bar text (centered) -->
+  <text x="390" y="25" text-anchor="middle" class="title-text">mi@ubuntu: ~/claude-devkit</text>
+
+  <!-- Window controls (right side, GNOME style) -->
+  <!-- Minimize (dash) -->
+  <g transform="translate(688, 12)" opacity="0.6">
+    <rect x="0" y="0" width="16" height="16" rx="8" fill="#4A4A4A"/>
+    <line x1="4" y1="8" x2="12" y2="8" stroke="#AAAAAA" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+  <!-- Maximize (square) -->
+  <g transform="translate(712, 12)" opacity="0.6">
+    <rect x="0" y="0" width="16" height="16" rx="8" fill="#4A4A4A"/>
+    <rect x="4" y="4" width="8" height="8" rx="1" stroke="#AAAAAA" stroke-width="1.2" fill="none"/>
+  </g>
+  <!-- Close (X) -->
+  <g transform="translate(736, 12)" opacity="0.6">
+    <rect x="0" y="0" width="16" height="16" rx="8" fill="#4A4A4A"/>
+    <line x1="5" y1="5" x2="11" y2="11" stroke="#AAAAAA" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="11" y1="5" x2="5" y2="11" stroke="#AAAAAA" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- Terminal content area -->
+  <g transform="translate(20, 58)" class="term-text">
+
+    <!-- Line 1: prompt + command -->
+    <text y="0">
+      <tspan class="prompt">mi@ubuntu:~/claude-devkit$</tspan>
+      <tspan class="command"> ./scripts/update.sh</tspan>
+    </text>
+
+    <!-- Line 2: empty -->
+
+    <!-- Section: Claude Code -->
+    <text y="39" class="section-header">══ Claude Code ══</text>
+    <text y="58.5">
+      <tspan class="checkmark">  &#x2713; </tspan>
+      <tspan class="tool-name">claude </tspan>
+      <tspan class="version">2.3.1</tspan>
+    </text>
+
+    <!-- Section: Claude Code Plugins -->
+    <text y="97.5" class="section-header">══ Claude Code Plugins ══</text>
+    <text y="117">
+      <tspan class="checkmark">  &#x2713; </tspan>
+      <tspan class="tool-name">ralph-wiggum</tspan>
+    </text>
+
+    <!-- Section: MCP: fetch -->
+    <text y="156" class="section-header">══ MCP: fetch ══</text>
+    <text y="175.5">
+      <tspan class="checkmark">  &#x2713; </tspan>
+      <tspan class="tool-name">claude-fetch-setup</tspan>
+    </text>
+
+    <!-- Section: GSD workflow -->
+    <text y="214.5" class="section-header">══ GSD workflow ══</text>
+    <text y="234">
+      <tspan class="checkmark">  &#x2713; </tspan>
+      <tspan class="tool-name">gsd </tspan>
+      <tspan class="version">(claude + codex)</tspan>
+    </text>
+
+    <!-- Section: Global CLI tools -->
+    <text y="273" class="section-header">══ Global CLI tools ══</text>
+    <text y="292.5">
+      <tspan class="checkmark">  &#x2713; </tspan>
+      <tspan class="tool-name">gemini-cli, codex, happy-coder, opencode-ai</tspan>
+    </text>
+
+    <!-- Section: Skills -->
+    <text y="331.5" class="section-header">══ Skills ══</text>
+    <text y="351">
+      <tspan class="checkmark">  &#x2713; </tspan>
+      <tspan class="tool-name">skill-creator, mcp-builder, pdf, xlsx, docx, codex</tspan>
+    </text>
+
+    <!-- Done section -->
+    <text y="390" class="section-header">══ Done &#x2713; ══</text>
+
+    <!-- Empty line, then prompt with blinking cursor -->
+    <text y="429">
+      <tspan class="prompt">mi@ubuntu:~/claude-devkit$</tspan>
+    </text>
+    <rect x="235" y="417" width="9" height="16" fill="#4E9A06" class="cursor"/>
+
+  </g>
+</svg>
