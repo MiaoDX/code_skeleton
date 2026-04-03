@@ -14,6 +14,7 @@
 - Return summaries to the main thread, not raw notes or long log dumps.
 - Prefer 2-4 subagents by default. Scale up only for clearly partitioned work.
 - Match subagent model strength to task complexity rather than defaulting everything to the highest-cost model.
+- This repo often runs through an API relay with a single allowed model; default subagents to the main session model, and only override the model after confirming the target ID is actually available.
 - For concurrent edits, assign disjoint ownership and avoid overlapping write scopes.
 - Do not wait idly for subagents if non-overlapping local work is available.
 - Do not mark work complete without verification. Run relevant tests, inspect logs, or otherwise demonstrate correctness.
