@@ -1,1 +1,1 @@
-CLAUDE.md
+AGENT_CORE.md

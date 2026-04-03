@@ -13,27 +13,28 @@ fi
 
 # softlink these cli md
 echo "Linking CLI markdown files..."
-ln -sf $SKELETON_DIR/CLAUDE.md .
-ln -sf $SKELETON_DIR/AGENTS.md .
-ln -sf $SKELETON_DIR/GEMINI.md .
+ln -sf "$SKELETON_DIR/AGENT_CORE.md" .
+ln -sf "$SKELETON_DIR/CLAUDE.md" .
+ln -sf "$SKELETON_DIR/AGENTS.md" .
+ln -sf "$SKELETON_DIR/GEMINI.md" .
 
 # symlink the context folder for reference docs
 echo "Linking context directory..."
-ln -sf $SKELETON_DIR/context .
+ln -sf "$SKELETON_DIR/context" .
 
 # softlink gemini config to make sure zen click usage
 echo "Linking gemini config..."
-ln -sf ~/.gemini/ .
+ln -sf "$HOME/.gemini/" .
 
 # create .claude if needed, then symlink commands and skills subdirectories
 echo "Linking .claude/commands directory..."
 mkdir -p .claude
 [ -L .claude/commands ] && rm -f .claude/commands
-ln -sf $SKELETON_DIR/.claude/commands .claude/commands
+ln -sf "$SKELETON_DIR/.claude/commands" .claude/commands
 
 echo "Linking .claude/skills directory..."
 [ -L .claude/skills ] && rm -f .claude/skills
-ln -sf $SKELETON_DIR/.claude/skills .claude/skills
+ln -sf "$SKELETON_DIR/.claude/skills" .claude/skills
 
 # Add claude_yolo alias to shell rc file (if not already present)
 echo "Setting up claude_yolo alias..."

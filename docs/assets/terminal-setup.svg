@@ -67,34 +67,38 @@
     <!-- Line 10: prompt + command -->
     <text x="22" y="252">
       <tspan fill="#A6E3A1">user@macbook ~/my-robotics-project $</tspan>
-      <tspan fill="#CDD6F4"> ls -la CLAUDE.md AGENTS.md GEMINI.md</tspan>
+      <tspan fill="#CDD6F4"> ls -la AGENT_CORE.md CLAUDE.md AGENTS.md GEMINI.md</tspan>
     </text>
 
     <!-- Line 11: ls output -->
     <text x="22" y="272">
-      <tspan fill="#7F849C">lrwxr-xr-x  user  staff  CLAUDE.md </tspan>
-      <tspan fill="#89DCEB">-> /Users/user/claude-devkit/CLAUDE.md</tspan>
+      <tspan fill="#7F849C">lrwxr-xr-x  user  staff  AGENT_CORE.md </tspan>
+      <tspan fill="#89DCEB">-> /Users/user/claude-devkit/AGENT_CORE.md</tspan>
     </text>
 
     <!-- Line 12: ls output -->
     <text x="22" y="292">
-      <tspan fill="#7F849C">lrwxr-xr-x  user  staff  AGENTS.md </tspan>
-      <tspan fill="#89DCEB">-> /Users/user/claude-devkit/AGENTS.md</tspan>
+      <tspan fill="#7F849C">lrwxr-xr-x  user  staff  CLAUDE.md </tspan>
+      <tspan fill="#89DCEB">-> /Users/user/claude-devkit/CLAUDE.md</tspan>
     </text>
 
     <!-- Line 13: ls output -->
     <text x="22" y="312">
+      <tspan fill="#7F849C">lrwxr-xr-x  user  staff  AGENTS.md </tspan>
+      <tspan fill="#89DCEB">-> /Users/user/claude-devkit/AGENTS.md</tspan>
+    </text>
+
+    <!-- Line 14: ls output -->
+    <text x="22" y="332">
       <tspan fill="#7F849C">lrwxr-xr-x  user  staff  GEMINI.md </tspan>
       <tspan fill="#89DCEB">-> /Users/user/claude-devkit/GEMINI.md</tspan>
     </text>
 
-    <!-- Line 14: empty -->
-
     <!-- Line 15: prompt with blinking cursor -->
-    <text x="22" y="352">
+    <text x="22" y="372">
       <tspan fill="#A6E3A1">user@macbook ~/my-robotics-project $</tspan>
     </text>
-    <rect class="cursor" x="300" y="339" width="8" height="16" fill="#CDD6F4"/>
+    <rect class="cursor" x="300" y="359" width="8" height="16" fill="#CDD6F4"/>
 
   </g>
 </svg>

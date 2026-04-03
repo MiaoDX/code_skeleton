@@ -55,15 +55,21 @@ Installs Claude Code, Gemini CLI, Codex, GSD, MCP servers, and skills — all in
 
 ## What's Inside
 
-### Unified Guidelines (`CLAUDE.md`)
+### Shared Core + Tool Entrypoints
 
-One file, symlinked as `AGENTS.md` and `GEMINI.md` — every AI tool reads the same rules:
+Shared rules live in `AGENT_CORE.md`, with thin per-tool entry files:
 
-- **Parallel-first execution** — subagents for everything, protect the main context window
-- **Model-matched subagents** — Opus for judgment, Sonnet for mechanical work
-- **Real tests, not stub theater** — UTs must predict E2E success, not just pass
-- **Vis-based validation** — complement numeric tests with IsaacLab, MuJoCo, Meshcat, Rerun
-- **Core principles** — Simplicity First, Root Cause, Chesterton's Fence, Fail Fast, Demand Elegance
+- `CLAUDE.md` imports `AGENT_CORE.md` and keeps Claude-specific guidance small
+- `AGENTS.md` keeps Codex-specific guidance self-contained and focused on delegation behavior
+- `GEMINI.md` points at the shared core so Gemini projects inherit the same repo constraints
+
+The shared core covers:
+
+- **Parallel-first execution** — default to delegation when workstreams are independent or verification-heavy
+- **Main-context protection** — keep orchestration and final synthesis in the main thread
+- **Real tests, not stub theater** — UTs should predict real behavior, not just pass
+- **Vis-based validation** — complement numeric tests when geometry or rendering issues are easy to miss
+- **Repo constraints** — `fetch-mcp`, `uv` + `.venv`, no heavy simulations, no folder removal
 
 ### Multi-Agent Skills
 
@@ -120,7 +126,7 @@ Each variant runs parallel multi-angle review, auto-routes findings to the right
   <img src="docs/assets/architecture.svg" alt="Architecture" width="800">
 </p>
 
-Edit `CLAUDE.md` once — every linked project picks it up immediately.
+Edit `AGENT_CORE.md` for shared rules, then keep each tool entry file thin.
 
 ---
 
