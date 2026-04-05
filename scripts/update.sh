@@ -94,11 +94,20 @@ run_gsd_workflow() {
     npx -y get-shit-done-cc --claude --global
     npx -y get-shit-done-cc --codex --global
 
-    # Disable context-monitor warnings — we rely on auto-compact instead (GSD #976/#1073).
-    local gsd_tools="$HOME/.claude/get-shit-done/bin/gsd-tools.cjs"
-    if [ -f "$gsd_tools" ]; then
-        node "$gsd_tools" config-set hooks.context_warnings false
-        echo "  ✓ disabled gsd context-monitor (hooks.context_warnings=false)"
+    # Remove context-monitor PostToolUse hook — we rely on auto-compact instead (GSD #976).
+    # GSD's config-set only writes per-project .planning/config.json, so we strip the
+    # hook entry from the global settings.json directly.
+    local settings="$HOME/.claude/settings.json"
+    if [ -f "$settings" ] && command -v jq >/dev/null 2>&1; then
+        local tmp
+        tmp=$(jq '
+          if .hooks.PostToolUse then
+            .hooks.PostToolUse |= map(
+              select(.hooks | any(.command | test("gsd-context-monitor")) | not)
+            )
+          else . end
+        ' "$settings") && printf '%s\n' "$tmp" > "$settings"
+        echo "  ✓ removed gsd-context-monitor hook from settings.json"
     fi
 
     echo "  ✓ gsd (claude + codex)"
