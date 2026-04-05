@@ -93,6 +93,14 @@ run_global_cli_tools() {
 run_gsd_workflow() {
     npx -y get-shit-done-cc --claude --global
     npx -y get-shit-done-cc --codex --global
+
+    # Disable context-monitor warnings — we rely on auto-compact instead (GSD #976/#1073).
+    local gsd_tools="$HOME/.claude/get-shit-done/bin/gsd-tools.cjs"
+    if [ -f "$gsd_tools" ]; then
+        node "$gsd_tools" config-set hooks.context_warnings false
+        echo "  ✓ disabled gsd context-monitor (hooks.context_warnings=false)"
+    fi
+
     echo "  ✓ gsd (claude + codex)"
 }
 
