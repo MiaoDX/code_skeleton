@@ -39,12 +39,28 @@ print_npm_failure_hint() {
     fi
 }
 
+print_gstack_failure_hint() {
+    local log_file="$1"
+    local repo_dir
+
+    repo_dir=$(sed -n 's/^gstack install path exists but is not a git repo: //p' "$log_file" | tail -1)
+
+    if [ -n "$repo_dir" ]; then
+        echo "  ! That path already exists but is not a gstack git checkout:"
+        echo "    $repo_dir"
+        echo "  ! Move it aside or rerun update.sh with GSTACK_REPO_DIR pointing at a clean checkout path."
+    fi
+}
+
 print_failure_hint() {
     local name="$1" log_file="$2"
 
     case "$name" in
         "Global CLI tools")
             print_npm_failure_hint "$log_file"
+            ;;
+        "GStack")
+            print_gstack_failure_hint "$log_file"
             ;;
     esac
 }
@@ -129,6 +145,48 @@ run_skills_codex() {
     npx -y skills add skills-directory/skill-codex -a "$agent" -g -y
 }
 
+run_gstack() {
+    local devkit_dir repo_dir repo_parent
+
+    devkit_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+    repo_dir="${GSTACK_REPO_DIR:-$devkit_dir/vendor/gstack}"
+
+    if ! command -v git >/dev/null 2>&1; then
+        echo "  ! skipped because git is not installed"
+        return 0
+    fi
+
+    if ! command -v bun >/dev/null 2>&1; then
+        echo "  ! skipped because bun is not installed (gstack requires Bun)"
+        return 0
+    fi
+
+    repo_parent=$(dirname "$repo_dir")
+    mkdir -p "$repo_parent"
+
+    if [ -e "$repo_dir" ]; then
+        if ! git -C "$repo_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+            echo "gstack install path exists but is not a git repo: $repo_dir"
+            return 1
+        fi
+
+        git -C "$repo_dir" pull --ff-only
+    else
+        git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git "$repo_dir"
+    fi
+
+    # Run explicit host installs so both Claude Code and Codex get the gstack skill set.
+    (
+        cd "$repo_dir"
+        ./setup --host claude -q
+        ./setup --host codex -q
+    )
+
+    echo "  ✓ gstack latest"
+    echo "  ✓ gstack path: $repo_dir"
+    echo "  ✓ gstack hosts: claude, codex"
+}
+
 # ── Phase 1: independent tasks in parallel ───────────────────────
 
 bg_task "Global CLI tools" run_global_cli_tools
@@ -191,6 +249,17 @@ fi
 
 if [ "$skills_failed" = true ]; then
     record_failure "Skills"
+fi
+
+if [ "$cli_ok" = true ]; then
+    bg_task "GStack" run_gstack
+    pid_gstack=$BG_TASK_PID
+    if ! await_task "GStack" "$pid_gstack"; then
+        record_failure "GStack"
+    fi
+else
+    section "GStack"
+    echo "  ! skipped because Global CLI tools failed"
 fi
 
 if [ "${#failed_sections[@]}" -gt 0 ]; then

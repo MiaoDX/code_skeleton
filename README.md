@@ -49,7 +49,7 @@ cd ~/projects/ml-pipeline     && ~/claude-devkit/scripts/setup.sh
 ~/claude-devkit/scripts/update.sh
 ```
 
-Installs Claude Code, Gemini CLI, Codex, GSD, MCP servers, and skills — all in parallel.
+Installs Claude Code, Gemini CLI, Codex, GSD, MCP servers, skills, and the latest `gstack` checkout in `vendor/gstack` for Claude Code + Codex when Bun is available.
 
 ---
 
@@ -115,7 +115,7 @@ Each variant runs parallel multi-angle review, auto-routes findings to the right
 | Script | Purpose |
 |--------|---------|
 | `setup.sh` | Symlink configs into any project |
-| `update.sh` | Install/update all AI CLI tools in parallel |
+| `update.sh` | Install/update all AI CLI tools and the latest `gstack` checkout for Claude Code + Codex |
 | `convert-docs.sh` | Convert code/docs to LLM-ready markdown |
 
 ---
