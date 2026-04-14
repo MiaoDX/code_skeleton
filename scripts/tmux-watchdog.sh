@@ -58,6 +58,7 @@ STUCK_PATTERNS=(
   "server error"
   "timed out"
   "connection reset"
+  "failed: Connection reset by peer"
   "ECONNRESET"
   "socket hang up"
   "API error"
