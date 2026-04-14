@@ -138,11 +138,6 @@ looks_like_agent_pane() {
   return 1
 }
 
-is_ready_for_prompt() {
-  local output="$1"
-  [[ -n "$(last_visible_prompt_line "$output")" ]]
-}
-
 prompt_is_still_buffered() {
   local output="$1"
   local prompt_line
@@ -158,6 +153,11 @@ prompt_has_manual_input() {
 
   prompt_text="$(prompt_buffer_text "$output")" || return 1
   [[ -n "$prompt_text" && "$prompt_text" != "$PROMPT" ]]
+}
+
+has_stuck_pattern() {
+  local output="$1"
+  printf '%s\n' "$output" | grep -qiE -- "$PATTERN"
 }
 
 pane_is_busy() {
@@ -198,6 +198,10 @@ press_enter() {
   tmux send-keys -t "$1" Enter
 }
 
+clear_prompt_buffer() {
+  tmux send-keys -t "$1" C-u
+}
+
 submit_buffered_prompt() {
   local pane="$1"
   local output_after_send
@@ -216,7 +220,12 @@ submit_buffered_prompt() {
 
 send_prompt() {
   local pane="$1"
+  local replace_buffer="${2:-false}"
   local output_after_send
+
+  if [[ "$replace_buffer" == "true" ]]; then
+    clear_prompt_buffer "$pane"
+  fi
 
   tmux send-keys -t "$pane" -l "$PROMPT"
   press_enter "$pane"
@@ -256,11 +265,6 @@ scan_all_panes() {
       continue
     fi
 
-    if prompt_has_manual_input "$visible_output"; then
-      log "SKIP: $pane - 输入框已有未提交内容，不注入 watchdog prompt"
-      continue
-    fi
-
     if prompt_is_still_buffered "$visible_output"; then
       if pane_is_busy "$pane"; then
         log "SKIP: $pane - prompt 已在输入框，但 agent 仍忙"
@@ -274,28 +278,22 @@ scan_all_panes() {
       continue
     fi
 
-    if ! printf '%s\n' "$visible_output" | grep -qiE -- "$PATTERN"; then
+    if has_stuck_pattern "$output"; then
+      if recently_prompted "$pane"; then
+        log "SKIP: $pane - 冷却中，暂不重复发送"
+        continue
+      fi
+
+      log "STUCK: $pane - 命中错误，强制发送 \"$PROMPT\""
+      if send_prompt "$pane" true; then
+        mark_prompt_sent "$pane"
+      fi
       continue
     fi
 
-    if pane_is_busy "$pane"; then
-      log "SKIP: $pane - 命中错误但 agent 仍忙，等待真正回到 prompt"
+    if prompt_has_manual_input "$visible_output"; then
+      log "SKIP: $pane - 输入框已有未提交内容，不注入 watchdog prompt"
       continue
-    fi
-
-    if ! is_ready_for_prompt "$visible_output"; then
-      log "SKIP: $pane - 命中错误但当前不在可输入 prompt"
-      continue
-    fi
-
-    if recently_prompted "$pane"; then
-      log "SKIP: $pane - 冷却中，暂不重复发送"
-      continue
-    fi
-
-    log "STUCK: $pane - 检测到错误，发送 \"$PROMPT\""
-    if send_prompt "$pane"; then
-      mark_prompt_sent "$pane"
     fi
   done <<< "$pane_list"
 }
