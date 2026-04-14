@@ -18,10 +18,11 @@
 #                                               直接以前台命令识别 agent 的模式
 # WATCHDOG_WRAPPED_AGENT_COMMAND_PATTERN='^(node)$'
 #                                               对 node 包裹的 agent 做二次识别
-# WATCHDOG_AGENT_OUTPUT_PATTERN='OpenAI Codex|azure_openai/|Claude Code|claude-code'
+# WATCHDOG_AGENT_OUTPUT_PATTERN='OpenAI Codex|azure_openai/|Claude Code|claude-code|tab to queue message|context left'
 #                                               输出中出现这些特征才认为是 agent pane
 # WATCHDOG_READY_PROMPT_PATTERN='^[[:space:]]*[›>][[:space:]]'
 #                                               只有出现可输入 prompt 才会发送 keep going
+# WATCHDOG_READY_WINDOW_LINES=12                 只在 pane 底部这些可见行里识别 prompt
 # WATCHDOG_BUSY_TITLE_PATTERN='^[⠁-⣿][[:space:]]'
 #                                               pane 标题命中这个模式时认为 agent 正在工作
 # WATCHDOG_COOLDOWN=900                          同一 pane 两次发送间隔（秒）
@@ -37,8 +38,9 @@ LOG_FILE="${WATCHDOG_LOG:-$HOME/.tmux-watchdog.log}"
 SESSION_PATTERN="${WATCHDOG_SESSION_PATTERN:-.*}"
 DIRECT_AGENT_COMMAND_PATTERN="${WATCHDOG_DIRECT_AGENT_COMMAND_PATTERN:-^(codex|claude|claude-code)$}"
 WRAPPED_AGENT_COMMAND_PATTERN="${WATCHDOG_WRAPPED_AGENT_COMMAND_PATTERN:-^(node)$}"
-AGENT_OUTPUT_PATTERN="${WATCHDOG_AGENT_OUTPUT_PATTERN:-OpenAI Codex|azure_openai/|Claude Code|claude-code}"
+AGENT_OUTPUT_PATTERN="${WATCHDOG_AGENT_OUTPUT_PATTERN:-OpenAI Codex|azure_openai/|Claude Code|claude-code|tab to queue message|context left}"
 READY_PROMPT_PATTERN="${WATCHDOG_READY_PROMPT_PATTERN:-^[[:space:]]*[›>][[:space:]]}"
+READY_WINDOW_LINES="${WATCHDOG_READY_WINDOW_LINES:-12}"
 BUSY_TITLE_PATTERN="${WATCHDOG_BUSY_TITLE_PATTERN:-^[⠁-⣿][[:space:]]}"
 COOLDOWN_SECONDS="${WATCHDOG_COOLDOWN:-900}"
 STATE_DIR="${WATCHDOG_STATE_DIR:-$HOME/.tmux-watchdog-state}"
@@ -89,12 +91,26 @@ capture_recent_output() {
   tmux capture-pane -p -t "$1" -S "-${LINES_TO_CHECK}" 2>/dev/null
 }
 
-last_non_empty_line() {
-  awk 'NF { line = $0 } END { print line }' | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//'
+capture_visible_output() {
+  tmux capture-pane -p -t "$1" 2>/dev/null
+}
+
+last_visible_prompt_line() {
+  local output="$1"
+  printf '%s\n' "$output" | tail -n "$READY_WINDOW_LINES" | grep -E -- "$READY_PROMPT_PATTERN" | tail -n 1 || true
 }
 
 normalize_prompt_line() {
   sed -E 's/^[[:space:]]*[›>][[:space:]]*//; s/[[:space:]]+$//'
+}
+
+prompt_buffer_text() {
+  local output="$1"
+  local prompt_line
+
+  prompt_line="$(last_visible_prompt_line "$output")"
+  [[ -n "$prompt_line" ]] || return 1
+  printf '%s\n' "$prompt_line" | normalize_prompt_line
 }
 
 matches_session() {
@@ -123,16 +139,24 @@ looks_like_agent_pane() {
 
 is_ready_for_prompt() {
   local output="$1"
-  printf '%s\n' "$output" | grep -qE -- "$READY_PROMPT_PATTERN"
+  [[ -n "$(last_visible_prompt_line "$output")" ]]
 }
 
 prompt_is_still_buffered() {
   local output="$1"
-  local prompt_lines
+  local prompt_line
 
-  prompt_lines="$(printf '%s\n' "$output" | tail -n 6 | grep -E -- "$READY_PROMPT_PATTERN" || true)"
-  [[ -n "$prompt_lines" ]] || return 1
-  [[ "$(printf '%s\n' "$prompt_lines" | tail -n 1 | normalize_prompt_line)" == "$PROMPT" ]]
+  prompt_line="$(last_visible_prompt_line "$output")"
+  [[ -n "$prompt_line" ]] || return 1
+  [[ "$(printf '%s\n' "$prompt_line" | normalize_prompt_line)" == "$PROMPT" ]]
+}
+
+prompt_has_manual_input() {
+  local output="$1"
+  local prompt_text
+
+  prompt_text="$(prompt_buffer_text "$output")" || return 1
+  [[ -n "$prompt_text" && "$prompt_text" != "$PROMPT" ]]
 }
 
 pane_is_busy() {
@@ -169,19 +193,43 @@ mark_prompt_sent() {
   date +%s > "$state_file"
 }
 
+press_enter() {
+  tmux send-keys -t "$1" Enter
+}
+
+submit_buffered_prompt() {
+  local pane="$1"
+  local output_after_send
+
+  press_enter "$pane"
+  sleep "$SEND_SETTLE_SECONDS"
+  output_after_send="$(capture_visible_output "$pane")" || return 1
+
+  if prompt_is_still_buffered "$output_after_send"; then
+    log "WARN: $pane - 补发 Enter 后 prompt 仍停留在输入框"
+    return 1
+  fi
+
+  return 0
+}
+
 send_prompt() {
   local pane="$1"
   local output_after_send
 
   tmux send-keys -t "$pane" -l "$PROMPT"
-  tmux send-keys -t "$pane" Enter
+  press_enter "$pane"
 
   sleep "$SEND_SETTLE_SECONDS"
-  output_after_send="$(capture_recent_output "$pane")" || return 0
-  if ! pane_is_busy "$pane" && prompt_is_still_buffered "$output_after_send"; then
+  output_after_send="$(capture_visible_output "$pane")" || return 1
+  if prompt_is_still_buffered "$output_after_send"; then
     log "RETRY: $pane - prompt 仍停留在输入框，补发一次 Enter"
-    tmux send-keys -t "$pane" Enter
+    if ! submit_buffered_prompt "$pane"; then
+      return 1
+    fi
   fi
+
+  return 0
 }
 
 scan_all_panes() {
@@ -197,26 +245,45 @@ scan_all_panes() {
       continue
     fi
 
-    local current_command output
+    local current_command output visible_output
     current_command="$(pane_current_command "$pane")" || continue
     output="$(capture_recent_output "$pane")" || continue
+    visible_output="$(capture_visible_output "$pane")" || continue
     [[ -z "$output" ]] && continue
 
     if ! looks_like_agent_pane "$current_command" "$output"; then
       continue
     fi
 
-    if ! printf '%s\n' "$output" | grep -qiE -- "$PATTERN"; then
+    if prompt_has_manual_input "$visible_output"; then
+      log "SKIP: $pane - 输入框已有未提交内容，不注入 watchdog prompt"
       continue
     fi
 
-    if ! is_ready_for_prompt "$output"; then
+    if prompt_is_still_buffered "$visible_output"; then
+      if pane_is_busy "$pane"; then
+        log "SKIP: $pane - prompt 已在输入框，但 agent 仍忙"
+        continue
+      fi
+
+      log "RESUME: $pane - prompt 已在输入框，补发 Enter"
+      if submit_buffered_prompt "$pane"; then
+        mark_prompt_sent "$pane"
+      fi
+      continue
+    fi
+
+    if ! printf '%s\n' "$visible_output" | grep -qiE -- "$PATTERN"; then
+      continue
+    fi
+
+    if pane_is_busy "$pane"; then
+      log "SKIP: $pane - 命中错误但 agent 仍忙，等待真正回到 prompt"
+      continue
+    fi
+
+    if ! is_ready_for_prompt "$visible_output"; then
       log "SKIP: $pane - 命中错误但当前不在可输入 prompt"
-      continue
-    fi
-
-    if prompt_is_still_buffered "$output"; then
-      log "SKIP: $pane - 上次已发送过 prompt，等待恢复中"
       continue
     fi
 
@@ -226,8 +293,9 @@ scan_all_panes() {
     fi
 
     log "STUCK: $pane - 检测到错误，发送 \"$PROMPT\""
-    send_prompt "$pane"
-    mark_prompt_sent "$pane"
+    if send_prompt "$pane"; then
+      mark_prompt_sent "$pane"
+    fi
   done <<< "$pane_list"
 }
 
@@ -239,6 +307,7 @@ main() {
   log "    包装命令过滤: ${WRAPPED_AGENT_COMMAND_PATTERN}"
   log "    agent 输出特征: ${AGENT_OUTPUT_PATTERN}"
   log "    ready prompt 特征: ${READY_PROMPT_PATTERN}"
+  log "    ready prompt 可见窗口: 底部 ${READY_WINDOW_LINES} 行"
   log "    busy title 特征: ${BUSY_TITLE_PATTERN}"
   log "    冷却时间: ${COOLDOWN_SECONDS}s | 状态目录: ${STATE_DIR}"
   log "    发送后等待: ${SEND_SETTLE_SECONDS}s"
