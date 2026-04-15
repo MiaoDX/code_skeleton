@@ -63,7 +63,7 @@ STUCK_PATTERNS=(
   "ECONNRESET"
   "socket hang up"
   "API error"
-  "stream disconnected before completion: response\.failed event received"
+  "stream disconnected before completion"
 )
 
 build_pattern() {
