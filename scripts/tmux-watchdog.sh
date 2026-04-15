@@ -57,6 +57,7 @@ STUCK_PATTERNS=(
   "quota exceeded"
   "server error"
   "timed out"
+  "Connection timed out"
   "connection reset"
   "failed: Connection reset by peer"
   "ECONNRESET"
