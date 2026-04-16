@@ -63,6 +63,7 @@ STUCK_PATTERNS=(
   "ECONNRESET"
   "socket hang up"
   "API error"
+  "Request Error"
   "stream disconnected before completion"
 )
 
