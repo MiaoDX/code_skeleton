@@ -216,15 +216,30 @@ cat > "$CODEX_HOOKS" <<EOF
 EOF
 echo "    Codex hooks configured in ~/.codex/hooks.json"
 
-# 6. Source tmux plugin if inside tmux
-if [ -n "${TMUX:-}" ]; then
-    echo "==> Sourcing tmux-agent-status in current tmux session..."
-    tmux run-shell "$PLUGIN_DIR/tmux-agent-status.tmux" 2>/dev/null || true
+# 6. Auto-install TPM plugins (replaces the manual "prefix + I" step)
+if [ -x "$TPM_DIR/bin/install_plugins" ]; then
+    echo "==> Running TPM install_plugins..."
+    "$TPM_DIR/bin/install_plugins" 2>/dev/null || true
+fi
+
+# 7. Reload config + source plugin on every running tmux server
+#    (so existing sessions pick up the status icons without a restart)
+SOCKET_DIR="${TMUX_TMPDIR:-/tmp}/tmux-$(id -u)"
+if [ -d "$SOCKET_DIR" ]; then
+    echo "==> Reloading running tmux servers..."
+    for socket in "$SOCKET_DIR"/*; do
+        [ -S "$socket" ] || continue
+        socket_name=$(basename "$socket")
+        echo "    Socket: $socket_name"
+        tmux -S "$socket" source-file "$TMUX_CONF" 2>/dev/null || true
+        tmux -S "$socket" run-shell "$PLUGIN_DIR/tmux-agent-status.tmux" 2>/dev/null || true
+        tmux -S "$socket" refresh-client -S 2>/dev/null || true
+    done
 fi
 
 echo "==> Done."
 echo ""
 echo "Next steps:"
-echo "  1. Start a new tmux session (or reload existing ones with prefix + r)."
-echo "  2. Inside tmux, press prefix + I to install TPM plugins if not already loaded."
-echo "  3. Claude Code and Codex will now report status to tmux-agent-status via hooks."
+echo "  1. Existing tmux sessions have been reloaded automatically."
+echo "  2. Restart any already-running Claude Code / Codex process so the new hooks load."
+echo "  3. New prompts will then report status to tmux-agent-status via hooks."
