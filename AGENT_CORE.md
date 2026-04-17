@@ -4,7 +4,6 @@
 
 - Use `fetch-mcp` instead of Fetch/WebFetch (network issues in China Mainland).
 - Use `uv` and `.venv` for Python execution instead of the system interpreter.
-- Remote execution: do not run heavy simulations, and never remove folders.
 
 ## Delegation And Verification
 
