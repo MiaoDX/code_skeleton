@@ -23,6 +23,8 @@
 # WATCHDOG_READY_PROMPT_PATTERN='^[[:space:]]*[›>][[:space:]]'
 #                                               只有出现可输入 prompt 才会发送 keep going
 # WATCHDOG_READY_WINDOW_LINES=12                 只在 pane 底部这些可见行里识别 prompt
+# WATCHDOG_PLACEHOLDER_PROMPT_PATTERN='^(Use /skills to list available skills|Run /review on my current changes)$'
+#                                               这些 Codex UI 占位提示不视为用户未提交输入
 # WATCHDOG_BUSY_TITLE_PATTERN='^[⠁-⣿][[:space:]]'
 #                                               pane 标题命中这个模式时认为 agent 正在工作
 # WATCHDOG_COOLDOWN=900                          同一 pane 两次发送间隔（秒）
@@ -41,6 +43,7 @@ WRAPPED_AGENT_COMMAND_PATTERN="${WATCHDOG_WRAPPED_AGENT_COMMAND_PATTERN:-^(node)
 AGENT_OUTPUT_PATTERN="${WATCHDOG_AGENT_OUTPUT_PATTERN:-OpenAI Codex|azure_openai/|Claude Code|claude-code|tab to queue message|context left}"
 READY_PROMPT_PATTERN="${WATCHDOG_READY_PROMPT_PATTERN:-^[[:space:]]*[›>][[:space:]]}"
 READY_WINDOW_LINES="${WATCHDOG_READY_WINDOW_LINES:-12}"
+PLACEHOLDER_PROMPT_PATTERN="${WATCHDOG_PLACEHOLDER_PROMPT_PATTERN:-^(Use /skills to list available skills|Run /review on my current changes)$}"
 BUSY_TITLE_PATTERN="${WATCHDOG_BUSY_TITLE_PATTERN:-^[⠁-⣿][[:space:]]}"
 COOLDOWN_SECONDS="${WATCHDOG_COOLDOWN:-900}"
 STATE_DIR="${WATCHDOG_STATE_DIR:-$HOME/.tmux-watchdog-state}"
@@ -65,6 +68,7 @@ STUCK_PATTERNS=(
   "API error"
   "Request Error"
   "stream disconnected before completion"
+  "prematurely closed"
 )
 
 build_pattern() {
@@ -154,7 +158,14 @@ prompt_has_manual_input() {
   local prompt_text
 
   prompt_text="$(prompt_buffer_text "$output")" || return 1
-  [[ -n "$prompt_text" && "$prompt_text" != "$PROMPT" ]]
+  [[ -n "$prompt_text" ]] || return 1
+  [[ "$prompt_text" == "$PROMPT" ]] && return 1
+
+  if [[ -n "$PLACEHOLDER_PROMPT_PATTERN" && "$prompt_text" =~ $PLACEHOLDER_PROMPT_PATTERN ]]; then
+    return 1
+  fi
+
+  return 0
 }
 
 has_stuck_pattern() {
@@ -309,6 +320,7 @@ main() {
   log "    agent 输出特征: ${AGENT_OUTPUT_PATTERN}"
   log "    ready prompt 特征: ${READY_PROMPT_PATTERN}"
   log "    ready prompt 可见窗口: 底部 ${READY_WINDOW_LINES} 行"
+  log "    prompt 占位提示特征: ${PLACEHOLDER_PROMPT_PATTERN}"
   log "    busy title 特征: ${BUSY_TITLE_PATTERN}"
   log "    冷却时间: ${COOLDOWN_SECONDS}s | 状态目录: ${STATE_DIR}"
   log "    发送后等待: ${SEND_SETTLE_SECONDS}s"
