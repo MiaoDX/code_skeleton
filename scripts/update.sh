@@ -107,8 +107,8 @@ pid_cli=$BG_TASK_PID
 bg_task "GSD workflow" run_gsd_workflow
 pid_gsd=$BG_TASK_PID
 
-bg_task "Codex TUI" run_codex_statusline
-pid_codex_tui=$BG_TASK_PID
+# Codex TUI runs sequentially after GSD workflow — both rewrite
+# ~/.codex/config.toml, so racing them lets GSD clobber the [tui] block.
 
 skills_pids=()
 for agent in claude-code codex gemini-cli; do
@@ -147,6 +147,8 @@ if ! await_task "GSD workflow" "$pid_gsd"; then
     record_failure "GSD workflow"
 fi
 
+bg_task "Codex TUI" run_codex_statusline
+pid_codex_tui=$BG_TASK_PID
 if ! await_task "Codex TUI" "$pid_codex_tui"; then
     record_failure "Codex TUI"
 fi
