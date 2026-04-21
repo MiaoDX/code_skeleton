@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
 section() { echo ""; echo "══ $1 ══"; }
 LOGDIR=$(mktemp -d)
 trap 'rm -rf "$LOGDIR"' EXIT
@@ -134,6 +136,13 @@ run_mcp_fetch() {
     echo "  ✓ claude-fetch-setup"
 }
 
+run_codex_statusline() {
+    local config_file="$HOME/.codex/config.toml"
+    node "$SCRIPT_DIR/lib/ensure-codex-config.js" "$config_file"
+
+    echo "  ✓ codex status line includes current-dir, context-used, fast-mode, and thread-title"
+}
+
 run_skills_anthro() {
     local agent="$1"
     npx -y skills add anthropics/skills -a "$agent" -g -y \
@@ -262,6 +271,9 @@ pid_cli=$BG_TASK_PID
 bg_task "GSD workflow" run_gsd_workflow
 pid_gsd=$BG_TASK_PID
 
+bg_task "Codex TUI" run_codex_statusline
+pid_codex_tui=$BG_TASK_PID
+
 skills_pids=()
 for agent in claude-code codex gemini-cli; do
     bg_task "skills-anthro-$agent" run_skills_anthro "$agent"
@@ -297,6 +309,10 @@ fi
 
 if ! await_task "GSD workflow" "$pid_gsd"; then
     record_failure "GSD workflow"
+fi
+
+if ! await_task "Codex TUI" "$pid_codex_tui"; then
+    record_failure "Codex TUI"
 fi
 
 section "Skills"

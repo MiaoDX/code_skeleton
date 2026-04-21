@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
 # Install and setup tmux-agent-status for both Claude Code and Codex.
 # https://github.com/samleeney/tmux-agent-status
 
@@ -147,24 +149,9 @@ echo "    Claude Code hooks configured."
 # 5. Codex CLI settings
 CODEX_CONFIG="$HOME/.codex/config.toml"
 CODEX_HOOKS="$HOME/.codex/hooks.json"
-mkdir -p "$(dirname "$CODEX_CONFIG")"
-
-if [ -f "$CODEX_CONFIG" ]; then
-    if ! grep -q "^\s*codex_hooks\s*=\s*true" "$CODEX_CONFIG" 2>/dev/null; then
-        echo "" >> "$CODEX_CONFIG"
-        echo "[features]" >> "$CODEX_CONFIG"
-        echo "codex_hooks = true" >> "$CODEX_CONFIG"
-        echo "    Enabled codex_hooks in ~/.codex/config.toml"
-    else
-        echo "    codex_hooks already enabled in ~/.codex/config.toml"
-    fi
-else
-    cat > "$CODEX_CONFIG" <<'EOF'
-[features]
-codex_hooks = true
-EOF
-    echo "    Created ~/.codex/config.toml with codex_hooks enabled."
-fi
+node "$SCRIPT_DIR/lib/ensure-codex-config.js" "$CODEX_CONFIG"
+echo "    Codex config ensured in ~/.codex/config.toml"
+echo "    Codex status line includes current-dir, context-used, fast-mode, and thread-title"
 
 cat > "$CODEX_HOOKS" <<EOF
 {
