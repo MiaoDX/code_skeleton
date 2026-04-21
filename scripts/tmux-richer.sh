@@ -3,8 +3,12 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
+source "$SCRIPT_DIR/lib/ensure-no-running-codex.sh"
+
 # Install and setup tmux-agent-status for both Claude Code and Codex.
 # https://github.com/samleeney/tmux-agent-status
+
+ensure_no_running_codex
 
 PLUGIN_DIR="$HOME/.config/tmux/plugins/tmux-agent-status"
 TPM_DIR="$HOME/.config/tmux/plugins/tpm"

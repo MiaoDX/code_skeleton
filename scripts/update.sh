@@ -3,9 +3,13 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
+source "$SCRIPT_DIR/lib/ensure-no-running-codex.sh"
+
 section() { echo ""; echo "══ $1 ══"; }
 LOGDIR=$(mktemp -d)
 trap 'rm -rf "$LOGDIR"' EXIT
+
+ensure_no_running_codex
 
 source "$SCRIPT_DIR/tasks/update-cli.sh"
 source "$SCRIPT_DIR/tasks/update-skills.sh"
