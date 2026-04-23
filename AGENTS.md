@@ -41,6 +41,12 @@
 - Ask a brief clarifying question only when a high-risk ambiguity would materially change the implementation.
 - Record repeated repo-specific mistakes in `tasks/lessons.md`.
 
+## Docs And Planning
+
+- Keep `README.md` thin and put detailed current-state setup, runtime, and interface docs under `docs/`.
+- Use `docs/` for human-facing truth at `HEAD`, `.planning/` for locked project summaries and execution state, and archive/spec areas for historical design material.
+- When a refactor changes runtime truth, update the canonical `docs/` surface in the same slice; if decisions or scope change too, refresh the live `.planning/` summaries as well.
+
 ## Codex-Specific Notes
 
 - Keep `AGENTS.md` thin and self-contained. Do not rely on follow-up file reads for critical rules.
