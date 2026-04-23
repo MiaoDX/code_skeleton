@@ -14,6 +14,7 @@ ensure_no_running_codex
 source "$SCRIPT_DIR/tasks/update-cli.sh"
 source "$SCRIPT_DIR/tasks/update-skills.sh"
 source "$SCRIPT_DIR/tasks/update-gstack.sh"
+source "$SCRIPT_DIR/tasks/sync-local-commands.sh"
 
 # Run a task in the background, capturing output to a log file.
 # Usage: bg_task <name> <command...>
@@ -107,6 +108,9 @@ pid_cli=$BG_TASK_PID
 bg_task "GSD workflow" run_gsd_workflow
 pid_gsd=$BG_TASK_PID
 
+bg_task "Local commands" run_sync_local_commands
+pid_local_cmds=$BG_TASK_PID
+
 # Codex TUI runs sequentially after GSD workflow — both rewrite
 # ~/.codex/config.toml, so racing them lets GSD clobber the [tui] block.
 
@@ -145,6 +149,10 @@ fi
 
 if ! await_task "GSD workflow" "$pid_gsd"; then
     record_failure "GSD workflow"
+fi
+
+if ! await_task "Local commands" "$pid_local_cmds"; then
+    record_failure "Local commands"
 fi
 
 bg_task "Codex TUI" run_codex_statusline
