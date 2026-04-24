@@ -10,7 +10,7 @@ ensure_no_running_codex() {
     while IFS= read -r row; do
         rows+=("$row")
     done < <(
-        ps -eo pid=,tty=,cmd= |
+        ps -eo pid=,tty=,command= |
             awk -v current_pid="$current_pid" -v parent_pid="$parent_pid" '
                 /(^|[[:space:]])codex([[:space:]]|$)|\/codex([[:space:]]|$)/ && $1 != current_pid && $1 != parent_pid { print }
             '

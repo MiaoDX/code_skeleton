@@ -35,8 +35,9 @@ if [[ ! -d "$INPUT_DIR" ]]; then
 fi
 
 # Create temp file name (remove empty file so zip can create fresh)
-TMP_ZIP=$(mktemp --suffix=.zip)
-rm "$TMP_ZIP"
+TMP_BASE=$(mktemp /tmp/convert-docs-XXXXXX)
+TMP_ZIP="${TMP_BASE}.zip"
+rm "$TMP_BASE"
 
 # Activate venv and run
 source .venv/bin/activate
