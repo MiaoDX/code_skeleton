@@ -34,7 +34,7 @@ ensure_clean_env() {
             errors+=("  $default_alias")
             errors+=("")
             errors+=("  Fix by setting default to latest LTS:")
-            errors+=("    nvm alias default lts/*")
+            errors+=("    nvm alias default 'lts/*'")
         fi
     fi
 
