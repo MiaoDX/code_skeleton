@@ -61,30 +61,24 @@ run_sync_local_commands() {
 
     local claude_dest="$HOME/.claude/commands"
     local codex_dest="$HOME/.codex/skills"
-    local synced=0
+    local synced=0 src_file filename name codex_name description body skill_dir
 
     mkdir -p "$claude_dest"
 
     for src_file in "$commands_src"/*.md; do
         [ -f "$src_file" ] || continue
 
-        local filename name codex_name description body
         filename=$(basename "$src_file")
         name="${filename%.md}"
         codex_name="${name//_/-}"
 
-        # Extract single-line description from YAML frontmatter
         description=$(awk '/^---/{c++; next} c==1 && /^description:/{sub(/^description:[[:space:]]*/,""); print; exit}' "$src_file")
-
-        # Strip frontmatter — keep only content after the closing ---
         body=$(awk 'BEGIN{c=0} /^---/{c++; next} c>=2{print}' "$src_file")
 
-        # ── Claude Code global commands ──────────────────────────
         cp "$src_file" "$claude_dest/$name.md"
 
-        # ── Codex skills (only when ~/.codex exists) ─────────────
         if [ -d "$codex_dest" ]; then
-            local skill_dir="$codex_dest/$codex_name"
+            skill_dir="$codex_dest/$codex_name"
             mkdir -p "$skill_dir"
             {
                 printf -- '---\n'

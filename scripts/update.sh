@@ -126,7 +126,7 @@ pid_local_cmds=$BG_TASK_PID
 # ~/.codex/config.toml, so racing them lets GSD clobber the [tui] block.
 
 skills_pids=()
-for agent in claude-code codex gemini-cli; do
+for agent in claude-code codex; do
     bg_task "skills-anthro-$agent" run_skills_anthro "$agent"
     skills_pids+=("skills-anthro-$agent:$BG_TASK_PID")
 
@@ -142,19 +142,21 @@ if ! await_task "Global CLI tools" "$pid_cli"; then
     cli_ok=false
 fi
 
-section "Claude Code Plugins"
-echo "  ! optional: install Claude plugins manually after configuring a marketplace"
-echo "    claude plugin marketplace add <owner/repo>"
-echo "    claude plugin install <plugin>@<marketplace>"
-
 if [ "$cli_ok" = true ]; then
     bg_task "MCP: fetch" run_mcp_fetch
     pid_fetch=$BG_TASK_PID
+    bg_task "Claude plugins" run_claude_plugins
+    pid_plugins=$BG_TASK_PID
     if ! await_task "MCP: fetch" "$pid_fetch"; then
         record_failure "MCP: fetch"
     fi
+    if ! await_task "Claude plugins" "$pid_plugins"; then
+        record_failure "Claude plugins"
+    fi
 else
     section "MCP: fetch"
+    echo "  ! skipped because Global CLI tools failed"
+    section "Claude plugins"
     echo "  ! skipped because Global CLI tools failed"
 fi
 
@@ -182,10 +184,6 @@ for entry in "${skills_pids[@]}"; do
     fi
     cat "$LOGDIR/$name.log" 2>/dev/null
 done
-
-# Count installed skills instead of verbose listing
-skills_count=$(npx -y skills ls -g 2>/dev/null | grep -c '^ ' || echo 0)
-echo "  ✓ $skills_count skills installed globally"
 
 if [ "$skills_failed" = true ]; then
     record_failure "Skills"

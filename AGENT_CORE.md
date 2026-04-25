@@ -4,6 +4,7 @@
 
 - Use `fetch-mcp` instead of Fetch/WebFetch (network issues in China Mainland).
 - Use `uv` and `.venv` for Python execution instead of the system interpreter.
+- Pyright LSP is active globally for Python type checking. For non-Python projects, check the project root for a `.mcp.json` with the appropriate language server, or run `claude plugin install <lang>-lsp@claude-plugins-official`.
 
 ## Delegation And Verification
 

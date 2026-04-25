@@ -2,31 +2,62 @@
 
 run_global_cli_tools() {
     # Keep all global npm installs in one command so they do not race on the same prefix.
-    # Suppress npm output; errors still go to stderr.
-    npm install -g --silent \
+    npm install -g --loglevel=error \
         @anthropic-ai/claude-code \
         claude-fetch-setup \
-        @google/gemini-cli \
         @openai/codex \
         happy-coder \
         opencode-ai@latest \
-        2>&1 | grep -E '^npm (error|warn)' || true
+        pyright
 
     echo "  ✓ claude $(claude --version 2>/dev/null)"
     echo "  ✓ codex $(codex --version 2>/dev/null)"
-    echo "  ✓ gemini-cli"
     echo "  ✓ happy-coder"
     echo "  ✓ opencode-ai"
+    echo "  ✓ pyright $(pyright --version 2>/dev/null)"
+}
+
+run_claude_plugins() {
+    local out
+
+    out=$(claude plugin marketplace add anthropics/claude-plugins-official 2>&1) || {
+        echo "  ! failed to register claude-plugins-official marketplace:"
+        echo "$out"
+        return 1
+    }
+
+    local plugins=(
+        pyright-lsp
+        claude-md-management
+        hookify
+        commit-commands
+        pr-review-toolkit
+        claude-code-setup
+        learning-output-style
+        ralph-loop
+        feature-dev
+        frontend-design
+        agent-sdk-dev
+    )
+
+    for plugin in "${plugins[@]}"; do
+        out=$(claude plugin install "${plugin}@claude-plugins-official" 2>&1) || {
+            echo "  ! failed to install ${plugin}:"
+            echo "$out"
+            return 1
+        }
+        echo "  ✓ ${plugin}"
+    done
 }
 
 run_gsd_workflow() {
-    # Suppress verbose GSD output; only show warnings/errors
-    npx -y get-shit-done-cc --claude --global 2>&1 | grep -E '^  [⚠✗!]' || true
-    npx -y get-shit-done-cc --codex --global 2>&1 | grep -E '^  [⚠✗!]' || true
+    local out
+    # GSD #976: strip context-monitor hook from global settings.json (use auto-compact instead)
+    out=$(npx -y get-shit-done-cc --claude --global 2>&1) || { echo "$out"; return 1; }
+    echo "$out" | grep -E '^  [⚠✗!]' || true
+    out=$(npx -y get-shit-done-cc --codex --global 2>&1) || { echo "$out"; return 1; }
+    echo "$out" | grep -E '^  [⚠✗!]' || true
 
-    # Remove context-monitor PostToolUse hook — we rely on auto-compact instead (GSD #976).
-    # GSD's config-set only writes per-project .planning/config.json, so we strip the
-    # hook entry from the global settings.json directly.
     local settings="$HOME/.claude/settings.json"
     if [ -f "$settings" ] && command -v jq >/dev/null 2>&1; then
         local tmp
@@ -45,7 +76,6 @@ run_gsd_workflow() {
 }
 
 run_mcp_fetch() {
-    # Suppress verbose output; only show errors
     claude-fetch-setup >/dev/null 2>&1 || {
         echo "  ! claude-fetch-setup failed"
         return 1
@@ -56,6 +86,5 @@ run_mcp_fetch() {
 run_codex_statusline() {
     local config_file="$HOME/.codex/config.toml"
     node "$SCRIPT_DIR/lib/ensure-codex-config.js" "$config_file"
-
-    echo "  ✓ codex status line includes current-dir, context-used, fast-mode, and thread-title"
+    echo "  ✓ codex status line configured"
 }
