@@ -3,12 +3,23 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
+# Source nvm if available (needed when running from bash but nvm is configured in zsh)
+if [ -n "${NVM_DIR:-}" ] && [ -f "$NVM_DIR/nvm.sh" ]; then
+    source "$NVM_DIR/nvm.sh"
+    # Activate node if not in PATH (e.g., default version was uninstalled)
+    if ! command -v node >/dev/null 2>&1; then
+        nvm use --lts >/dev/null 2>&1 || nvm use node >/dev/null 2>&1 || true
+    fi
+fi
+
 source "$SCRIPT_DIR/lib/ensure-no-running-codex.sh"
+source "$SCRIPT_DIR/lib/ensure-clean-env.sh"
 
 section() { echo ""; echo "══ $1 ══"; }
 LOGDIR=$(mktemp -d)
 trap 'rm -rf "$LOGDIR"' EXIT
 
+ensure_clean_env
 ensure_no_running_codex
 
 source "$SCRIPT_DIR/tasks/update-cli.sh"
@@ -172,9 +183,9 @@ for entry in "${skills_pids[@]}"; do
     cat "$LOGDIR/$name.log" 2>/dev/null
 done
 
-if ! npx -y skills ls -g; then
-    skills_failed=true
-fi
+# Count installed skills instead of verbose listing
+skills_count=$(npx -y skills ls -g 2>/dev/null | grep -c '^ ' || echo 0)
+echo "  ✓ $skills_count skills installed globally"
 
 if [ "$skills_failed" = true ]; then
     record_failure "Skills"

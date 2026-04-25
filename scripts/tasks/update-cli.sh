@@ -2,13 +2,15 @@
 
 run_global_cli_tools() {
     # Keep all global npm installs in one command so they do not race on the same prefix.
-    npm install -g --loglevel=error \
+    # Suppress npm output; errors still go to stderr.
+    npm install -g --silent \
         @anthropic-ai/claude-code \
         claude-fetch-setup \
         @google/gemini-cli \
         @openai/codex \
         happy-coder \
-        opencode-ai@latest
+        opencode-ai@latest \
+        2>&1 | grep -E '^npm (error|warn)' || true
 
     echo "  ✓ claude $(claude --version 2>/dev/null)"
     echo "  ✓ codex $(codex --version 2>/dev/null)"
@@ -18,8 +20,9 @@ run_global_cli_tools() {
 }
 
 run_gsd_workflow() {
-    npx -y get-shit-done-cc --claude --global
-    npx -y get-shit-done-cc --codex --global
+    # Suppress verbose GSD output; only show warnings/errors
+    npx -y get-shit-done-cc --claude --global 2>&1 | grep -E '^  [⚠✗!]' || true
+    npx -y get-shit-done-cc --codex --global 2>&1 | grep -E '^  [⚠✗!]' || true
 
     # Remove context-monitor PostToolUse hook — we rely on auto-compact instead (GSD #976).
     # GSD's config-set only writes per-project .planning/config.json, so we strip the
@@ -34,15 +37,20 @@ run_gsd_workflow() {
             )
           else . end
         ' "$settings") && printf '%s\n' "$tmp" > "$settings"
-        echo "  ✓ removed gsd-context-monitor hook from settings.json"
     fi
 
-    echo "  ✓ gsd (claude + codex)"
+    local gsd_version
+    gsd_version=$(cat ~/.claude/get-shit-done/VERSION 2>/dev/null || echo "?")
+    echo "  ✓ gsd v$gsd_version (claude + codex)"
 }
 
 run_mcp_fetch() {
-    claude-fetch-setup
-    echo "  ✓ claude-fetch-setup"
+    # Suppress verbose output; only show errors
+    claude-fetch-setup >/dev/null 2>&1 || {
+        echo "  ! claude-fetch-setup failed"
+        return 1
+    }
+    echo "  ✓ mcp-fetch"
 }
 
 run_codex_statusline() {

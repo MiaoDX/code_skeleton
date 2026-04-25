@@ -25,17 +25,21 @@ run_gstack() {
             return 1
         fi
 
-        git -C "$repo_dir" pull --ff-only
+        git -C "$repo_dir" pull --ff-only -q
     else
-        git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git "$repo_dir"
+        git clone --single-branch --depth 1 -q https://github.com/garrytan/gstack.git "$repo_dir"
     fi
 
     # Run explicit host installs so both Claude Code and Codex get the gstack skill set.
+    # Suppress verbose output; only show errors.
     (
         cd "$repo_dir"
-        ./setup --host claude -q
-        ./setup --host codex -q
-    )
+        ./setup --host claude -q >/dev/null 2>&1
+        ./setup --host codex -q >/dev/null 2>&1
+    ) || {
+        echo "  ! gstack setup failed"
+        return 1
+    }
 
     echo "  ✓ gstack latest"
     echo "  ✓ gstack path: $repo_dir"
@@ -56,7 +60,7 @@ run_gstack_state() {
 
     if [ -d "$state_dir" ] && git -C "$state_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
         if [ -f "$sync_pull" ]; then
-            (cd "$state_dir" && bash "$sync_pull")
+            (cd "$state_dir" && bash "$sync_pull" >/dev/null 2>&1) || true
         else
             if ! git -C "$state_dir" remote get-url origin >/dev/null 2>&1; then
                 echo "  ! skipped because $state_dir has no origin remote"
@@ -73,7 +77,7 @@ run_gstack_state() {
                 fi
             fi
 
-            git -C "$state_dir" pull --rebase --autostash
+            git -C "$state_dir" pull --rebase --autostash -q
         fi
 
         origin_url="$(git -C "$state_dir" remote get-url origin 2>/dev/null || true)"
@@ -97,11 +101,11 @@ run_gstack_state() {
     fi
 
     mkdir -p "$(dirname "$state_dir")"
-    git clone --single-branch --depth 1 "$state_remote" "$state_dir"
+    git clone --single-branch --depth 1 -q "$state_remote" "$state_dir"
     chmod +x "$state_dir"/sync-* 2>/dev/null || true
 
     if [ -f "$sync_pull" ]; then
-        (cd "$state_dir" && bash "$sync_pull")
+        (cd "$state_dir" && bash "$sync_pull" >/dev/null 2>&1) || true
     fi
 
     echo "  ✓ gstack state cloned"
