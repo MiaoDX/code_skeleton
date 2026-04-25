@@ -22,7 +22,23 @@ ensure_clean_env() {
         errors+=("  Reinstall nvm or fix NVM_DIR in your shell profile.")
     fi
 
-    # ── Check 2: node/npm come from nvm ──────────────────────────────
+    # ── Check 2: nvm default alias points to an installed version ────
+    # Source nvm to check the alias (nvm is a shell function)
+
+    if [ -n "${NVM_DIR:-}" ] && [ -f "$NVM_DIR/nvm.sh" ]; then
+        source "$NVM_DIR/nvm.sh" 2>/dev/null
+        local default_alias
+        default_alias=$(nvm alias default 2>/dev/null || true)
+        if [[ "$default_alias" == *"N/A"* ]]; then
+            errors+=("nvm default alias points to a version that is not installed:")
+            errors+=("  $default_alias")
+            errors+=("")
+            errors+=("  Fix by setting default to latest LTS:")
+            errors+=("    nvm alias default lts/*")
+        fi
+    fi
+
+    # ── Check 3: node/npm come from nvm ──────────────────────────────
 
     local node_path npm_path
     node_path=$(command -v node 2>/dev/null || true)
@@ -43,7 +59,7 @@ ensure_clean_env() {
         errors+=("  Remove or unlink non-nvm npm installations.")
     fi
 
-    # ── Check 3: node version is not too old ──────────────────────────
+    # ── Check 4: node version is not too old ──────────────────────────
 
     if [ -n "$node_path" ]; then
         local node_major
@@ -54,14 +70,14 @@ ensure_clean_env() {
         fi
     fi
 
-    # ── Check 4: bun is installed ────────────────────────────────────
+    # ── Check 5: bun is installed ────────────────────────────────────
 
     if ! command -v bun >/dev/null 2>&1; then
         errors+=("bun not found in PATH.")
         errors+=("  Install bun: curl -fsSL https://bun.sh/install | bash")
     fi
 
-    # ── Check 5: single claude binary from nvm npm ───────────────────
+    # ── Check 6: single claude binary from nvm npm ───────────────────
     # Use 'type -a' and extract paths (portable across bash versions)
 
     local claude_paths claude_count claude_first
@@ -87,7 +103,7 @@ ensure_clean_env() {
         errors+=("  Remove this installation. update.sh will install via npm.")
     fi
 
-    # ── Check 6: single codex binary from nvm npm ────────────────────
+    # ── Check 7: single codex binary from nvm npm ────────────────────
 
     local codex_paths codex_count codex_first
     codex_paths=$(type -a codex 2>/dev/null | sed -n 's/^codex is //p' || true)
@@ -112,7 +128,7 @@ ensure_clean_env() {
         errors+=("  Remove this installation. update.sh will install via npm.")
     fi
 
-    # ── Check 7: npm global modules are user-writable ─────────────────
+    # ── Check 8: npm global modules are user-writable ─────────────────
     # With nvm, you should NEVER need sudo for npm. Root-owned files mean
     # someone ran "sudo npm install -g" at some point, which is wrong.
 
