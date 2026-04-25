@@ -19,14 +19,14 @@ echo "==> Installing tmux-agent-status..."
 if [ ! -d "$TPM_DIR" ]; then
     echo "    Cloning TPM..."
     mkdir -p "$TPM_DIR"
-    git clone https://github.com/tmux-plugins/tpm "$TPM_DIR"
+    git clone --depth 1 https://github.com/tmux-plugins/tpm "$TPM_DIR"
 fi
 
 # 2. Clone the plugin
 if [ ! -d "$PLUGIN_DIR" ]; then
     echo "    Cloning tmux-agent-status..."
     mkdir -p "$(dirname "$PLUGIN_DIR")"
-    git clone https://github.com/samleeney/tmux-agent-status "$PLUGIN_DIR"
+    git clone --depth 1 https://github.com/samleeney/tmux-agent-status "$PLUGIN_DIR"
 else
     echo "    Updating tmux-agent-status..."
     git -C "$PLUGIN_DIR" pull --ff-only
