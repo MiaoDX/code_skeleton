@@ -22,7 +22,7 @@
 #                                               从 pane 进程树识别 agent 的兜底模式
 # WATCHDOG_AGENT_OUTPUT_PATTERN='OpenAI Codex|azure_openai/|Claude Code|claude-code|tab to queue message|context left'
 #                                               输出中出现这些特征才认为是 agent pane
-# WATCHDOG_READY_PROMPT_PATTERN='^[[:space:]]*[›>][[:space:]]'
+# WATCHDOG_READY_PROMPT_PATTERN='^[[:space:]]*[›>]([[:space:]].*)?$'
 #                                               只有出现可输入 prompt 才会发送 keep going
 # WATCHDOG_READY_WINDOW_LINES=12                 只在 pane 底部这些可见行里识别 prompt
 # WATCHDOG_PLACEHOLDER_PROMPT_PATTERN='^(Use /skills to list available skills|Run /review on my current changes)$'
@@ -44,7 +44,7 @@ DIRECT_AGENT_COMMAND_PATTERN="${WATCHDOG_DIRECT_AGENT_COMMAND_PATTERN:-^(codex|c
 WRAPPED_AGENT_COMMAND_PATTERN="${WATCHDOG_WRAPPED_AGENT_COMMAND_PATTERN:-^(node)$}"
 AGENT_PROCESS_PATTERN="${WATCHDOG_AGENT_PROCESS_PATTERN:-(^|/)(codex|claude|claude-code)([[:space:]]|$)|@openai/codex|claude-code}"
 AGENT_OUTPUT_PATTERN="${WATCHDOG_AGENT_OUTPUT_PATTERN:-OpenAI Codex|azure_openai/|Claude Code|claude-code|tab to queue message|context left}"
-READY_PROMPT_PATTERN="${WATCHDOG_READY_PROMPT_PATTERN:-^[[:space:]]*[›>][[:space:]]}"
+READY_PROMPT_PATTERN="${WATCHDOG_READY_PROMPT_PATTERN:-^[[:space:]]*[›>]([[:space:]].*)?$}"
 READY_WINDOW_LINES="${WATCHDOG_READY_WINDOW_LINES:-12}"
 PLACEHOLDER_PROMPT_PATTERN="${WATCHDOG_PLACEHOLDER_PROMPT_PATTERN:-^(Use /skills to list available skills|Run /review on my current changes)$}"
 BUSY_TITLE_PATTERN="${WATCHDOG_BUSY_TITLE_PATTERN:-^[⠁-⣿][[:space:]]}"
@@ -125,6 +125,11 @@ prompt_buffer_text() {
   prompt_line="$(last_visible_prompt_line "$output")"
   [[ -n "$prompt_line" ]] || return 1
   printf '%s\n' "$prompt_line" | normalize_prompt_line
+}
+
+pane_has_ready_prompt() {
+  local output="$1"
+  [[ -n "$(last_visible_prompt_line "$output")" ]]
 }
 
 matches_session() {
@@ -314,12 +319,13 @@ scan_all_panes() {
     local current_command output visible_output
     current_command="$(pane_current_command "$pane")" || continue
     output="$(capture_recent_output "$pane")" || continue
-    visible_output="$(capture_visible_output "$pane")" || continue
     [[ -z "$output" ]] && continue
 
     if ! looks_like_agent_pane "$pane" "$current_command" "$output"; then
       continue
     fi
+
+    visible_output="$(capture_visible_output "$pane")" || continue
 
     if prompt_is_still_buffered "$visible_output"; then
       if pane_is_busy "$pane"; then
@@ -334,7 +340,22 @@ scan_all_panes() {
       continue
     fi
 
+    if prompt_has_manual_input "$visible_output"; then
+      log "SKIP: $pane - 输入框已有未提交内容，不注入 watchdog prompt"
+      continue
+    fi
+
     if has_stuck_pattern "$output"; then
+      if pane_is_busy "$pane"; then
+        log "SKIP: $pane - 命中错误，但 agent 仍忙"
+        continue
+      fi
+
+      if ! pane_has_ready_prompt "$visible_output"; then
+        log "SKIP: $pane - 命中错误，但当前无可输入 prompt"
+        continue
+      fi
+
       if recently_prompted "$pane"; then
         log "SKIP: $pane - 冷却中，暂不重复发送"
         continue
@@ -344,11 +365,6 @@ scan_all_panes() {
       if send_prompt "$pane" true; then
         mark_prompt_sent "$pane"
       fi
-      continue
-    fi
-
-    if prompt_has_manual_input "$visible_output"; then
-      log "SKIP: $pane - 输入框已有未提交内容，不注入 watchdog prompt"
       continue
     fi
   done <<< "$pane_list"
