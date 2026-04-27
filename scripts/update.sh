@@ -3,6 +3,13 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
+# --tmp-fix → run only the dirty-patch script (scripts/tmp-fix.sh) and exit.
+# Used to repair upstream-version drift (e.g. codex schema changes) without
+# re-running the full update. Drop fixes from tmp-fix.sh when upstream catches up.
+if [ "${1:-}" = "--tmp-fix" ]; then
+    exec "$SCRIPT_DIR/tmp-fix.sh"
+fi
+
 # Source nvm if available (needed when running from bash but nvm is configured in zsh)
 if [ -n "${NVM_DIR:-}" ] && [ -f "$NVM_DIR/nvm.sh" ]; then
     source "$NVM_DIR/nvm.sh"
