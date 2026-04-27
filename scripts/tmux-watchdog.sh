@@ -2,14 +2,13 @@
 
 # tmux-watchdog.sh
 #
-# 每 5 分钟由 cron 或 while 循环调用，自动扫描所有 tmux pane，
+# 默认每 1 分钟在前台循环中自动扫描所有 tmux pane，
 # 检测到 AI agent（Claude Code / Codex）卡在 rate limit 时发送 "keep going"。
 #
-# 用法 A（前台循环）: ./tmux-watchdog.sh
-# 用法 B（cron）:     */5 * * * * /path/to/tmux-watchdog.sh --once
+# 用法: ./tmux-watchdog.sh
 #
 # 可通过环境变量自定义：
-# WATCHDOG_INTERVAL=300                          轮询间隔（秒），仅前台循环模式
+# WATCHDOG_INTERVAL=60                           轮询间隔（秒），仅前台循环模式
 # WATCHDOG_PROMPT="keep going"                   卡住时发送的内容
 # WATCHDOG_LINES=80                              检查 pane 最后多少行
 # WATCHDOG_LOG=~/.tmux-watchdog.log              日志路径
@@ -35,7 +34,7 @@
 
 set -euo pipefail
 
-INTERVAL="${WATCHDOG_INTERVAL:-300}"
+INTERVAL="${WATCHDOG_INTERVAL:-60}"
 PROMPT="${WATCHDOG_PROMPT:-keep going}"
 LINES_TO_CHECK="${WATCHDOG_LINES:-80}"
 LOG_FILE="${WATCHDOG_LOG:-$HOME/.tmux-watchdog.log}"
@@ -371,6 +370,11 @@ scan_all_panes() {
 }
 
 main() {
+  if (($# > 0)); then
+    printf 'Usage: %s\n' "${0##*/}" >&2
+    return 1
+  fi
+
   log "=== tmux-watchdog 启动 ==="
   log "    检测间隔: ${INTERVAL}s | 检查行数: ${LINES_TO_CHECK} | prompt: \"${PROMPT}\""
   log "    session 过滤: ${SESSION_PATTERN}"
@@ -385,11 +389,6 @@ main() {
   log "    冷却时间: ${COOLDOWN_SECONDS}s | 状态目录: ${STATE_DIR}"
   log "    发送后等待: ${SEND_SETTLE_SECONDS}s"
   log "    报错 pattern: ${PATTERN}"
-
-  if [[ "${1:-}" == "--once" ]]; then
-    scan_all_panes
-    return
-  fi
 
   while true; do
     scan_all_panes
