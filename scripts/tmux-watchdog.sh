@@ -18,6 +18,8 @@
 #                                               直接以前台命令识别 agent 的模式
 # WATCHDOG_WRAPPED_AGENT_COMMAND_PATTERN='^(node)$'
 #                                               对 node 包裹的 agent 做二次识别
+# WATCHDOG_AGENT_PROCESS_PATTERN='(^|/)(codex|claude|claude-code)([[:space:]]|$)|@openai/codex|claude-code'
+#                                               从 pane 进程树识别 agent 的兜底模式
 # WATCHDOG_AGENT_OUTPUT_PATTERN='OpenAI Codex|azure_openai/|Claude Code|claude-code|tab to queue message|context left'
 #                                               输出中出现这些特征才认为是 agent pane
 # WATCHDOG_READY_PROMPT_PATTERN='^[[:space:]]*[›>][[:space:]]'
@@ -40,6 +42,7 @@ LOG_FILE="${WATCHDOG_LOG:-$HOME/.tmux-watchdog.log}"
 SESSION_PATTERN="${WATCHDOG_SESSION_PATTERN:-.*}"
 DIRECT_AGENT_COMMAND_PATTERN="${WATCHDOG_DIRECT_AGENT_COMMAND_PATTERN:-^(codex|claude|claude-code)$}"
 WRAPPED_AGENT_COMMAND_PATTERN="${WATCHDOG_WRAPPED_AGENT_COMMAND_PATTERN:-^(node)$}"
+AGENT_PROCESS_PATTERN="${WATCHDOG_AGENT_PROCESS_PATTERN:-(^|/)(codex|claude|claude-code)([[:space:]]|$)|@openai/codex|claude-code}"
 AGENT_OUTPUT_PATTERN="${WATCHDOG_AGENT_OUTPUT_PATTERN:-OpenAI Codex|azure_openai/|Claude Code|claude-code|tab to queue message|context left}"
 READY_PROMPT_PATTERN="${WATCHDOG_READY_PROMPT_PATTERN:-^[[:space:]]*[›>][[:space:]]}"
 READY_WINDOW_LINES="${WATCHDOG_READY_WINDOW_LINES:-12}"
@@ -90,6 +93,10 @@ pane_current_command() {
   tmux display-message -p -t "$1" '#{pane_current_command}' 2>/dev/null
 }
 
+pane_pid() {
+  tmux display-message -p -t "$1" '#{pane_pid}' 2>/dev/null
+}
+
 pane_title() {
   tmux display-message -p -t "$1" '#{pane_title}' 2>/dev/null
 }
@@ -128,9 +135,41 @@ matches_session() {
   [[ "$session_name" =~ $SESSION_PATTERN ]]
 }
 
+pane_process_snapshot() {
+  local pane="$1"
+  local root_pid pid child
+  local -a queue=()
+
+  root_pid="$(pane_pid "$pane")" || return 1
+  [[ "$root_pid" =~ ^[0-9]+$ ]] || return 1
+
+  queue=("$root_pid")
+  while ((${#queue[@]} > 0)); do
+    pid="${queue[0]}"
+    queue=("${queue[@]:1}")
+
+    ps -o pid=,comm=,args= -p "$pid" 2>/dev/null | sed -E 's/^[[:space:]]+//'
+    while IFS= read -r child; do
+      child="$(printf '%s' "$child" | tr -d '[:space:]')"
+      [[ -n "$child" ]] || continue
+      queue+=("$child")
+    done < <(ps -o pid= --ppid "$pid" 2>/dev/null)
+  done
+}
+
+looks_like_agent_process_tree() {
+  local pane="$1"
+  local process_snapshot
+
+  process_snapshot="$(pane_process_snapshot "$pane")" || return 1
+  [[ -n "$process_snapshot" ]] || return 1
+  printf '%s\n' "$process_snapshot" | grep -qiE -- "$AGENT_PROCESS_PATTERN"
+}
+
 looks_like_agent_pane() {
-  local current_command="$1"
-  local output="$2"
+  local pane="$1"
+  local current_command="$2"
+  local output="$3"
 
   if [[ "$current_command" =~ $DIRECT_AGENT_COMMAND_PATTERN ]]; then
     return 0
@@ -138,6 +177,10 @@ looks_like_agent_pane() {
 
   if [[ "$current_command" =~ $WRAPPED_AGENT_COMMAND_PATTERN ]] &&
     printf '%s\n' "$output" | grep -qiE -- "$AGENT_OUTPUT_PATTERN"; then
+    return 0
+  fi
+
+  if looks_like_agent_process_tree "$pane"; then
     return 0
   fi
 
@@ -274,7 +317,7 @@ scan_all_panes() {
     visible_output="$(capture_visible_output "$pane")" || continue
     [[ -z "$output" ]] && continue
 
-    if ! looks_like_agent_pane "$current_command" "$output"; then
+    if ! looks_like_agent_pane "$pane" "$current_command" "$output"; then
       continue
     fi
 
@@ -317,6 +360,7 @@ main() {
   log "    session 过滤: ${SESSION_PATTERN}"
   log "    直接命令过滤: ${DIRECT_AGENT_COMMAND_PATTERN}"
   log "    包装命令过滤: ${WRAPPED_AGENT_COMMAND_PATTERN}"
+  log "    进程树 agent 过滤: ${AGENT_PROCESS_PATTERN}"
   log "    agent 输出特征: ${AGENT_OUTPUT_PATTERN}"
   log "    ready prompt 特征: ${READY_PROMPT_PATTERN}"
   log "    ready prompt 可见窗口: 底部 ${READY_WINDOW_LINES} 行"
