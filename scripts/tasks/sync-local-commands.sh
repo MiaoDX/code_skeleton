@@ -99,12 +99,55 @@ run_sync_local_commands() {
 
     if [ "$synced" -eq 0 ]; then
         echo "  ! no .md files found in .claude/commands/"
-        return 0
-    fi
-
-    if [ -d "$codex_dest" ]; then
+    elif [ -d "$codex_dest" ]; then
         echo "  ✓ $synced local command(s) → ~/.claude/commands/ + ~/.codex/skills/"
     else
         echo "  ✓ $synced local command(s) → ~/.claude/commands/"
+    fi
+
+    # ── Sync local .claude/skills/* to ~/.agents/skills/ via npx skills ─
+    local skills_src="$devkit_dir/.claude/skills"
+    if [ -d "$skills_src" ]; then
+        local skills_synced=0
+        for skill_dir in "$skills_src"/*; do
+            [ -d "$skill_dir" ] || continue
+            [ -f "$skill_dir/SKILL.md" ] || continue
+
+            local skill_name
+            skill_name=$(basename "$skill_dir")
+
+            if npx -y skills add "$skill_dir" -g -y -a codex >/dev/null 2>&1; then
+                skills_synced=$((skills_synced + 1))
+                echo "  synced skill: $skill_name"
+            else
+                echo "  ! failed to sync skill: $skill_name"
+            fi
+        done
+        if [ "$skills_synced" -gt 0 ]; then
+            echo "  ✓ $skills_synced local skill(s) → ~/.agents/skills/ (via skills CLI)"
+        fi
+    fi
+
+    # ── Sync local skills/* (repo root) to ~/.agents/skills/ via npx skills ─
+    local root_skills_src="$devkit_dir/skills"
+    if [ -d "$root_skills_src" ]; then
+        local root_skills_synced=0
+        for skill_dir in "$root_skills_src"/*; do
+            [ -d "$skill_dir" ] || continue
+            [ -f "$skill_dir/SKILL.md" ] || continue
+
+            local skill_name
+            skill_name=$(basename "$skill_dir")
+
+            if npx -y skills add "$skill_dir" -g -y -a codex >/dev/null 2>&1; then
+                root_skills_synced=$((root_skills_synced + 1))
+                echo "  synced skill: $skill_name"
+            else
+                echo "  ! failed to sync skill: $skill_name"
+            fi
+        done
+        if [ "$root_skills_synced" -gt 0 ]; then
+            echo "  ✓ $root_skills_synced local skill(s) → ~/.agents/skills/ (via skills CLI)"
+        fi
     fi
 }
