@@ -128,9 +128,9 @@ run_sync_local_commands() {
         fi
     fi
 
-    # ── Sync local skills/* (repo root) to ~/.agents/skills/ via npx skills ─
+    # ── Sync local skills/* (repo root) to ~/.codex/skills/ for Codex ─
     local root_skills_src="$devkit_dir/skills"
-    if [ -d "$root_skills_src" ]; then
+    if [ -d "$root_skills_src" ] && [ -d "$codex_dest" ]; then
         local root_skills_synced=0
         for skill_dir in "$root_skills_src"/*; do
             [ -d "$skill_dir" ] || continue
@@ -139,15 +139,13 @@ run_sync_local_commands() {
             local skill_name
             skill_name=$(basename "$skill_dir")
 
-            if npx -y skills add "$skill_dir" -g -y -a codex >/dev/null 2>&1; then
-                root_skills_synced=$((root_skills_synced + 1))
-                echo "  synced skill: $skill_name"
-            else
-                echo "  ! failed to sync skill: $skill_name"
-            fi
+            # Copy directly to ~/.codex/skills/ for Codex
+            cp -r "$skill_dir" "$codex_dest/$skill_name"
+            root_skills_synced=$((root_skills_synced + 1))
+            echo "  synced skill: $skill_name"
         done
         if [ "$root_skills_synced" -gt 0 ]; then
-            echo "  ✓ $root_skills_synced local skill(s) → ~/.agents/skills/ (via skills CLI)"
+            echo "  ✓ $root_skills_synced local skill(s) → ~/.codex/skills/"
         fi
     fi
 }
