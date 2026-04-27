@@ -46,6 +46,19 @@ Result parsing:
 ADAPTER
 }
 
+_copy_dir_contents() {
+    local src_dir="$1"
+    local dest_dir="$2"
+
+    if [ -e "$dest_dir" ] && [ ! -d "$dest_dir" ]; then
+        echo "  ! destination exists and is not a directory: $dest_dir"
+        return 1
+    fi
+
+    mkdir -p "$dest_dir"
+    cp -R "$src_dir"/. "$dest_dir"/
+}
+
 # Sync .claude/commands/*.md from this repo to:
 #   ~/.claude/commands/   (Claude Code global commands)
 #   ~/.codex/skills/      (Codex skills, if ~/.codex exists)
@@ -139,8 +152,11 @@ run_sync_local_commands() {
             local skill_name
             skill_name=$(basename "$skill_dir")
 
-            # Copy directly to ~/.codex/skills/ for Codex
-            cp -r "$skill_dir" "$codex_dest/$skill_name"
+            # Copy contents in place so reruns update the existing skill directory
+            # instead of nesting skill_dir/skill_dir on repeated syncs.
+            if ! _copy_dir_contents "$skill_dir" "$codex_dest/$skill_name"; then
+                return 1
+            fi
             root_skills_synced=$((root_skills_synced + 1))
             echo "  synced skill: $skill_name"
         done

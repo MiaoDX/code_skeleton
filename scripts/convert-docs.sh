@@ -1,5 +1,12 @@
 #!/bin/bash
-set -e
+set -euo pipefail
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
+MARKITDOWN_BIN="$REPO_DIR/.venv/bin/markitdown"
+
+INPUT_DIR=""
+OUTPUT_FILE=""
 
 usage() {
     echo "Usage: $0 --in <input_dir> --out <output_file>"
@@ -11,10 +18,12 @@ usage() {
 while [[ $# -gt 0 ]]; do
     case $1 in
         --in)
+            [[ $# -ge 2 ]] || usage
             INPUT_DIR="$2"
             shift 2
             ;;
         --out)
+            [[ $# -ge 2 ]] || usage
             OUTPUT_FILE="$2"
             shift 2
             ;;
@@ -34,16 +43,23 @@ if [[ ! -d "$INPUT_DIR" ]]; then
     exit 1
 fi
 
+if [[ ! -x "$MARKITDOWN_BIN" ]]; then
+    echo "Error: markitdown not found at '$MARKITDOWN_BIN'"
+    exit 1
+fi
+
 # Create temp file name (remove empty file so zip can create fresh)
 TMP_BASE=$(mktemp /tmp/convert-docs-XXXXXX)
 TMP_ZIP="${TMP_BASE}.zip"
-rm "$TMP_BASE"
+cleanup() {
+    rm -f "$TMP_BASE" "$TMP_ZIP"
+}
+trap cleanup EXIT
+rm -f "$TMP_BASE"
 
-# Activate venv and run
-source .venv/bin/activate
+mkdir -p "$(dirname "$OUTPUT_FILE")"
 
 zip -r "$TMP_ZIP" "$INPUT_DIR"
-markitdown "$TMP_ZIP" -o "$OUTPUT_FILE"
-rm "$TMP_ZIP"
+"$MARKITDOWN_BIN" "$TMP_ZIP" -o "$OUTPUT_FILE"
 
 echo "Done: $OUTPUT_FILE"

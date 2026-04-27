@@ -99,7 +99,9 @@ await_task() {
     local name="$1" pid="$2" status=0
     local log_file="$LOGDIR/$name.log"
 
-    if ! wait "$pid"; then
+    if wait "$pid"; then
+        status=0
+    else
         status=$?
     fi
 
