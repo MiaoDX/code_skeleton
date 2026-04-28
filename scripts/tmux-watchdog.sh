@@ -26,7 +26,7 @@
 # WATCHDOG_READY_WINDOW_LINES=12                 只在 pane 底部这些可见行里识别 prompt
 # WATCHDOG_BUSY_TITLE_PATTERN='^[⠁-⣿][[:space:]]'
 #                                               pane 标题命中这个模式时认为 agent 正在工作
-# WATCHDOG_COOLDOWN=900                          同一 pane 两次发送间隔（秒）
+# WATCHDOG_COOLDOWN=60                           同一 pane 两次发送间隔（秒）
 # WATCHDOG_STATE_DIR=~/.tmux-watchdog-state      冷却状态目录
 # WATCHDOG_SEND_SETTLE_SECONDS=2                 发送后等待 UI 刷新的时间
 
@@ -44,7 +44,7 @@ AGENT_OUTPUT_PATTERN="${WATCHDOG_AGENT_OUTPUT_PATTERN:-OpenAI Codex|azure_openai
 READY_PROMPT_PATTERN="${WATCHDOG_READY_PROMPT_PATTERN:-^[[:space:]]*[›>]([[:space:]].*)?$}"
 READY_WINDOW_LINES="${WATCHDOG_READY_WINDOW_LINES:-12}"
 BUSY_TITLE_PATTERN="${WATCHDOG_BUSY_TITLE_PATTERN:-^[⠁-⣿][[:space:]]}"
-COOLDOWN_SECONDS="${WATCHDOG_COOLDOWN:-900}"
+COOLDOWN_SECONDS="${WATCHDOG_COOLDOWN:-60}"
 STATE_DIR="${WATCHDOG_STATE_DIR:-$HOME/.tmux-watchdog-state}"
 SEND_SETTLE_SECONDS="${WATCHDOG_SEND_SETTLE_SECONDS:-2}"
 
