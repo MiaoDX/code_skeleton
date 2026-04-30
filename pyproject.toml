@@ -1,7 +1,7 @@
 [project]
 name = "claude-devkit"
 version = "0.2.0"
-description = "Best practices and tools for AI coding agents"
+description = "Shared config, skills, and update scripts for Claude Code, Codex, and Gemini CLI"
 requires-python = ">=3.12"
 dependencies = [
     "markitdown",

@@ -1,10 +1,9 @@
-# Gemini Guide
+# Shared AI Agent Guide
 
 ## Environment
 
 - Use `fetch-mcp` instead of Fetch/WebFetch (network issues in China Mainland).
 - Use `uv` and `.venv` for Python execution instead of the system interpreter.
-- Pyright LSP is active globally for Python type checking. For non-Python projects, check the project root for a `.mcp.json` with the appropriate language server, or run `claude plugin install <lang>-lsp@claude-plugins-official`.
 
 ## Delegation And Verification
 
@@ -37,6 +36,8 @@
 - Ask a brief clarifying question only when a high-risk ambiguity would materially change the implementation.
 - Record repeated repo-specific mistakes in `tasks/lessons.md`.
 
-## Gemini-Specific Notes
+## Docs And Planning
 
-- Keep `GEMINI.md` thin and practical. Favor commands, scripts, or reusable workflows over long prompt playbooks.
+- Keep `README.md` as the thin entry guide and put detailed current-state docs under `docs/`.
+- Treat `docs/` as the human docs layer and `.planning/` as the live summary/control-plane layer; do not duplicate full manuals across both.
+- Prefer a curated ingest or merge step over broad repo-wide doc discovery when syncing planning from docs.
