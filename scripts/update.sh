@@ -141,6 +141,9 @@ for agent in claude-code codex; do
 
     bg_task "skills-codex-$agent" run_skills_codex "$agent"
     skills_pids+=("skills-codex-$agent:$BG_TASK_PID")
+
+    bg_task "skills-mattpocock-$agent" run_skills_mattpocock "$agent"
+    skills_pids+=("skills-mattpocock-$agent:$BG_TASK_PID")
 done
 
 # ── Collect results ──────────────────────────────────────────────

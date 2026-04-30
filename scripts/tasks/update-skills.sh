@@ -16,3 +16,7 @@ run_skills_anthro() {
 run_skills_codex() {
     _run_skills "$1" "skills-directory/skill-codex" "codex"
 }
+
+run_skills_mattpocock() {
+    _run_skills "$1" "https://github.com/mattpocock/skills" "mattpocock"
+}
