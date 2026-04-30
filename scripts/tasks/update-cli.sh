@@ -6,13 +6,11 @@ run_global_cli_tools() {
         @anthropic-ai/claude-code \
         claude-fetch-setup \
         @openai/codex \
-        happy-coder \
         opencode-ai@latest \
         pyright
 
     echo "  ✓ claude $(claude --version 2>/dev/null)"
     echo "  ✓ codex $(codex --version 2>/dev/null)"
-    echo "  ✓ happy-coder"
     echo "  ✓ opencode-ai"
     echo "  ✓ pyright $(pyright --version 2>/dev/null)"
 }

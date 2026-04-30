@@ -1,3 +1,8 @@
+---
+name: "agent-teams-impl-ralph-refactor"
+description: "Review implemented code with Claude Code agent teams and iterative Ralph Loop — parallel reviewer agents find issues, Claude triages findings, fix agents resolve real issues, and dismissed false positives feed back as hints so reviewers stop repeating them."
+---
+
 # agent-teams-impl-ralph-refactor
 
 Review implemented code with Claude Code agent teams and iterative Ralph Loop — parallel reviewer agents find issues, Claude triages findings, fix agents resolve real issues, and dismissed false positives feed back as hints so reviewers stop repeating them.

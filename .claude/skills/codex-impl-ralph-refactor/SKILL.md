@@ -1,3 +1,8 @@
+---
+name: "codex-impl-ralph-refactor"
+description: "Review implemented code with Codex and iterative Ralph Loop — Claude triages findings, fixes real issues, and feeds dismissed false positives back as hints so Codex stops repeating them."
+---
+
 # codex-impl-ralph-refactor
 
 Review implemented code with Codex and iterative Ralph Loop — Claude triages findings, fixes real issues, and feeds dismissed false positives back as hints so Codex stops repeating them.

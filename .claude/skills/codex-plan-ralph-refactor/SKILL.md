@@ -1,3 +1,8 @@
+---
+name: "codex-plan-ralph-refactor"
+description: "Review GSD phase plans with Codex and auto-refactor using Ralph Loop with early-stop detection."
+---
+
 # codex-plan-ralph-refactor
 
 Review GSD phase plans with Codex and auto-refactor using Ralph Loop with early-stop detection.

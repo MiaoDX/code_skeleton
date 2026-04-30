@@ -20,7 +20,7 @@ Arguments are passed through to `codex`, with the model name automatically prefi
 1. Parse the user's arguments
 2. If `-m <model>`, `--model <model>`, or `--model=<model>` is present and the model does NOT already start with `azure_openai/`, prepend `azure_openai/` to the model name
 3. Also check for `-c model="..."` config overrides — apply the same prefix rule
-4. If no model is specified anywhere, default to `-m azure_openai/gpt-5.4`
+4. If no model is specified anywhere, default to `-m azure_openai/gpt-5.5`
 5. Run the codex command (no `OPENAI_BASE_URL` override needed — `~/.codex/config.toml` already defines the mify provider with `base_url`)
 
 ## Prerequisites
@@ -40,12 +40,12 @@ The API key should be configured via `OPENAI_API_KEY` env var or in the config.
 
 | User provides | Sent to mify |
 |---------------|-------------|
-| (nothing) | `azure_openai/gpt-5.4` |
-| `-m gpt-5.4` | `-m azure_openai/gpt-5.4` |
+| (nothing) | `azure_openai/gpt-5.5` |
+| `-m gpt-5.5` | `-m azure_openai/gpt-5.5` |
 | `-m gpt-5.4-pro` | `-m azure_openai/gpt-5.4-pro` |
-| `--model=gpt-5.4` | `--model=azure_openai/gpt-5.4` |
+| `--model=gpt-5.5` | `--model=azure_openai/gpt-5.5` |
 | `-c model="gpt-5.4"` | `-c model="azure_openai/gpt-5.4"` |
-| `-m azure_openai/gpt-5.4` | `-m azure_openai/gpt-5.4` (no double prefix) |
+| `-m azure_openai/gpt-5.5` | `-m azure_openai/gpt-5.5` (no double prefix) |
 
 ## Command Assembly
 
@@ -92,5 +92,5 @@ codex resume {SESSION_ID|--last} \
 | Scenario | Response |
 |----------|----------|
 | mify endpoint unreachable | Report connection error, suggest checking VPN/network |
-| "Not supported model" error | Model not available on mify — known working models include `azure_openai/gpt-5.4`, `azure_openai/gpt-5.4-pro`, `azure_openai/gpt-5.3-codex` (not exhaustive) |
+| "Not supported model" error | Model not available on mify — known working models include `azure_openai/gpt-5.5`, `azure_openai/gpt-5.4-pro`, `azure_openai/gpt-5.3-codex` (not exhaustive) |
 | Codex CLI not found | Suggest `npm i -g @openai/codex` |

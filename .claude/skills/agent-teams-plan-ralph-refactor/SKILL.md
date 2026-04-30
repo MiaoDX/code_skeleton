@@ -1,3 +1,8 @@
+---
+name: "agent-teams-plan-ralph-refactor"
+description: "Review GSD phase plans with Claude Code agent teams and auto-refactor using Ralph Loop with early-stop detection. Parallel reviewer agents find design issues, the orchestrator triages, planner agents revise, and a checker agent verifies."
+---
+
 # agent-teams-plan-ralph-refactor
 
 Review GSD phase plans with Claude Code agent teams and auto-refactor using Ralph Loop with early-stop detection. Parallel reviewer agents find design issues, the orchestrator triages, planner agents revise, and a checker agent verifies.
