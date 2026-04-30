@@ -2,13 +2,34 @@
 set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+SKIP_CODEX_RUNNING_CHECK=false
+
+usage() {
+    echo "Usage: ${0##*/} [--tmp-fix] [--skip-codex-running-check]"
+}
 
 # --tmp-fix → run only the dirty-patch script (scripts/tmp-fix.sh) and exit.
 # Used to repair upstream-version drift (e.g. codex schema changes) without
 # re-running the full update. Drop fixes from tmp-fix.sh when upstream catches up.
-if [ "${1:-}" = "--tmp-fix" ]; then
-    exec "$SCRIPT_DIR/tmp-fix.sh"
-fi
+for arg in "$@"; do
+    case "$arg" in
+        --tmp-fix)
+            exec "$SCRIPT_DIR/tmp-fix.sh"
+            ;;
+        --skip-codex-running-check)
+            SKIP_CODEX_RUNNING_CHECK=true
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $arg" >&2
+            usage >&2
+            exit 2
+            ;;
+    esac
+done
 
 # Source nvm if available (needed when running from bash but nvm is configured in zsh)
 if [ -n "${NVM_DIR:-}" ] && [ -f "$NVM_DIR/nvm.sh" ]; then
@@ -27,7 +48,11 @@ LOGDIR=$(mktemp -d)
 trap 'rm -rf "$LOGDIR"' EXIT
 
 ensure_clean_env
-ensure_no_running_codex
+if [ "$SKIP_CODEX_RUNNING_CHECK" = true ]; then
+    echo "  ! Skipping Codex running-process check by request."
+else
+    ensure_no_running_codex
+fi
 
 source "$SCRIPT_DIR/tasks/update-cli.sh"
 source "$SCRIPT_DIR/tasks/update-skills.sh"
