@@ -57,7 +57,7 @@ fi
 source "$SCRIPT_DIR/tasks/update-cli.sh"
 source "$SCRIPT_DIR/tasks/update-skills.sh"
 source "$SCRIPT_DIR/tasks/update-gstack.sh"
-source "$SCRIPT_DIR/tasks/sync-local-commands.sh"
+source "$SCRIPT_DIR/tasks/sync-local-commands-skills.sh"
 
 # Run a task in the background, capturing output to a log file.
 # Usage: bg_task <name> <command...>
@@ -153,7 +153,7 @@ pid_cli=$BG_TASK_PID
 bg_task "GSD workflow" run_gsd_workflow
 pid_gsd=$BG_TASK_PID
 
-bg_task "Local commands" run_sync_local_commands
+bg_task "Local commands/skills" run_sync_local_commands_skills
 pid_local_cmds=$BG_TASK_PID
 
 # Codex TUI runs sequentially after GSD workflow — both rewrite
@@ -201,8 +201,8 @@ if ! await_task "GSD workflow" "$pid_gsd"; then
     record_failure "GSD workflow"
 fi
 
-if ! await_task "Local commands" "$pid_local_cmds"; then
-    record_failure "Local commands"
+if ! await_task "Local commands/skills" "$pid_local_cmds"; then
+    record_failure "Local commands/skills"
 fi
 
 bg_task "Codex TUI" run_codex_statusline

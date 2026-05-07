@@ -62,7 +62,7 @@ _copy_dir_contents() {
 # Sync .claude/commands/*.md from this repo to:
 #   ~/.claude/commands/   (Claude Code global commands)
 #   ~/.codex/skills/      (Codex skills, if ~/.codex exists)
-run_sync_local_commands() {
+run_sync_local_commands_skills() {
     local devkit_dir commands_src
     devkit_dir=$(cd "$SCRIPT_DIR/.." && pwd)
     commands_src="$devkit_dir/.claude/commands"
@@ -165,3 +165,8 @@ run_sync_local_commands() {
         fi
     fi
 }
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+    run_sync_local_commands_skills "$@"
+fi
