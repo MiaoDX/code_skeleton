@@ -5,12 +5,12 @@ description: |
   office-hours for idea shaping, docs/plans as the pre-execution source of
   truth, autoplan for hard review, optional to-issues for vertical slices, GSD
   ingest/plan for committed execution, GSD execute/verify for implementation,
-  bounded scoping for architecture/refactor work, and tdd inside risky slices.
-  Use when the user asks to combine Matt Pocock skills, gstack, and GSD; asks
-  for a durable pipeline; mentions
-  grill-me/office-hours/autoplan/to-issues/tdd/gsd together; asks to run
-  improve-codebase-architecture via a pipeline; or wants to move an idea from
-  fuzzy concept to implemented phase without duplicating sources of truth.
+  simplify for changed-code cleanup, bounded scoping for architecture/refactor
+  work, and tdd inside risky slices. Use when the user asks to combine Matt
+  Pocock skills, gstack, and GSD; asks for a durable pipeline; mentions
+  grill-me/office-hours/autoplan/to-issues/simplify/tdd/gsd together; asks to
+  run improve-codebase-architecture via a pipeline; or wants to move an idea
+  from fuzzy concept to implemented phase without duplicating sources of truth.
 ---
 
 # Hybrid Phase Pipeline
@@ -38,7 +38,7 @@ an artifact was produced inline by this skill or by a downstream skill.
 
 When this skill selects a downstream step such as `grill-me`, `autoplan`,
 `to-issues`, `gsd-ingest-docs`, `gsd-plan-phase`, `gsd-execute-phase`,
-`gsd-verify-work`, or `tdd`, do one of these:
+`simplify`, `gsd-verify-work`, or `tdd`, do one of these:
 
 - actually invoke/load that named skill and follow its workflow
 - say the named skill is unavailable or blocked, then stop or give a routing
@@ -219,6 +219,7 @@ Default path:
 
 ```text
 gsd-execute-phase <phase>
+simplify <changed-scope>
 gsd-verify-work <phase>
 ```
 
@@ -232,6 +233,22 @@ Use `tdd` inside individual slices when behavior needs to drive the code:
 - regressions
 
 `tdd` is not a phase planner. It is the implementation discipline for one slice.
+
+Use `simplify` after implementation produces code changes and before final
+verification or final commit. It reviews changed code for reuse, quality, and
+efficiency, then fixes valid findings directly.
+
+Scope `simplify` to the actual changed code:
+
+- if changes are still uncommitted, use `simplify`
+- if the slice was already committed, use `simplify <base-ref>` or
+  `simplify <path>`
+- if only docs/plans changed, skip `simplify` unless the user explicitly asks
+
+`simplify` is not an architecture discovery tool. Do not use it to find new
+features, expand refactor scope, or replace `gsd-verify-work`. After `simplify`
+changes code, rerun the relevant tests or verification gates before declaring
+the phase done.
 
 ### E. Architecture Or Refactor Goal
 
@@ -271,6 +288,29 @@ first. Read the frontmatter `status` marker, falling back to the `## Status`
 section. If the status is `DONE` and evidence remains green, stop instead of
 re-scanning for fresh cleanup.
 
+### F. Changed Code Needs Cleanup
+
+Use when implementation has already changed code and the next risk is local
+quality: duplication, missed reuse, avoidable complexity, or inefficient work.
+
+Default path:
+
+```text
+simplify <changed-scope>
+rerun relevant tests or verification gates
+```
+
+Pick the scope from the actual diff:
+
+- uncommitted changes -> `simplify`
+- committed slice -> `simplify <base-ref>`
+- focused package/module -> `simplify <path>`
+
+After `simplify`, keep the source of truth unchanged: GSD still owns phase
+execution truth, and the original plan or scope gate still owns what is in
+scope. Treat new broad cleanup ideas as P2/Parked unless they are valid findings
+against code already changed in this slice.
+
 ## Default Pipeline
 
 When the user asks for the whole durable pipeline, propose this compact sequence:
@@ -287,7 +327,8 @@ When the user asks for the whole durable pipeline, propose this compact sequence
      gsd-plan-phase --prd
 7. gsd-execute-phase
 8. tdd inside risky slices
-9. gsd-verify-work
+9. simplify changed code
+10. gsd-verify-work
 ```
 
 Do not run `office-hours` by default if `grill-me` already made the direction
@@ -298,6 +339,10 @@ Do not run `to-issues` by default if one GSD phase can hold the work cleanly.
 
 Do not run `tdd` globally. Use it where behavior should be specified through
 public interfaces before code.
+
+Do not run `simplify` globally. Run it on changed code after implementation and
+before final verification, or after a committed slice by passing a base ref or
+path.
 
 For architecture/refactor work, do not run `improve-codebase-architecture` as
 the execution driver. First produce or load an accepted refactor scope gate,
@@ -317,9 +362,11 @@ Stop and ask before crossing these boundaries:
    scope first?"
 5. **Issues -> GSD:** "Do you want GitHub issue tracking, or go straight to GSD?"
 6. **GSD plan -> Execute:** "Execute now, or stop after plan generation?"
-7. **Refactor scope -> Execute:** "Do you approve this P0/P1 checklist and stop
+7. **Simplify -> Verify:** "Review and clean the changed code with `simplify`
+   before final verification, or skip because the change is docs-only/trivial?"
+8. **Refactor scope -> Execute:** "Do you approve this P0/P1 checklist and stop
    condition for implementation?"
-8. **Local-dev gate:** if proof depends on real simulator, real Gateway, real VLM,
+9. **Local-dev gate:** if proof depends on real simulator, real Gateway, real VLM,
    Docker, GPU, or API keys, stop unless the current session is local and equipped.
 
 ## Output Shapes
@@ -352,7 +399,7 @@ Include:
 Return a compact routing table:
 
 ```text
-Current state: <fuzzy | draft-plan | reviewed-plan | gsd-phase | refactor-goal>
+Current state: <fuzzy | draft-plan | reviewed-plan | gsd-phase | changed-code | refactor-goal>
 Recommended next step: <skill/stage>
 Why: <one sentence>
 Stop condition: <what should be true before the next stage>
@@ -376,6 +423,8 @@ README or architecture docs unless the user asks.
 - Do not manually copy `docs/plans/<slug>.md` into a phase `CONTEXT.md`; use
   `gsd-plan-phase <phase> --prd docs/plans/<slug>.md`.
 - Do not use `autoplan` as a code refactor tool.
+- Do not use `simplify` as a broad refactor scanner. It reviews changed code
+  for reuse, quality, and efficiency after implementation.
 - Do not use `improve-codebase-architecture` as an unbounded refactor executor;
   produce or load a bounded refactor scope gate first.
 - Do not use `to-issues` after GSD execution has already started unless the
@@ -400,6 +449,8 @@ to-issues docs/plans/molmospaces-manipulation-spike.md   # optional
 gsd-ingest-docs --manifest <manifest> --mode merge   # if the phase does not exist yet
 gsd-plan-phase <created-or-existing-phase> --prd docs/plans/molmospaces-manipulation-spike.md
 gsd-execute-phase <created-or-existing-phase>
+simplify <changed-scope>
+gsd-verify-work <created-or-existing-phase>
 ```
 
 Use `tdd` inside the MolmoSpaces slices for scenario scoring, manifest parsing,
