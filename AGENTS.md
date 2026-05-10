@@ -50,5 +50,5 @@
 ## Codex-Specific Notes
 
 - Keep `AGENTS.md` thin and self-contained. Do not rely on follow-up file reads for critical rules.
-- Keep shared repo rules aligned with `AGENT_CORE.md`, but include the operative constraints in this file.
+- Keep shared repo rules aligned with `CLAUDE.md`, but include the operative constraints in this file.
 - Move reusable workflows to skills, scripts, or subagents instead of expanding this file.

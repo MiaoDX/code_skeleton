@@ -93,7 +93,7 @@
     <text y="273" class="section-header">══ Global CLI tools ══</text>
     <text y="292.5">
       <tspan class="checkmark">  &#x2713; </tspan>
-      <tspan class="tool-name">gemini-cli, codex, happy-coder, opencode-ai</tspan>
+      <tspan class="tool-name">claude, codex, pyright</tspan>
     </text>
 
     <!-- Section: Skills -->

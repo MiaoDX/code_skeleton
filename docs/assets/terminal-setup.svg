@@ -48,57 +48,42 @@
     <text x="22" y="112" fill="#7F849C">Linking context directory...</text>
 
     <!-- Line 4 -->
-    <text x="22" y="132" fill="#7F849C">Linking gemini config...</text>
+    <text x="22" y="132" fill="#7F849C">Linking .claude/commands directory...</text>
 
     <!-- Line 5 -->
-    <text x="22" y="152" fill="#7F849C">Linking .claude/commands directory...</text>
+    <text x="22" y="152" fill="#7F849C">Linking .claude/skills directory...</text>
 
     <!-- Line 6 -->
-    <text x="22" y="172" fill="#7F849C">Linking .claude/skills directory...</text>
+    <text x="22" y="172" fill="#7F849C">Setting up claude_yolo alias...</text>
 
     <!-- Line 7 -->
-    <text x="22" y="192" fill="#7F849C">Setting up claude_yolo alias...</text>
+    <text x="22" y="192" fill="#7F849C">claude_yolo alias already exists in /Users/user/.zshrc</text>
 
-    <!-- Line 8 -->
-    <text x="22" y="212" fill="#7F849C">claude_yolo alias already exists in /Users/user/.zshrc</text>
+    <!-- Line 8: empty -->
 
-    <!-- Line 9: empty -->
-
-    <!-- Line 10: prompt + command -->
-    <text x="22" y="252">
+    <!-- Line 9: prompt + command -->
+    <text x="22" y="232">
       <tspan fill="#A6E3A1">user@macbook ~/my-robotics-project $</tspan>
-      <tspan fill="#CDD6F4"> ls -la AGENT_CORE.md CLAUDE.md AGENTS.md GEMINI.md</tspan>
+      <tspan fill="#CDD6F4"> ls -la CLAUDE.md AGENTS.md</tspan>
     </text>
 
-    <!-- Line 11: ls output -->
-    <text x="22" y="272">
-      <tspan fill="#7F849C">lrwxr-xr-x  user  staff  AGENT_CORE.md </tspan>
-      <tspan fill="#89DCEB">-> /Users/user/claude-devkit/AGENT_CORE.md</tspan>
-    </text>
-
-    <!-- Line 12: ls output -->
-    <text x="22" y="292">
+    <!-- Line 10: ls output -->
+    <text x="22" y="252">
       <tspan fill="#7F849C">lrwxr-xr-x  user  staff  CLAUDE.md </tspan>
       <tspan fill="#89DCEB">-> /Users/user/claude-devkit/CLAUDE.md</tspan>
     </text>
 
-    <!-- Line 13: ls output -->
-    <text x="22" y="312">
+    <!-- Line 11: ls output -->
+    <text x="22" y="272">
       <tspan fill="#7F849C">lrwxr-xr-x  user  staff  AGENTS.md </tspan>
       <tspan fill="#89DCEB">-> /Users/user/claude-devkit/AGENTS.md</tspan>
     </text>
 
-    <!-- Line 14: ls output -->
-    <text x="22" y="332">
-      <tspan fill="#7F849C">lrwxr-xr-x  user  staff  GEMINI.md </tspan>
-      <tspan fill="#89DCEB">-> /Users/user/claude-devkit/GEMINI.md</tspan>
-    </text>
-
-    <!-- Line 15: prompt with blinking cursor -->
-    <text x="22" y="372">
+    <!-- Line 12: prompt with blinking cursor -->
+    <text x="22" y="312">
       <tspan fill="#A6E3A1">user@macbook ~/my-robotics-project $</tspan>
     </text>
-    <rect class="cursor" x="300" y="359" width="8" height="16" fill="#CDD6F4"/>
+    <rect class="cursor" x="300" y="299" width="8" height="16" fill="#CDD6F4"/>
 
   </g>
 </svg>

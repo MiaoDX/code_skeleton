@@ -536,8 +536,7 @@ Consider:
 | **Review engine** | Codex CLI (`codex exec`) | Claude Code agent teams (Agent tool) |
 | **External deps** | Requires Codex CLI + OpenAI API key | None — all Claude, works out of the box |
 | **Session resume** | Codex session resume mechanism | Stateless agents with rich context prompts per iteration |
-| **Provider** | `mify` flag for Azure OpenAI proxy | N/A — uses Claude models directly |
-| **Model control** | Fixed gpt-5.4 | `--reviewer-model` flag (sonnet/opus) |
+| **Model control** | Fixed gpt-5.5 | `--reviewer-model` flag (sonnet/opus) |
 | **Code access** | Codex reads files via its sandbox | Agents read files via Read/Grep tools |
 | **State file** | `{PHASE}-CODEX-REVIEW-STATE.md` | `{PHASE}-AGENT-REVIEW-STATE.md` |
 | **Parallelism** | Codex calls + subagents | Pure agent teams at every stage |

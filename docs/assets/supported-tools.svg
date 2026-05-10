@@ -11,7 +11,7 @@
   <rect width="700" height="110" rx="8" fill="white" stroke="#e2e8f0" stroke-width="1"/>
 
   <!-- ========== Claude Code ========== -->
-  <g transform="translate(70, 12)">
+  <g transform="translate(87.5, 12)">
     <!-- Tinted background circle -->
     <circle cx="0" cy="30" r="24" fill="#D97757" opacity="0.08"/>
     <!-- Abstract spark / asterisk -->
@@ -25,10 +25,10 @@
   </g>
 
   <!-- Separator 1 -->
-  <line x1="140" y1="16" x2="140" y2="94" class="separator"/>
+  <line x1="175" y1="16" x2="175" y2="94" class="separator"/>
 
   <!-- ========== Codex ========== -->
-  <g transform="translate(210, 12)">
+  <g transform="translate(262.5, 12)">
     <circle cx="0" cy="30" r="24" fill="#10A37F" opacity="0.08"/>
     <!-- Code brackets icon -->
     <g transform="translate(0, 30)">
@@ -38,24 +38,10 @@
   </g>
 
   <!-- Separator 2 -->
-  <line x1="280" y1="16" x2="280" y2="94" class="separator"/>
-
-  <!-- ========== Gemini CLI ========== -->
-  <g transform="translate(350, 12)">
-    <circle cx="0" cy="30" r="24" fill="#4285F4" opacity="0.08"/>
-    <!-- 4-pointed star -->
-    <g transform="translate(0, 30)">
-      <polygon points="0,-14 4.5,-4.5 14,0 4.5,4.5 0,14 -4.5,4.5 -14,0 -4.5,-4.5" fill="#4285F4"/>
-      <polygon points="0,-7 2.2,-2.2 7,0 2.2,2.2 0,7 -2.2,2.2 -7,0 -2.2,-2.2" fill="white" opacity="0.3"/>
-    </g>
-    <text x="0" y="72" text-anchor="middle" class="tool-name" fill="#4285F4">Gemini CLI</text>
-  </g>
-
-  <!-- Separator 3 -->
-  <line x1="420" y1="16" x2="420" y2="94" class="separator"/>
+  <line x1="350" y1="16" x2="350" y2="94" class="separator"/>
 
   <!-- ========== GSD ========== -->
-  <g transform="translate(490, 12)">
+  <g transform="translate(437.5, 12)">
     <circle cx="0" cy="30" r="24" fill="#8B5CF6" opacity="0.08"/>
     <!-- Checkmark with speed lines -->
     <g transform="translate(0, 30)">
@@ -67,11 +53,11 @@
     <text x="0" y="72" text-anchor="middle" class="tool-name" fill="#8B5CF6">GSD</text>
   </g>
 
-  <!-- Separator 4 -->
-  <line x1="560" y1="16" x2="560" y2="94" class="separator"/>
+  <!-- Separator 3 -->
+  <line x1="525" y1="16" x2="525" y2="94" class="separator"/>
 
   <!-- ========== MCP ========== -->
-  <g transform="translate(630, 12)">
+  <g transform="translate(612.5, 12)">
     <circle cx="0" cy="30" r="24" fill="#64748B" opacity="0.08"/>
     <!-- Plug / connection icon -->
     <g transform="translate(0, 30)">
