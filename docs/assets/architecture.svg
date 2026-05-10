@@ -1,133 +1,99 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="800" height="480">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" width="800" height="360">
   <defs>
     <style>
-      text { font-family: Inter, system-ui, sans-serif; }
+      .hub-title { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 17px; font-weight: 700; letter-spacing: 0.3px; }
+      .hub-sub { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 9.5px; font-weight: 700; letter-spacing: 2.2px; }
+      .hub-file { font-family: 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; font-size: 12px; font-weight: 500; }
+      .hub-tag { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 1.4px; }
+      .proj-name { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13.5px; font-weight: 700; }
+      .proj-path { font-family: 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; font-size: 10.5px; font-weight: 500; }
+      .arrow-label { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 9.5px; font-weight: 600; letter-spacing: 0.5px; }
+      .footer { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 11.5px; font-weight: 500; letter-spacing: 0.3px; }
     </style>
-    <!-- Arrow markers (color-matched) -->
-    <marker id="arrow-teal" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#5eead4"/>
+    <marker id="arr-teal" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="7" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#14b8a6"/>
     </marker>
-    <marker id="arrow-blue" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#60a5fa"/>
+    <marker id="arr-blue" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="7" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#3b82f6"/>
     </marker>
-    <marker id="arrow-purple" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#a78bfa"/>
+    <marker id="arr-violet" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="7" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#8b5cf6"/>
     </marker>
-    <!-- Hub gradient overlay -->
     <linearGradient id="hub-grad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#4338ca" stop-opacity="0.25"/>
+      <stop offset="0%" stop-color="#4338ca" stop-opacity="0.28"/>
       <stop offset="100%" stop-color="#1e1b4b" stop-opacity="0"/>
     </linearGradient>
   </defs>
 
-  <!-- Background -->
-  <rect width="800" height="480" rx="12" fill="#f8fafc"/>
+  <!-- ═══ Background ═══ -->
+  <rect width="800" height="360" rx="12" fill="#f8fafc"/>
 
-  <!-- ════════════════════════════════════════ -->
-  <!--              CENTRAL HUB                -->
-  <!-- ════════════════════════════════════════ -->
-  <rect x="260" y="28" width="280" height="138" rx="14" fill="#312e81"/>
-  <rect x="260" y="28" width="280" height="138" rx="14" fill="url(#hub-grad)"/>
-  <rect x="260" y="28" width="280" height="138" rx="14" fill="none" stroke="#4f46e5" stroke-width="1.5"/>
+  <!-- ═══ HUB (LEFT) — single source of truth ═══ -->
+  <rect x="24" y="48" width="240" height="264" rx="14" fill="#312e81"/>
+  <rect x="24" y="48" width="240" height="264" rx="14" fill="url(#hub-grad)"/>
+  <rect x="24" y="48" width="240" height="264" rx="14" fill="none" stroke="#4f46e5" stroke-width="1.5"/>
 
-  <!-- Hub title -->
-  <text x="400" y="62" text-anchor="middle" fill="#e0e7ff" font-size="17" font-weight="700" letter-spacing="0.3">claude-devkit</text>
+  <!-- Window-control style dots in upper-left of hub -->
+  <circle cx="42" cy="64" r="3.5" fill="#6366f1" opacity="0.75"/>
+  <circle cx="54" cy="64" r="3.5" fill="#818cf8" opacity="0.55"/>
+  <circle cx="66" cy="64" r="3.5" fill="#a5b4fc" opacity="0.4"/>
+
+  <!-- Hub title block -->
+  <text x="144" y="100" text-anchor="middle" class="hub-title" fill="#e0e7ff">claude-devkit</text>
+  <text x="144" y="118" text-anchor="middle" class="hub-sub" fill="#a5b4fc">SOURCE OF TRUTH</text>
+
   <!-- Divider -->
-  <line x1="280" y1="74" x2="520" y2="74" stroke="#4f46e5" stroke-width="0.8" opacity="0.5"/>
-  <!-- Hub components -->
-  <text x="400" y="100" text-anchor="middle" fill="#a5b4fc" font-size="12" font-weight="500">CLAUDE.md    AGENTS.md</text>
-  <text x="400" y="122" text-anchor="middle" fill="#a5b4fc" font-size="12" font-weight="500">skills/    commands/    hooks/</text>
-  <text x="400" y="144" text-anchor="middle" fill="#a5b4fc" font-size="11" font-weight="400" opacity="0.85">scripts/    context/</text>
+  <line x1="48" y1="138" x2="240" y2="138" stroke="#4f46e5" stroke-width="0.8" opacity="0.45"/>
 
-  <!-- Decorative dots -->
-  <rect x="272" y="40" width="8" height="8" rx="2" fill="#6366f1" opacity="0.6"/>
-  <rect x="284" y="40" width="8" height="8" rx="2" fill="#818cf8" opacity="0.5"/>
-  <rect x="296" y="40" width="8" height="8" rx="2" fill="#a5b4fc" opacity="0.4"/>
+  <!-- Hub file list -->
+  <text x="44" y="166" class="hub-file" fill="#c7d2fe">CLAUDE.md</text>
+  <text x="44" y="190" class="hub-file" fill="#c7d2fe">AGENTS.md</text>
+  <text x="44" y="214" class="hub-file" fill="#c7d2fe">.claude/commands/</text>
+  <text x="44" y="238" class="hub-file" fill="#c7d2fe">.claude/skills/</text>
+  <text x="44" y="262" class="hub-file" fill="#c7d2fe">context/</text>
 
-  <!-- ════════════════════════════════════════ -->
-  <!--            PROJECT NODES                -->
-  <!-- ════════════════════════════════════════ -->
+  <!-- Hub footer tag -->
+  <line x1="48" y1="280" x2="240" y2="280" stroke="#4f46e5" stroke-width="0.8" opacity="0.4"/>
+  <text x="144" y="298" text-anchor="middle" class="hub-tag" fill="#818cf8">EDIT ONCE  ·  SYMLINK EVERYWHERE</text>
 
-  <!-- Project 1: robotics-project (left) -->
-  <rect x="30" y="56" width="170" height="58" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
-  <rect x="30" y="56" width="4" height="58" rx="2" fill="#14b8a6"/>
-  <text x="52" y="82" fill="#134e4a" font-size="13" font-weight="600">robotics-project</text>
-  <text x="115" y="98" text-anchor="middle" fill="#5eead4" font-size="10" font-weight="500">~/ws/robotics</text>
+  <!-- ═══ SYMLINK ARROWS (CENTER) ═══ -->
+  <!-- Hub → robotics-arm -->
+  <path d="M 264 124 C 360 116, 430 92, 520 90" fill="none" stroke="#14b8a6" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arr-teal)"/>
+  <rect x="370" y="78" width="56" height="18" rx="4" fill="#f0fdfa" stroke="#ccfbf1" stroke-width="0.6"/>
+  <text x="398" y="91" text-anchor="middle" class="arrow-label" fill="#0d9488">symlink</text>
 
-  <!-- Project 2: web-app (top right) -->
-  <rect x="600" y="56" width="170" height="58" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
-  <rect x="600" y="56" width="4" height="58" rx="2" fill="#3b82f6"/>
-  <text x="622" y="82" fill="#1e3a5f" font-size="13" font-weight="600">web-app</text>
-  <text x="685" y="98" text-anchor="middle" fill="#60a5fa" font-size="10" font-weight="500">~/ws/web-app</text>
+  <!-- Hub → web-dashboard -->
+  <path d="M 264 184 L 520 190" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arr-blue)"/>
+  <rect x="370" y="178" width="56" height="18" rx="4" fill="#eff6ff" stroke="#dbeafe" stroke-width="0.6"/>
+  <text x="398" y="191" text-anchor="middle" class="arrow-label" fill="#2563eb">symlink</text>
 
-  <!-- Project 3: ml-pipeline (bottom right) -->
-  <rect x="600" y="136" width="170" height="58" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
-  <rect x="600" y="136" width="4" height="58" rx="2" fill="#8b5cf6"/>
-  <text x="622" y="162" fill="#3b0764" font-size="13" font-weight="600">ml-pipeline</text>
-  <text x="685" y="178" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="500">~/ws/ml-pipeline</text>
+  <!-- Hub → ml-pipeline -->
+  <path d="M 264 244 C 360 252, 430 280, 520 290" fill="none" stroke="#8b5cf6" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arr-violet)"/>
+  <rect x="370" y="278" width="56" height="18" rx="4" fill="#f5f3ff" stroke="#ede9fe" stroke-width="0.6"/>
+  <text x="398" y="291" text-anchor="middle" class="arrow-label" fill="#7c3aed">symlink</text>
 
-  <!-- ════════════════════════════════════════ -->
-  <!--            SYMLINK ARROWS               -->
-  <!-- ════════════════════════════════════════ -->
+  <!-- ═══ PROJECTS (RIGHT) ═══ -->
+  <!-- robotics-arm -->
+  <rect x="520" y="56" width="256" height="68" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="520" y="56" width="4" height="68" rx="2" fill="#14b8a6"/>
+  <text x="540" y="84" class="proj-name" fill="#134e4a">robotics-arm</text>
+  <text x="540" y="104" class="proj-path" fill="#0d9488">~/projects/robotics-arm</text>
+  <text x="757" y="113" text-anchor="end" class="hub-tag" fill="#5eead4">5 LINKS</text>
 
-  <!-- Hub -> robotics-project -->
-  <path d="M 260 70 C 225 68, 215 80, 200 85" fill="none" stroke="#5eead4" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arrow-teal)"/>
-  <rect x="196" y="60" width="58" height="18" rx="4" fill="#f0fdfa" stroke="#ccfbf1" stroke-width="0.5"/>
-  <text x="225" y="72" text-anchor="middle" fill="#0d9488" font-size="10" font-weight="600">symlink</text>
+  <!-- web-dashboard -->
+  <rect x="520" y="156" width="256" height="68" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="520" y="156" width="4" height="68" rx="2" fill="#3b82f6"/>
+  <text x="540" y="184" class="proj-name" fill="#1e3a5f">web-dashboard</text>
+  <text x="540" y="204" class="proj-path" fill="#2563eb">~/projects/web-dashboard</text>
+  <text x="757" y="213" text-anchor="end" class="hub-tag" fill="#60a5fa">5 LINKS</text>
 
-  <!-- Hub -> web-app -->
-  <path d="M 540 70 C 565 68, 580 78, 600 82" fill="none" stroke="#60a5fa" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arrow-blue)"/>
-  <rect x="546" y="60" width="58" height="18" rx="4" fill="#eff6ff" stroke="#dbeafe" stroke-width="0.5"/>
-  <text x="575" y="72" text-anchor="middle" fill="#2563eb" font-size="10" font-weight="600">symlink</text>
+  <!-- ml-pipeline -->
+  <rect x="520" y="256" width="256" height="68" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="520" y="256" width="4" height="68" rx="2" fill="#8b5cf6"/>
+  <text x="540" y="284" class="proj-name" fill="#3b0764">ml-pipeline</text>
+  <text x="540" y="304" class="proj-path" fill="#7c3aed">~/projects/ml-pipeline</text>
+  <text x="757" y="313" text-anchor="end" class="hub-tag" fill="#a78bfa">5 LINKS</text>
 
-  <!-- Hub -> ml-pipeline -->
-  <path d="M 540 140 C 565 145, 580 155, 600 160" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arrow-purple)"/>
-  <rect x="546" y="140" width="58" height="18" rx="4" fill="#f5f3ff" stroke="#ede9fe" stroke-width="0.5"/>
-  <text x="575" y="152" text-anchor="middle" fill="#7c3aed" font-size="10" font-weight="600">symlink</text>
-
-  <!-- ════════════════════════════════════════ -->
-  <!--      SEPARATOR: AI tools zone           -->
-  <!-- ════════════════════════════════════════ -->
-
-  <!-- Vertical connector from hub down to separator -->
-  <line x1="400" y1="166" x2="400" y2="260" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4 3"/>
-
-  <!-- Dashed horizontal separator -->
-  <line x1="80" y1="260" x2="320" y2="260" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4 4"/>
-  <line x1="480" y1="260" x2="720" y2="260" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4 4"/>
-  <!-- Centered label on separator -->
-  <rect x="310" y="248" width="180" height="22" rx="4" fill="#f8fafc"/>
-  <text x="400" y="264" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="500" letter-spacing="0.5">AI tools read shared config</text>
-
-  <!-- ════════════════════════════════════════ -->
-  <!--            AI TOOL CARDS                -->
-  <!-- ════════════════════════════════════════ -->
-
-  <!-- Claude Code -->
-  <rect x="130" y="300" width="200" height="72" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
-  <rect x="130" y="300" width="200" height="26" rx="10" fill="#fff7ed"/>
-  <rect x="130" y="316" width="200" height="10" fill="#fff7ed"/>
-  <rect x="130" y="300" width="4" height="72" rx="2" fill="#f97316"/>
-  <text x="230" y="318" text-anchor="middle" fill="#9a3412" font-size="14" font-weight="700">Claude Code</text>
-  <text x="230" y="340" text-anchor="middle" fill="#78716c" font-size="11">Anthropic</text>
-  <text x="230" y="357" text-anchor="middle" fill="#a8a29e" font-size="10">CLAUDE.md + skills + commands</text>
-  <!-- Connector up -->
-  <path d="M 230 300 L 230 280 C 230 268, 290 260, 400 260" fill="none" stroke="#fb923c" stroke-width="1" opacity="0.5"/>
-
-  <!-- Codex -->
-  <rect x="470" y="300" width="200" height="72" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
-  <rect x="470" y="300" width="200" height="26" rx="10" fill="#f0fdf4"/>
-  <rect x="470" y="316" width="200" height="10" fill="#f0fdf4"/>
-  <rect x="470" y="300" width="4" height="72" rx="2" fill="#22c55e"/>
-  <text x="570" y="318" text-anchor="middle" fill="#166534" font-size="14" font-weight="700">Codex</text>
-  <text x="570" y="340" text-anchor="middle" fill="#78716c" font-size="11">OpenAI</text>
-  <text x="570" y="357" text-anchor="middle" fill="#a8a29e" font-size="10">AGENTS.md + skills + commands</text>
-  <!-- Connector up -->
-  <path d="M 570 300 L 570 280 C 570 268, 510 260, 400 260" fill="none" stroke="#4ade80" stroke-width="1" opacity="0.5"/>
-
-  <!-- ════════════════════════════════════════ -->
-  <!--              FOOTER LABEL               -->
-  <!-- ════════════════════════════════════════ -->
-  <text x="400" y="420" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="400">One source of truth, two AI agents, every project</text>
-
+  <!-- ═══ FOOTER ═══ -->
+  <text x="400" y="340" text-anchor="middle" class="footer" fill="#94a3b8">Pull updates at the hub. Every linked project picks them up — no copies, no drift.</text>
 </svg>
