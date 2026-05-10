@@ -61,6 +61,7 @@ source "$SCRIPT_DIR/tasks/sync-local-commands-skills.sh"
 
 # Run a task in the background, capturing output to a log file.
 # Usage: bg_task <name> <command...>
+# Note: <name> is used as a filename — keep it filesystem-safe (no '/').
 bg_task() {
     local name="$1"; shift
     "$@" >"$LOGDIR/$name.log" 2>&1 &
@@ -153,9 +154,6 @@ pid_cli=$BG_TASK_PID
 bg_task "GSD workflow" run_gsd_workflow
 pid_gsd=$BG_TASK_PID
 
-bg_task "Local commands/skills" run_sync_local_commands_skills
-pid_local_cmds=$BG_TASK_PID
-
 # Codex TUI runs sequentially after GSD workflow — both rewrite
 # ~/.codex/config.toml, so racing them lets GSD clobber the [tui] block.
 
@@ -201,10 +199,6 @@ if ! await_task "GSD workflow" "$pid_gsd"; then
     record_failure "GSD workflow"
 fi
 
-if ! await_task "Local commands/skills" "$pid_local_cmds"; then
-    record_failure "Local commands/skills"
-fi
-
 bg_task "Codex TUI" run_codex_statusline
 pid_codex_tui=$BG_TASK_PID
 if ! await_task "Codex TUI" "$pid_codex_tui"; then
@@ -241,6 +235,15 @@ if [ "$cli_ok" = true ]; then
 else
     section "GStack"
     echo "  ! skipped because Global CLI tools failed"
+fi
+
+# Local command/skill sync writes to ~/.codex/skills, the same destination used
+# by the remote skill installers and GStack setup. Run it last so update.sh does
+# not race on that tree and local skill overrides win deterministically.
+bg_task "Local commands & skills" run_sync_local_commands_skills
+pid_local_cmds=$BG_TASK_PID
+if ! await_task "Local commands & skills" "$pid_local_cmds"; then
+    record_failure "Local commands & skills"
 fi
 
 if [ "${#failed_sections[@]}" -gt 0 ]; then
