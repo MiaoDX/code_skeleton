@@ -1,5 +1,21 @@
 #!/bin/bash
 
+# Failure hint for run_gstack — surfaces the case where the install path
+# exists but is not a git checkout (typical when the directory was created
+# manually or left behind from a different tool).
+print_gstack_failure_hint() {
+    local log_file="$1"
+    local repo_dir
+
+    repo_dir=$(sed -n 's/^gstack install path exists but is not a git repo: //p' "$log_file" | tail -1)
+
+    if [ -n "$repo_dir" ]; then
+        echo "  ! That path already exists but is not a gstack git checkout:"
+        echo "    $repo_dir"
+        echo "  ! Move it aside or rerun update.sh with GSTACK_REPO_DIR pointing at a clean checkout path."
+    fi
+}
+
 run_gstack() {
     local devkit_dir repo_dir repo_parent
 
