@@ -277,6 +277,10 @@ simplify <changed-scope>
 gsd-verify-work <phase>
 ```
 
+At GSD closeout/verify/ship, update `STATUS.md` when the current focus, latest
+phase, next action, or blocker changed. Keep it as a short dashboard; do not
+mirror the GSD ledger.
+
 When implementation hits a blocker, stay inside the current phase by default.
 Record the blocker and either fix it, narrow the phase, or mark the phase
 blocked. Create a follow-up phase only when the blocker is a separate coherent
@@ -388,6 +392,7 @@ When the user asks for the whole durable pipeline, propose this compact sequence
 8. tdd inside risky slices
 9. simplify changed code
 10. gsd-verify-work
+11. update STATUS.md if the current focus, latest phase, next action, or blocker changed
 ```
 
 Do not run `office-hours` by default if `grill-me` already made the direction
