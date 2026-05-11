@@ -39,13 +39,18 @@ Keep skills small, composable, and boring.
 ## Default Flow
 
 1. Parse the user task and selected skills.
-2. Run `scripts/run_skill_runner.py` with the original prompt.
-3. Wait for the tmux session by default, unless the user asks to detach.
-4. Read only the compact run artifacts first: `result.md`, `eval.md`, and the
+2. Choose the task workspace: the repo where the user prompt was triggered,
+   unless the user explicitly names a different target repo. Do not switch to
+   the custom skill source repo merely because a selected skill may be inspected
+   or patched.
+3. Run `scripts/run_skill_runner.py` with the original prompt and that workspace
+   as `--cwd`.
+4. Wait for the tmux session by default, unless the user asks to detach.
+5. Read only the compact run artifacts first: `result.md`, `eval.md`, and the
    worker's final message.
-5. Inspect the actual diff and verification output before trusting the result.
-6. Apply follow-up fixes in the main session only when needed.
-7. Consider skill changes only for reusable workflow defects.
+6. Inspect the actual diff and verification output before trusting the result.
+7. Apply follow-up fixes in the main session only when needed.
+8. Consider skill changes only for reusable workflow defects.
 
 Do not paste the whole worker transcript into the main context. Use the run
 artifacts and targeted searches through logs.
@@ -61,6 +66,12 @@ python3 /home/mi/ws/code_skeleton/skills/skill-runner/scripts/run_skill_runner.p
   -- \
   'impl <task> with $hybrid-phase-pipeline then $simplify'
 ```
+
+The selected skill must be applied to the `--cwd` workspace. If a run in a
+product repo reveals a reusable custom-skill defect, keep the product run
+grounded in that repo and patch `/home/mi/ws/code_skeleton/skills/...` as a
+separate follow-up. Use `/home/mi/ws/code_skeleton` as `--cwd` only when the
+task is solely custom skill maintenance.
 
 Useful options:
 

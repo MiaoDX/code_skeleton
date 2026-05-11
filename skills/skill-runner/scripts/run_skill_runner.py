@@ -198,6 +198,12 @@ Workspace:
 {cwd}
 
 Operating contract:
+- Treat the workspace above as the task/product repo and apply the selected
+  skill workflows there.
+- Do not substitute the custom skill source repo for the task workspace merely
+  because the prompt mentions a skill file or installed skill copy.
+- If the workspace appears wrong for the user objective, stop and report
+  BLOCKED_NEEDS_DECISION instead of doing a plausible task in the wrong repo.
 - Use the selected skill workflows honestly. If a named skill is unavailable, say so and stop.
 - Keep the work KISS: smallest useful change, fewest artifacts, clear stop condition.
 - Preserve unrelated user changes. Do not revert work you did not make.
