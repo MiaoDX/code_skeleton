@@ -1,6 +1,6 @@
 ---
 name: intuitive-ut
-description: Use this skill whenever the user asks about unit test best practices, UT organization, flat test suites, redundant tests, test refactors, pytest/JUnit/Jest/xUnit layout, test taxonomy, flaky tests, coverage quality, fixtures, mocks, parametrization, or "which tests are worth keeping." It turns broad testing advice into a practical, behavior-first cleanup workflow that preserves useful contracts while pruning low-signal unit tests.
+description: Use this skill whenever the user asks about unit test best practices, UT organization, flat test suites, redundant tests, test refactors, pytest/JUnit/Jest/xUnit layout, test taxonomy, flaky tests, coverage quality, fixtures, mocks, parametrization, or "which tests are worth keeping." It turns broad testing advice into a practical, behavior-first cleanup workflow. For broad suite refactors, audit first, propose a recommended path across markers, folder layout, pruning, fixtures, and parameterization, then wait for user feedback before applying disruptive changes.
 ---
 
 # Intuitive Unit Tests
@@ -10,6 +10,22 @@ less coupled to implementation details. The goal is not "more tests." The goal
 is a suite where each test has an obvious reason to exist.
 
 The workflow is framework-agnostic, but the examples assume Python/pytest.
+
+## When to Prompt First
+
+For broad requests such as "refactor all UTs", "fix the flat test suite",
+"organize tests", or "clean up unnecessary tests", start with an audit/proposal
+unless the user has already specified the exact slice to change.
+
+Report what you think is better to do across the known refactor points, then
+ask for confirmation before moving many files, deleting tests, or changing test
+entrypoints. A good proposal lets the user choose between conservative,
+layout-first, pruning-first, or fixture-extraction paths.
+
+Do not bake repo-specific verification skips into this skill. If some tests
+must not run because of network, credentials, simulator, hardware, paid APIs, or
+local services, use the user's prompt and repo instructions as the source of
+truth, then report those skipped checks explicitly.
 
 ## Core Principles
 
@@ -76,6 +92,112 @@ tests/
     fixtures.py
 ```
 
+## Modes
+
+### 1. AUDIT / PROPOSE mode
+
+Default for broad or ambiguous test-suite refactors.
+
+**Steps:**
+1. Inventory test files with `rg --files`, `find`, or the repo's test index.
+2. Identify current runners and path consumers: `pyproject.toml`, `pytest.ini`,
+   `tox.ini`, CI workflows, `just` recipes, scripts, docs, pre-commit hooks.
+3. Classify each file as `unit`, `contract`, `integration`, `regression`,
+   `local`, or `slow`.
+4. Identify low-signal candidates, repeated setup, table-driven opportunities,
+   implementation-coupled tests, and external-boundary tests.
+5. Recommend one primary path and one fallback:
+   - **Marker-first**: safest when path consumers are many or CI is fragile.
+   - **Layout-first**: good when file names already map cleanly to layers and
+     path consumers are easy to update.
+   - **Pruning-first**: good when many tests duplicate stronger behavior tests.
+   - **Fixture/factory-first**: good when setup noise hides test intent.
+   - **Parametrization-first**: good for validators, parsers, edge matrices, and
+     repeated one-case tests.
+6. Stop and ask the user which path to apply unless the prompt already makes
+   the choice explicit.
+
+Use this decision prompt:
+
+```text
+Recommended next slice: <marker-first | layout-first | pruning-first | fixture/factory-first | parametrization-first>
+Why: <short reason based on the inventory>
+Expected changes: <files/config/tests likely touched>
+Verification plan: <commands to run, plus any checks skipped because the user/repo said so>
+Tradeoff: <main risk or cost>
+Please confirm this slice or choose a different one.
+```
+
+### 2. MARKER mode
+
+Use when the user approves marker-first migration or when directory movement is
+risky.
+
+**Steps:**
+1. Register markers in `pyproject.toml` or `pytest.ini`; prefer
+   `--strict-markers`.
+2. Add explicit markers to touched tests, or add a temporary transparent
+   collection hook for legacy flat files.
+3. Add runner examples for useful layers such as `pytest -m unit` and
+   `pytest -m "contract or regression"`.
+4. Run focused collection/tests for the changed layer.
+
+### 3. LAYOUT mode
+
+Use when the user approves a folder layout migration or explicitly asks to move
+tests into a layer-based structure.
+
+**Steps:**
+1. Confirm the target layout and preserve importability:
+   ```text
+   tests/
+     unit/
+     contract/
+     integration/
+     regression/
+     support/
+   ```
+2. Move only the classified files in the approved slice.
+3. Update path consumers found during AUDIT / PROPOSE mode: CI, recipes,
+   scripts, docs, hooks, `pytest` config, and imports.
+4. Keep `tests/support/` for shared factories and fixtures; avoid making it a
+   dumping ground for one-off helpers.
+5. Run collection and relevant layer tests. If a check is skipped, cite the user
+   prompt or repo instruction that made it out of scope.
+
+### 4. PRUNE / CONSOLIDATE mode
+
+Use when the user approves pruning low-signal tests.
+
+**Steps:**
+1. For each candidate, identify the stronger behavior/contract/regression test
+   that preserves the caller-facing guarantee.
+2. Merge one-field-at-a-time tests into behavior tests when that improves
+   readability.
+3. Delete only tests that fail the low-signal checklist and are covered by a
+   stronger contract.
+4. Keep a short report of what was kept, merged, deleted, or reclassified.
+
+### 5. FIXTURE / FACTORY mode
+
+Use when repeated setup is the main problem.
+
+**Steps:**
+1. Extract a factory only after repeated dense setup appears in three or more
+   tests, or when a single setup block obscures the behavior under test.
+2. Prefer local fixtures near the tests until reuse is real.
+3. Keep factories readable and domain-named; avoid generic "make dict" helpers.
+
+### 6. PARAMETERIZE mode
+
+Use when repeated tests differ only by input/expected output or edge case.
+
+**Steps:**
+1. Convert repeated cases into table-driven tests.
+2. Give each case a readable id.
+3. Keep separate tests when setup, behavior, or failure diagnosis meaningfully
+   differs.
+
 ## Refactor Workflow
 
 Use a small, reversible sequence:
@@ -83,10 +205,12 @@ Use a small, reversible sequence:
 1. **Inventory** test files with `rg`/`find` and identify current runners (`pytest`, `just`, CI).
 2. **Classify** each file as unit, contract, integration, regression, local, or slow.
 3. **Preserve entrypoints** before moving files: explicit CI/recipe paths, docs, hooks, and developer commands.
-4. **Add markers** and strict marker checking before directory moves.
-5. **Prune low-signal tests** only when the replacement behavior test still proves the same caller-facing contract.
-6. **Extract factories** when three or more tests build the same dense object/dict.
-7. **Run focused tests** for touched modules, then the relevant layer (`-m unit`, `-m contract`, etc.).
+4. **Prompt for slice choice** when the request is broad or the best path is not obvious.
+5. **Add markers** and strict marker checking before directory moves unless the
+   user approved a layout-first migration.
+6. **Prune low-signal tests** only when the replacement behavior test still proves the same caller-facing contract.
+7. **Extract factories** when three or more tests build the same dense object/dict.
+8. **Run focused tests** for touched modules, then the relevant layer (`-m unit`, `-m contract`, etc.).
 
 Stop after one useful slice. Do not "clean up the entire test suite" by drift.
 
@@ -150,6 +274,7 @@ When applying this skill, report:
 Target:
 Change type:
 Classification:
+Recommended slice:
 Low-signal tests changed:
 Entry points preserved:
 Commands run:
