@@ -31,6 +31,57 @@ The core rule: **one source of truth per stage**.
 Do not create duplicate `.planning/phases/*` artifacts while the team is still
 brainstorming in `docs/plans/*.md`.
 
+## Scope Defaults
+
+Keep the workflow small, obvious, and proportionate. The pipeline should make
+the next right step easier to see; it should not turn normal implementation
+work into a ceremony.
+
+Default to:
+
+- the fewest artifacts that preserve the source of truth
+- one plan per coherent delivery unit
+- tasks/checklists inside a phase for small steps
+- follow-up notes for interesting but non-blocking ideas
+- explicit stop conditions instead of open-ended continuation
+
+If the simple path is enough, use it. Split only when the split makes execution
+or verification clearer.
+
+## Phase Granularity
+
+A GSD phase should be one coherent delivery unit:
+
+- one user-visible capability
+- one acceptance artifact
+- one risk gate
+- one bounded refactor outcome
+- one local-dev validation gate
+
+Do not create a new phase for:
+
+- every blocker found during implementation
+- every diagnostic improvement
+- every proof retry
+- every small report/checker change
+- every ADR-worthy detail
+- every commit
+
+Use tasks, checklist items, commits, notes, or verification rows inside the
+current phase for those.
+
+Before creating more than three phases from one user prompt, stop and propose a
+grouping. The proposal should name:
+
+- the smallest sensible phase set
+- what stays as tasks inside each phase
+- what is parked
+- what evidence closes each phase
+
+If the user asks for "each item has its own phase," interpret that as "each
+coherent deliverable has its own phase," then confirm before creating many
+micro-phases.
+
 ## Execution Honesty
 
 This skill is an orchestrator, not a magic executor. Be explicit about whether
@@ -59,7 +110,10 @@ If you produce something inline, label it as inline output from
   specific writing skill is invoked.
 - ADRs are not a default output of this skill. Create or update ADRs only when a
   documentation/ADR-capable skill is explicitly used or the user explicitly asks
-  for an ADR.
+  for an ADR. ADRs record durable architecture or product decisions, not
+  implementation progress. Do not create an ADR merely because a phase exists;
+  prefer updating the phase plan or summary unless the decision changes a
+  long-lived contract.
 - `.planning/*` files are GSD-owned. Do not create or edit `.planning/`
   artifacts inline and call it GSD. Use `gsd-ingest-docs` to bootstrap/merge
   docs into `.planning/`, and use `gsd-plan-phase` to create executable GSD
@@ -223,6 +277,11 @@ simplify <changed-scope>
 gsd-verify-work <phase>
 ```
 
+When implementation hits a blocker, stay inside the current phase by default.
+Record the blocker and either fix it, narrow the phase, or mark the phase
+blocked. Create a follow-up phase only when the blocker is a separate coherent
+delivery unit with its own acceptance evidence.
+
 Use `tdd` inside individual slices when behavior needs to drive the code:
 
 - new public interfaces
@@ -362,11 +421,13 @@ Stop and ask before crossing these boundaries:
    scope first?"
 5. **Issues -> GSD:** "Do you want GitHub issue tracking, or go straight to GSD?"
 6. **GSD plan -> Execute:** "Execute now, or stop after plan generation?"
-7. **Simplify -> Verify:** "Review and clean the changed code with `simplify`
+7. **Many phases:** before creating more than three phases from one prompt, ask
+   "Should this be grouped into a smaller set of coherent phases instead?"
+8. **Simplify -> Verify:** "Review and clean the changed code with `simplify`
    before final verification, or skip because the change is docs-only/trivial?"
-8. **Refactor scope -> Execute:** "Do you approve this P0/P1 checklist and stop
+9. **Refactor scope -> Execute:** "Do you approve this P0/P1 checklist and stop
    condition for implementation?"
-9. **Local-dev gate:** if proof depends on real simulator, real Gateway, real VLM,
+10. **Local-dev gate:** if proof depends on real simulator, real Gateway, real VLM,
    Docker, GPU, or API keys, stop unless the current session is local and equipped.
 
 ## Output Shapes
@@ -413,6 +474,10 @@ README or architecture docs unless the user asks.
 ## Anti-Patterns
 
 - Do not run every skill just because it exists.
+- Do not create a new GSD phase for every small task, diagnostic, proof retry,
+  report tweak, checker tweak, blocker, or commit. Keep those inside the
+  current coherent phase unless they need separate acceptance evidence.
+- Do not create an ADR for routine implementation progress.
 - Do not create both `docs/plans/<slug>.md` and `.planning/phases/<slug>/` as
   active competing sources of truth.
 - Do not treat `gsd-ingest-docs` and `gsd-plan-phase` as interchangeable.
