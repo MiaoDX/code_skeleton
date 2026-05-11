@@ -90,7 +90,7 @@ Skills that teach Claude Code to orchestrate Codex and pair on hard problems:
 | Skill | What it does |
 | --- | --- |
 | **codex** | Delegate analysis, review, and refactoring to Codex CLI |
-| **doc-keeper** | Audit architecture docs for drift and update stale claims |
+| **intuitive-doc** | Keep AI-developed repos readable through a small human doc surface |
 
 ### Ralph Loop Reviews
 
