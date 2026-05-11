@@ -68,7 +68,7 @@ Identify the human-facing doc surface, then verify its testable claims against t
    - **Implementation detail**: low-level internals, generated API notes, detailed phase implementation references
 3. Select a small audit set:
    - Include files explicitly named as current human-facing sources
-   - Include `README.md`, `ARCHITECTURE.md`, and `STATUS.md` when present and linked from orientation docs
+   - Include root `README.md`, `ARCHITECTURE.md`, and `STATUS.md` when present, even if not cross-linked
    - Include `docs/human/**` when present
    - Use ADR indexes, `.planning/**`, and `docs/plans/**` as evidence only unless the user explicitly targets them
    - Exclude `.planning/**`, `docs/plans/**`, `docs/status/active/**`, `docs/retrospectives/**`, `output/**`, generated reports, and archives unless the user targets them or an authoritative doc links one as current truth
