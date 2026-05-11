@@ -279,7 +279,9 @@ gsd-verify-work <phase>
 
 At GSD closeout/verify/ship, update `STATUS.md` when the current focus, latest
 phase, next action, or blocker changed. Keep it as a short dashboard; do not
-mirror the GSD ledger.
+mirror the GSD ledger. For parallel standalone terminal work, use one task-owned
+file under `docs/status/active/` instead of editing `STATUS.md` for routine
+progress.
 
 When implementation hits a blocker, stay inside the current phase by default.
 Record the blocker and either fix it, narrow the phase, or mark the phase
@@ -394,6 +396,9 @@ When the user asks for the whole durable pipeline, propose this compact sequence
 10. gsd-verify-work
 11. update STATUS.md if the current focus, latest phase, next action, or blocker changed
 ```
+
+For parallel standalone tasks, write progress to
+`docs/status/active/<task-slug>.md` and keep `STATUS.md` repo-level only.
 
 Do not run `office-hours` by default if `grill-me` already made the direction
 crisp. Add `office-hours` only if value, wedge, audience, or demo framing is
