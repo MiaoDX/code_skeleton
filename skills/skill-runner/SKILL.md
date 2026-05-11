@@ -17,6 +17,11 @@ The default mindset is daily development, not benchmark tuning. Do not rerun the
 same task just to optimize a skill. Learn from varied real tasks, and change a
 skill only when a reusable workflow defect is clear.
 
+This skill may repair itself when a real `skill-runner` run reveals a reusable
+runner defect, such as false blocker classification, unsafe supervision logic,
+or brittle artifact parsing. Keep those patches small and commit them separately
+from product-task changes.
+
 ## Philosophy
 
 Keep skills small, composable, and boring.
@@ -65,9 +70,27 @@ Useful options:
 - `--idle-timeout-min N` stops when logs are quiet too long.
 - `--dangerous` lets Codex run without sandbox/approval checks. Use only when
   the surrounding environment is already trusted.
+- Known Codex `bwrap` loopback sandbox failures are retried once automatically
+  without sandboxing when the worktree status is unchanged. Disable with
+  `--no-auto-retry-sandbox-failure`.
 - `--dry-run` writes the rewritten prompt and artifacts without starting tmux.
 
 The script writes run artifacts under `~/.cache/skill-runner/runs/` by default.
+
+## Supervisor Mechanics
+
+The runner treats the worker's final `RESULT_STATUS` as authoritative when
+`last-message.md` contains one:
+
+- `SUCCESS` maps to a successful run even if the CLI emitted noisy logs.
+- `PARTIAL` means useful work landed but follow-up remains.
+- `BLOCKED_NEEDS_DECISION` maps to `BLOCKED` even when the CLI exits 0.
+- `FAILED` maps to `FAILED` even when the CLI exits 0.
+
+Automatic blocker detection is intentionally narrow. It scans `stderr.log`, not
+the whole terminal transcript, so normal repo documentation mentioning auth,
+API keys, or setup instructions does not look like a live authentication
+failure. Inspect `terminal.log` manually when debugging a run.
 
 ## Prompt Rewrite Rules
 

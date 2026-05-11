@@ -17,11 +17,27 @@ from pathlib import Path
 
 DEFAULT_SKILL_REPO = Path("/home/mi/ws/code_skeleton")
 DEFAULT_RUN_ROOT = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "skill-runner" / "runs"
+SANDBOX_LOOPBACK_PATTERN = re.compile(
+    r"bwrap:\s+loopback:\s+Failed RTM_NEWADDR:\s+Operation not permitted",
+    re.I,
+)
+RESULT_STATUS_PATTERN = re.compile(
+    r"^\s*RESULT_STATUS:\s*(SUCCESS|PARTIAL|BLOCKED_NEEDS_DECISION|FAILED)\b",
+    re.I | re.M,
+)
 
 
 RISK_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("missing-agent-cli", re.compile(r"\b(codex|claude): command not found\b", re.I)),
-    ("auth-required", re.compile(r"(authentication required|not authenticated|no api key|api key.*missing)", re.I)),
+    ("sandbox-loopback-denied", SANDBOX_LOOPBACK_PATTERN),
+    (
+        "auth-required",
+        re.compile(
+            r"(authentication required|not authenticated|login required|please run .*\blogin\b|"
+            r"api key (is )?(required|missing|not set)|401 unauthorized)",
+            re.I,
+        ),
+    ),
     ("context-exhausted", re.compile(r"(context length|maximum context|too many tokens)", re.I)),
     ("noninteractive-approval", re.compile(r"(approval required|cannot prompt|requires confirmation)", re.I)),
 )
@@ -46,6 +62,7 @@ def main() -> int:
 
     write_text(run_dir / "input.md", prompt + "\n")
     write_text(run_dir / "rewritten-prompt.md", rewritten)
+    workspace_status_before = git_status(cwd)
     write_json(
         run_dir / "run.json",
         {
@@ -54,11 +71,12 @@ def main() -> int:
             "skills": skills,
             "session": args.session or default_session_name(run_dir),
             "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+            "auto_retry_sandbox_failure": args.auto_retry_sandbox_failure,
         },
     )
 
     session = args.session or default_session_name(run_dir)
-    write_run_script(run_dir, args, cwd)
+    write_run_script(run_dir, args, cwd, dangerous=args.dangerous)
 
     if args.dry_run:
         write_result(run_dir, session, "DRY_RUN", "Prompt rewritten; tmux session not started.")
@@ -75,6 +93,25 @@ def main() -> int:
         return 0
 
     status, exit_code, reason = wait_for_worker(session=session, run_dir=run_dir, args=args)
+    if should_retry_sandbox_failure(args, run_dir, cwd, workspace_status_before):
+        retry_session = retry_session_name(session)
+        archive_attempt_logs(run_dir, "attempt-1")
+        write_text(
+            run_dir / "auto-retry.md",
+            "Initial Codex run hit the known bwrap loopback sandbox failure. "
+            "The workspace git status was unchanged, so skill-runner retried "
+            "once with --dangerously-bypass-approvals-and-sandbox.\n",
+        )
+        write_run_script(run_dir, args, cwd, dangerous=True)
+        start_tmux(session=retry_session, run_dir=run_dir, cwd=cwd)
+        status, exit_code, retry_reason = wait_for_worker(
+            session=retry_session,
+            run_dir=run_dir,
+            args=args,
+        )
+        session = retry_session
+        reason = f"auto-retried sandbox-loopback-denied; retry result: {retry_reason}"
+
     if args.sync_on_skill_change:
         maybe_sync_skill_changes(skill_repo)
     if args.commit_skill_changes:
@@ -98,6 +135,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--detach", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--dangerous", action="store_true")
+    parser.add_argument(
+        "--auto-retry-sandbox-failure",
+        dest="auto_retry_sandbox_failure",
+        action="store_true",
+        default=True,
+        help="Retry known Codex bwrap loopback sandbox failures once without sandboxing.",
+    )
+    parser.add_argument(
+        "--no-auto-retry-sandbox-failure",
+        dest="auto_retry_sandbox_failure",
+        action="store_false",
+        help="Do not retry known Codex bwrap loopback sandbox failures automatically.",
+    )
     parser.add_argument("--no-auto-stop", action="store_true")
     parser.add_argument("--sync-on-skill-change", action="store_true")
     parser.add_argument("--commit-skill-changes", action="store_true")
@@ -114,6 +164,10 @@ def make_run_dir(run_root: str, cwd: Path, prompt: str) -> Path:
 
 def default_session_name(run_dir: Path) -> str:
     return "skill-runner-" + run_dir.name[:80]
+
+
+def retry_session_name(session: str) -> str:
+    return (session + "-retry")[:200]
 
 
 def slug(value: str) -> str:
@@ -173,7 +227,13 @@ SKILL_BEHAVIOR_NOTES: <reusable skill issue candidates or "none">
 """
 
 
-def write_run_script(run_dir: Path, args: argparse.Namespace, cwd: Path) -> None:
+def write_run_script(
+    run_dir: Path,
+    args: argparse.Namespace,
+    cwd: Path,
+    *,
+    dangerous: bool,
+) -> None:
     prompt_path = run_dir / "rewritten-prompt.md"
     exit_path = run_dir / "exit_code"
     if args.agent == "codex":
@@ -186,7 +246,7 @@ def write_run_script(run_dir: Path, args: argparse.Namespace, cwd: Path) -> None
             "--output-last-message",
             str(run_dir / "last-message.md"),
         ]
-        if args.dangerous:
+        if dangerous:
             command.append("--dangerously-bypass-approvals-and-sandbox")
         else:
             command.extend(["--sandbox", "workspace-write"])
@@ -200,7 +260,7 @@ def write_run_script(run_dir: Path, args: argparse.Namespace, cwd: Path) -> None
             "--permission-mode",
             "auto",
         ]
-        if args.dangerous:
+        if dangerous:
             command.append("--dangerously-skip-permissions")
 
     quoted = " ".join(shlex.quote(part) for part in command)
@@ -248,8 +308,7 @@ def wait_for_worker(*, session: str, run_dir: Path, args: argparse.Namespace) ->
     while True:
         if exit_path.exists():
             code = read_exit_code(exit_path)
-            status = "SUCCESS" if code == 0 else "FAILED"
-            return status, code, f"worker exited with code {code}"
+            return classify_worker_exit(run_dir, code)
 
         if not tmux_has_session(session):
             return "FAILED", 1, "tmux session ended without exit_code"
@@ -290,6 +349,68 @@ def stop_session(session: str, run_dir: Path, reason: str) -> None:
     write_text(run_dir / "status", "stopped\n")
 
 
+def classify_worker_exit(run_dir: Path, code: int) -> tuple[str, int, str]:
+    worker_status = read_worker_result_status(run_dir)
+    if worker_status == "SUCCESS":
+        return "SUCCESS", 0, f"worker reported RESULT_STATUS: SUCCESS; cli exit code {code}"
+    if worker_status == "PARTIAL":
+        return "PARTIAL", 0, f"worker reported RESULT_STATUS: PARTIAL; cli exit code {code}"
+    if worker_status == "BLOCKED_NEEDS_DECISION":
+        return "BLOCKED", 125, (
+            f"worker reported RESULT_STATUS: BLOCKED_NEEDS_DECISION; cli exit code {code}"
+        )
+    if worker_status == "FAILED":
+        return "FAILED", 1, f"worker reported RESULT_STATUS: FAILED; cli exit code {code}"
+    if detect_sandbox_loopback_failure(run_dir):
+        return "BLOCKED", 125, f"sandbox-loopback-denied; cli exit code {code}"
+    status = "SUCCESS" if code == 0 else "FAILED"
+    return status, code, f"worker exited with code {code}"
+
+
+def read_worker_result_status(run_dir: Path) -> str | None:
+    path = run_dir / "last-message.md"
+    if not path.exists():
+        return None
+    match = RESULT_STATUS_PATTERN.search(path.read_text(encoding="utf-8", errors="replace"))
+    if not match:
+        return None
+    return match.group(1).upper()
+
+
+def detect_sandbox_loopback_failure(run_dir: Path) -> bool:
+    return SANDBOX_LOOPBACK_PATTERN.search(read_log_tail(run_dir / "stderr.log")) is not None
+
+
+def should_retry_sandbox_failure(
+    args: argparse.Namespace,
+    run_dir: Path,
+    cwd: Path,
+    workspace_status_before: str,
+) -> bool:
+    if args.agent != "codex" or args.dangerous or not args.auto_retry_sandbox_failure:
+        return False
+    if not detect_sandbox_loopback_failure(run_dir):
+        return False
+    return git_status(cwd) == workspace_status_before
+
+
+def archive_attempt_logs(run_dir: Path, prefix: str) -> None:
+    for name in (
+        "events.jsonl",
+        "stderr.log",
+        "terminal.log",
+        "last-message.md",
+        "exit_code",
+        "status",
+        "worker.pid",
+        "stopped_reason",
+        "pane-before-stop.log",
+    ):
+        path = run_dir / name
+        if path.exists():
+            path.rename(run_dir / f"{prefix}.{name}")
+
+
 def log_size(run_dir: Path) -> int:
     total = 0
     for name in ("events.jsonl", "stderr.log", "terminal.log"):
@@ -300,15 +421,17 @@ def log_size(run_dir: Path) -> int:
 
 
 def detect_risk(run_dir: Path) -> str | None:
-    text = ""
-    for name in ("stderr.log", "terminal.log"):
-        path = run_dir / name
-        if path.exists():
-            text += path.read_text(encoding="utf-8", errors="replace")[-8000:]
+    text = read_log_tail(run_dir / "stderr.log")
     for label, pattern in RISK_PATTERNS:
         if pattern.search(text):
             return label
     return None
+
+
+def read_log_tail(path: Path, limit: int = 8000) -> str:
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8", errors="replace")[-limit:]
 
 
 def read_exit_code(path: Path) -> int:
