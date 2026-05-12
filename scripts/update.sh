@@ -61,8 +61,8 @@ task_init
 task_run "Global CLI tools" run_global_cli_tools --hint print_npm_failure_hint
 task_run "GSD workflow"     run_gsd_workflow
 
-# Codex TUI runs sequentially after GSD workflow — both rewrite
-# ~/.codex/config.toml, so racing them lets GSD clobber the [tui] block.
+# Codex config runs sequentially after GSD workflow — both rewrite
+# ~/.codex/config.toml, so racing them can clobber feature and [tui] updates.
 
 skills_names=()
 
@@ -81,8 +81,8 @@ fi
 
 task_await "GSD workflow"
 
-task_run "Codex TUI" run_codex_statusline
-task_await "Codex TUI"
+task_run "Codex config" run_codex_config
+task_await "Codex config"
 
 task_run "GStack State" run_gstack_state
 task_await "GStack State"

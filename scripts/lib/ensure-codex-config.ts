@@ -70,34 +70,12 @@ const findTableBounds = (tableName: string) => {
   return { start, end };
 };
 
-const ensureTableKey = (tableName: string, keyPattern: RegExp, keyLine: string) => {
-  const bounds = findTableBounds(tableName);
-  if (!bounds) {
-    const next = lines.join("\n").trimEnd();
-    const prefix = next === "" ? [] : [next, ""];
-    lines.length = 0;
-    if (prefix.length > 0) {
-      lines.push(...prefix[0]!.split("\n"), "");
-    }
-    lines.push(`[${tableName}]`, keyLine);
-    return;
-  }
-
-  for (let i = bounds.start + 1; i < bounds.end; i += 1) {
-    if (keyPattern.test(lines[i] ?? "")) {
-      lines[i] = keyLine;
-      return;
-    }
-  }
-
-  lines.splice(bounds.start + 1, 0, keyLine);
-};
-
-ensureTableKey("features", /^\s*codex_hooks\s*=/, "codex_hooks = true");
-
 const tuiBounds = findTableBounds("tui");
 if (!tuiBounds) {
-  lines.push(lines.length === 0 ? "[tui]" : "", "[tui]", `status_line = ${formatStatusLine(defaultItems)}`);
+  if (lines.length > 0) {
+    lines.push("");
+  }
+  lines.push("[tui]", `status_line = ${formatStatusLine(defaultItems)}`);
 } else {
   let statusLineIndex = -1;
   for (let i = tuiBounds.start + 1; i < tuiBounds.end; i += 1) {

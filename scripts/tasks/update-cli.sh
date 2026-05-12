@@ -123,8 +123,17 @@ run_mcp_fetch() {
     echo "  ✓ mcp-fetch"
 }
 
-run_codex_statusline() {
+run_codex_config() {
     local config_file="$HOME/.codex/config.toml"
+
+    if command -v codex >/dev/null 2>&1; then
+        codex features enable goals >/dev/null
+        codex features enable hooks >/dev/null
+        echo "  ✓ codex features enabled: goals, hooks"
+    else
+        echo "  ! skipped codex feature setup because codex is not installed"
+    fi
+
     bun "$SCRIPT_DIR/lib/ensure-codex-config.ts" "$config_file"
     echo "  ✓ codex status line configured"
 }
