@@ -64,3 +64,4 @@
 - Keep `AGENTS.md` thin and self-contained. Do not rely on follow-up file reads for critical rules.
 - Keep shared repo rules aligned with `CLAUDE.md`, but include the operative constraints in this file.
 - Move reusable workflows to skills, scripts, or subagents instead of expanding this file.
+- If a commit is created by Codex, include `Co-authored-by: Codex <codex@users.noreply.github.com>`
