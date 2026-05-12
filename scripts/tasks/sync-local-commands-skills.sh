@@ -92,7 +92,7 @@ run_sync_local_commands_skills() {
             local skill_name
             skill_name=$(basename "$skill_dir")
 
-            if npx -y skills add "$skill_dir" -g -y -a codex >/dev/null 2>&1; then
+            if npx -y skills add "$skill_dir" -g -y -a codex >/dev/null 2>&1 </dev/null; then
                 skills_synced=$((skills_synced + 1))
                 echo "  synced skill: $skill_name"
             else
@@ -116,7 +116,7 @@ run_sync_local_commands_skills() {
         while IFS= read -r skill_name; do
             skill_dir="$root_skills_src/$skill_name"
 
-            if npx -y skills add "$skill_dir" -g -y -a claude-code >/dev/null 2>&1; then
+            if npx -y skills add "$skill_dir" -g -y -a claude-code >/dev/null 2>&1 </dev/null; then
                 root_skills_claude_synced=$((root_skills_claude_synced + 1))
             else
                 echo "  ! failed to sync Claude Code skill: $skill_name"
