@@ -70,90 +70,17 @@ fi
 CLAUDE_SETTINGS="$HOME/.claude/settings.json"
 mkdir -p "$(dirname "$CLAUDE_SETTINGS")"
 
-write_claude_settings() {
-    local hook_path="$PLUGIN_DIR/hooks/better-hook.sh"
-    cat > "$CLAUDE_SETTINGS" <<EOF
-{
-  "hooks": {
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$hook_path UserPromptSubmit"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$hook_path PreToolUse"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$hook_path Stop"
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$hook_path Notification"
-          }
-        ]
-      }
-    ]
-  }
-}
-EOF
-}
-
-if [ -f "$CLAUDE_SETTINGS" ]; then
-    if [ -s "$CLAUDE_SETTINGS" ]; then
-        echo "    Merging Claude Code hooks into existing ~/.claude/settings.json..."
-        # Backup
-        cp "$CLAUDE_SETTINGS" "$CLAUDE_SETTINGS.bak.$(date +%s)"
-        # Use Python to merge JSON so we don't clobber other settings
-        python3 - "$CLAUDE_SETTINGS" "$PLUGIN_DIR" <<'PYEOF'
-import json, sys, os
-path = sys.argv[1]
-plugin_dir = sys.argv[2]
-hook = os.path.join(plugin_dir, "hooks", "better-hook.sh")
-with open(path, "r") as f:
-    data = json.load(f)
-if "hooks" not in data:
-    data["hooks"] = {}
-for event in ("UserPromptSubmit", "PreToolUse", "Stop", "Notification"):
-    data["hooks"][event] = [{
-        "hooks": [{"type": "command", "command": f"{hook} {event}"}]
-    }]
-with open(path, "w") as f:
-    json.dump(data, f, indent=2)
-PYEOF
-    else
-        write_claude_settings
-    fi
-else
-    write_claude_settings
+if [ -s "$CLAUDE_SETTINGS" ]; then
+    echo "    Merging Claude Code hooks into existing ~/.claude/settings.json..."
+    cp "$CLAUDE_SETTINGS" "$CLAUDE_SETTINGS.bak.$(date +%s)"
 fi
+bun "$SCRIPT_DIR/lib/ensure-claude-hooks.ts" "$CLAUDE_SETTINGS" "$PLUGIN_DIR"
 echo "    Claude Code hooks configured."
 
 # 5. Codex CLI settings
 CODEX_CONFIG="$HOME/.codex/config.toml"
 CODEX_HOOKS="$HOME/.codex/hooks.json"
-node "$SCRIPT_DIR/lib/ensure-codex-config.js" "$CODEX_CONFIG"
+bun "$SCRIPT_DIR/lib/ensure-codex-config.ts" "$CODEX_CONFIG"
 echo "    Codex config ensured in ~/.codex/config.toml"
 echo "    Codex status line includes current-dir, context-used, fast-mode, and thread-title"
 

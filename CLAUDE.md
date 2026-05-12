@@ -3,7 +3,9 @@
 ## Environment
 
 - Use `fetch-mcp` instead of Fetch/WebFetch (network issues in China Mainland).
-- Use `uv` and `.venv` for Python execution instead of the system interpreter.
+- Use Bash for orchestration entrypoints and Bun-run TypeScript for structured script logic.
+- For Python work, use `uv` and `.venv` instead of the system interpreter.
+- Avoid adding Python project dependencies unless a workflow truly needs Python-specific libraries.
 
 ## Delegation And Verification
 

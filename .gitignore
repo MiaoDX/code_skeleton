@@ -1,4 +1,4 @@
 vendor/
 .venv/
-uv.lock
+node_modules/
 .env

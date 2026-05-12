@@ -1,7 +1,0 @@
-[project]
-name = "intuitive-flow"
-version = "0.2.0"
-description = "Intuitive agent workflow skills, commands, and update scripts"
-requires-python = ">=3.12"
-dependencies = [
-]

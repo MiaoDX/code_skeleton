@@ -108,6 +108,6 @@ run_mcp_fetch() {
 
 run_codex_statusline() {
     local config_file="$HOME/.codex/config.toml"
-    node "$SCRIPT_DIR/lib/ensure-codex-config.js" "$config_file"
+    bun "$SCRIPT_DIR/lib/ensure-codex-config.ts" "$config_file"
     echo "  ✓ codex status line configured"
 }

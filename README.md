@@ -118,6 +118,17 @@ that every project should inherit wholesale. They capture useful defaults:
 | --- | --- |
 | `scripts/update.sh` | Install or update CLIs, MCP servers, skills, commands, and GSD |
 
+Bash scripts remain the orchestration entrypoints. Structured script logic that
+needs parsing, validation, or tests lives in Bun-run TypeScript under
+`scripts/lib/`.
+
+For script development:
+
+```bash
+bun install
+bun run verify
+```
+
 ## How It Works
 
 <p align="center">
