@@ -46,7 +46,6 @@
 
 - Treat instructions as intent. Flag contradictions, risky assumptions, or technical debt instead of blindly implementing around them.
 - Ask a brief clarifying question only when a high-risk ambiguity would materially change the implementation.
-- Record repeated repo-specific mistakes in `tasks/lessons.md`.
 
 ## Docs And Planning
 

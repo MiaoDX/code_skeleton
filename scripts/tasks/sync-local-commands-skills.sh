@@ -17,42 +17,100 @@ _copy_dir_contents() {
     cp -R "$src_dir"/. "$dest_dir"/
 }
 
-_remove_stale_local_artifacts() {
-    local stale_paths=(
-        "$HOME/.claude/commands/gsd_squash.md"
-        "$HOME/.codex/skills/gsd-squash"
-        "$HOME/.codex/skills/gsd_squash"
-        "$HOME/.codex/skills/intuitive-build"
-        "$HOME/.agents/skills/intuitive-build"
-        "$HOME/.claude/skills/intuitive-build"
-        "$HOME/.agents/skills/agent-teams-impl-ralph-refactor"
-        "$HOME/.agents/skills/agent-teams-plan-ralph-refactor"
-        "$HOME/.agents/skills/codex-impl-ralph-refactor"
-        "$HOME/.agents/skills/codex-plan-ralph-refactor"
-    )
+_manifest_entries() {
+    local manifest="$1"
+    local kind="$2"
 
-    local stale_path removed=0
-    for stale_path in "${stale_paths[@]}"; do
+    awk -v kind="$kind" '
+        /^[[:space:]]*#/ { next }
+        NF == 0 { next }
+        $1 == kind { print $2 }
+    ' "$manifest"
+}
+
+_manifest_has_entry() {
+    local manifest="$1"
+    local kind="$2"
+    local value="$3"
+
+    _manifest_entries "$manifest" "$kind" | grep -Fxq "$value"
+}
+
+_remove_stale_local_artifacts() {
+    local manifest="$1"
+
+    if [ ! -f "$manifest" ]; then
+        echo "  ! missing local skill manifest: $manifest"
+        return 1
+    fi
+
+    local removed=0 legacy_name stale_path install_root command_name
+
+    while IFS= read -r command_name; do
+        stale_path="$HOME/.claude/commands/$command_name"
         if [ -e "$stale_path" ]; then
+            # Allowed destructive cleanup: this path is built from a repo-owned
+            # manifest entry plus a known local agent install root.
             rm -rf "$stale_path"
             removed=$((removed + 1))
         fi
-    done
+    done < <(_manifest_entries "$manifest" legacy-command)
+
+    while IFS= read -r legacy_name; do
+        for install_root in "$HOME/.codex/skills" "$HOME/.agents/skills" "$HOME/.claude/skills"; do
+            stale_path="$install_root/$legacy_name"
+            if [ -e "$stale_path" ]; then
+                # Allowed destructive cleanup: legacy names are explicitly
+                # listed in scripts/local-skill-manifest.txt.
+                rm -rf "$stale_path"
+                removed=$((removed + 1))
+            fi
+        done
+    done < <(_manifest_entries "$manifest" legacy-skill)
 
     if [ "$removed" -gt 0 ]; then
         echo "  ✓ removed $removed stale local command/skill artifact(s)"
     fi
 }
 
+_check_root_skill_manifest() {
+    local manifest="$1"
+    local root_skills_src="$2"
+    local missing=0 skill_dir skill_name
+
+    while IFS= read -r skill_name; do
+        skill_dir="$root_skills_src/$skill_name"
+        if [ ! -f "$skill_dir/SKILL.md" ]; then
+            echo "  ! manifest lists missing root skill: $skill_name"
+            missing=$((missing + 1))
+        fi
+    done < <(_manifest_entries "$manifest" root-skill)
+
+    if [ -d "$root_skills_src" ]; then
+        for skill_dir in "$root_skills_src"/*; do
+            [ -d "$skill_dir" ] || continue
+            [ -f "$skill_dir/SKILL.md" ] || continue
+            skill_name=$(basename "$skill_dir")
+            if ! _manifest_has_entry "$manifest" root-skill "$skill_name"; then
+                echo "  ! root skill missing from manifest: $skill_name"
+                missing=$((missing + 1))
+            fi
+        done
+    fi
+
+    [ "$missing" -eq 0 ]
+}
+
 # Sync .claude/commands/*.md from this repo to:
 #   ~/.claude/commands/   (Claude Code global commands — raw .md copy)
 #   ~/.codex/skills/      (Codex skills — rendered via render_codex_skill)
 run_sync_local_commands_skills() {
-    local project_dir commands_src
+    local project_dir commands_src local_skill_manifest
     project_dir=$(cd "$SCRIPT_DIR/.." && pwd)
     commands_src="$project_dir/.claude/commands"
+    local_skill_manifest="$project_dir/scripts/local-skill-manifest.txt"
 
-    _remove_stale_local_artifacts
+    _remove_stale_local_artifacts "$local_skill_manifest" || return 1
 
     local claude_dest="$HOME/.claude/commands"
     local codex_dest="$HOME/.codex/skills"
@@ -115,12 +173,12 @@ run_sync_local_commands_skills() {
     if [ -d "$root_skills_src" ]; then
         local root_skills_codex_synced=0
         local root_skills_claude_synced=0
-        for skill_dir in "$root_skills_src"/*; do
-            [ -d "$skill_dir" ] || continue
-            [ -f "$skill_dir/SKILL.md" ] || continue
-
-            local skill_name
-            skill_name=$(basename "$skill_dir")
+        local skill_dir skill_name
+        if ! _check_root_skill_manifest "$local_skill_manifest" "$root_skills_src"; then
+            return 1
+        fi
+        while IFS= read -r skill_name; do
+            skill_dir="$root_skills_src/$skill_name"
 
             if npx -y skills add "$skill_dir" -g -y -a claude-code >/dev/null 2>&1; then
                 root_skills_claude_synced=$((root_skills_claude_synced + 1))
@@ -137,7 +195,7 @@ run_sync_local_commands_skills() {
                 root_skills_codex_synced=$((root_skills_codex_synced + 1))
             fi
             echo "  synced skill: $skill_name"
-        done
+        done < <(_manifest_entries "$local_skill_manifest" root-skill)
         if [ "$root_skills_claude_synced" -gt 0 ] || [ "$root_skills_codex_synced" -gt 0 ]; then
             echo "  ✓ $root_skills_claude_synced local skill(s) → Claude Code"
             echo "  ✓ $root_skills_codex_synced local skill(s) → ~/.codex/skills/"
