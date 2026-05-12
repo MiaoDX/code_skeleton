@@ -132,9 +132,13 @@ that every project should inherit wholesale. They capture useful defaults:
 | Script | Purpose |
 | --- | --- |
 | `scripts/update.sh` | Install or update CLIs, MCP servers, skills, commands, and GSD |
+| `scripts/dev/*.sh` | Local developer utilities for tmux and workstation sessions |
+| `scripts/support/tmp-fix.sh` | Idempotent updater patch hook used by `scripts/update.sh --tmp-fix` |
 
-Bash scripts remain the orchestration entrypoints. Structured script logic that
-needs parsing, validation, or tests lives in Bun-run TypeScript under
+The stable public entrypoint is `scripts/update.sh`. Local developer utilities
+live under `scripts/dev/`; update-only support helpers live under
+`scripts/support/`. Bash remains the orchestration layer. Structured script
+logic that needs parsing, validation, or tests lives in Bun-run TypeScript under
 `scripts/lib/`.
 
 For script development:

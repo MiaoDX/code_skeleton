@@ -5,7 +5,7 @@
 # 默认每 1 分钟在前台循环中自动扫描所有 tmux pane，
 # 检测到 AI agent（Claude Code / Codex）卡在 rate limit 时发送 "keep going"。
 #
-# 用法: ./tmux-watchdog.sh
+# 用法（从仓库根目录）: ./scripts/dev/tmux-watchdog.sh
 #
 # 可通过环境变量自定义：
 # WATCHDOG_INTERVAL=60                           轮询间隔（秒），仅前台循环模式

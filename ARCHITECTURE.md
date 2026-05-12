@@ -21,7 +21,7 @@ reusable workflows
         |
         v
 install and sync pipeline
-  scripts/update.sh -> scripts/tasks/* -> scripts/lib/*
+  scripts/update.sh -> scripts/tasks/* + scripts/support/* -> scripts/lib/*
         |
         v
 local/global agent surfaces
@@ -97,8 +97,10 @@ The updater currently handles these phases:
 - local command and root-skill sync
 
 Task execution is centralized in `scripts/lib/task-runner.sh`. Individual phases
-live under `scripts/tasks/`. TypeScript helpers and their tests live under
-`scripts/lib/`.
+live under `scripts/tasks/`. Updater-only patch hooks live under
+`scripts/support/`. TypeScript helpers and their tests live under `scripts/lib/`.
+Local workstation utilities that are not part of the updater contract live under
+`scripts/dev/`.
 
 To add a new update phase, implement the phase in `scripts/tasks/`, source it
 from `scripts/update.sh`, schedule it with the task runner, and document any new

@@ -11,6 +11,7 @@ currently provides:
 - reusable skills under `skills/`
 - update and sync automation under `scripts/`
 - Bun TypeScript helpers and tests under `scripts/lib/`
+- local workstation utilities under `scripts/dev/`
 - vendored GSD and gstack tooling under `vendor/`
 - generated Claude Code release-note visualizations under `docs/release-notes/`
 
@@ -44,6 +45,8 @@ The current maintenance focus is keeping the repo dogfoodable:
 - keep root skills listed in `scripts/local-skill-manifest.txt`
 - keep Bash as the orchestration layer and Bun TypeScript as the structured
   validation layer
+- keep stable updater entrypoints at `scripts/update.sh` and put local helpers
+  under `scripts/dev/` or `scripts/support/`
 - verify changes with `bun run verify`
 
 There is no active `.planning/` roadmap or GSD phase in this checkout.

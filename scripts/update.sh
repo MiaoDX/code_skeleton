@@ -8,13 +8,13 @@ usage() {
     echo "Usage: ${0##*/} [--tmp-fix] [--skip-codex-running-check]"
 }
 
-# --tmp-fix → run only the dirty-patch script (scripts/tmp-fix.sh) and exit.
+# --tmp-fix → run only the dirty-patch script (scripts/support/tmp-fix.sh) and exit.
 # Used to repair upstream-version drift (e.g. codex schema changes) without
 # re-running the full update. Drop fixes from tmp-fix.sh when upstream catches up.
 for arg in "$@"; do
     case "$arg" in
         --tmp-fix)
-            exec "$SCRIPT_DIR/tmp-fix.sh"
+            exec "$SCRIPT_DIR/support/tmp-fix.sh"
             ;;
         --skip-codex-running-check)
             SKIP_CODEX_RUNNING_CHECK=true

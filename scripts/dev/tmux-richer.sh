@@ -2,8 +2,9 @@
 set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+REPO_SCRIPTS_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 
-source "$SCRIPT_DIR/lib/ensure-no-running-codex.sh"
+source "$REPO_SCRIPTS_DIR/lib/ensure-no-running-codex.sh"
 
 # Install and setup tmux-agent-status for both Claude Code and Codex.
 # https://github.com/samleeney/tmux-agent-status
@@ -74,13 +75,13 @@ if [ -s "$CLAUDE_SETTINGS" ]; then
     echo "    Merging Claude Code hooks into existing ~/.claude/settings.json..."
     cp "$CLAUDE_SETTINGS" "$CLAUDE_SETTINGS.bak.$(date +%s)"
 fi
-bun "$SCRIPT_DIR/lib/ensure-claude-hooks.ts" "$CLAUDE_SETTINGS" "$PLUGIN_DIR"
+bun "$REPO_SCRIPTS_DIR/lib/ensure-claude-hooks.ts" "$CLAUDE_SETTINGS" "$PLUGIN_DIR"
 echo "    Claude Code hooks configured."
 
 # 5. Codex CLI settings
 CODEX_CONFIG="$HOME/.codex/config.toml"
 CODEX_HOOKS="$HOME/.codex/hooks.json"
-bun "$SCRIPT_DIR/lib/ensure-codex-config.ts" "$CODEX_CONFIG"
+bun "$REPO_SCRIPTS_DIR/lib/ensure-codex-config.ts" "$CODEX_CONFIG"
 echo "    Codex config ensured in ~/.codex/config.toml"
 echo "    Codex status line includes current-dir, context-used, fast-mode, and thread-title"
 
