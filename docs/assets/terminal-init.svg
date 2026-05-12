@@ -30,7 +30,7 @@
     </text>
 
     <text x="22" y="104" fill="#F9E2AF">&gt; Read this skill:</text>
-    <text x="42" y="126" fill="#89DCEB">https://github.com/MiaoDX/claude-devkit/blob/main/skills/intuitive-init/SKILL.md</text>
+    <text x="42" y="126" fill="#89DCEB">https://github.com/MiaoDX/intuitive-flow/blob/main/skills/intuitive-init/SKILL.md</text>
 
     <text x="22" y="164" fill="#F9E2AF">&gt; Use $intuitive-init to initialize this repo.</text>
     <text x="42" y="188" fill="#CDD6F4">Run /init-style discovery if available.</text>

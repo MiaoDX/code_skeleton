@@ -28,7 +28,7 @@
   <rect x="1" y="29" width="778" height="10" fill="#2C2C2C"/>
 
   <!-- Title bar text (centered) -->
-  <text x="390" y="25" text-anchor="middle" class="title-text">mi@ubuntu: ~/claude-devkit</text>
+  <text x="390" y="25" text-anchor="middle" class="title-text">mi@ubuntu: ~/intuitive-flow</text>
 
   <!-- Window controls (right side, GNOME style) -->
   <!-- Minimize (dash) -->
@@ -53,7 +53,7 @@
 
     <!-- Line 1: prompt + command -->
     <text y="0">
-      <tspan class="prompt">mi@ubuntu:~/claude-devkit$</tspan>
+      <tspan class="prompt">mi@ubuntu:~/intuitive-flow$</tspan>
       <tspan class="command"> ./scripts/update.sh</tspan>
     </text>
 
@@ -108,7 +108,7 @@
 
     <!-- Empty line, then prompt with blinking cursor -->
     <text y="429">
-      <tspan class="prompt">mi@ubuntu:~/claude-devkit$</tspan>
+      <tspan class="prompt">mi@ubuntu:~/intuitive-flow$</tspan>
     </text>
     <rect x="235" y="417" width="9" height="16" fill="#4E9A06" class="cursor"/>
 

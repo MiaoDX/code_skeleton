@@ -1,11 +1,10 @@
-# claude-devkit
+# intuitive-flow
 
-**AI-native repo init. Shared skills and commands. Project-local agent guidance.**
+**An opinionated operating model for agent-written software.**
 
-`claude-devkit` is a portable workflow kit for Claude Code and Codex. Its core
-idea is simple: reusable workflows live in skills, while every repo keeps its
-own `CLAUDE.md` and `AGENTS.md` with local commands, constraints, and
-source-of-truth rules.
+`intuitive-flow` is a portable workflow kit for Claude Code and Codex. It keeps
+the human surface small, puts reusable workflows in skills, and lets every repo
+own its local `CLAUDE.md` / `AGENTS.md` guidance.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Shell](https://img.shields.io/badge/Shell-toolkit-4EAA25.svg)](scripts/)
@@ -39,7 +38,7 @@ I do not want a giant process system. I want community best practices where
 they already exist, and a small set of intuitive skills where they do not.
 
 The workflow should make the big questions expensive and the small questions
-cheap: use `office-hours` or `grill-me` for what to build, `intuitive-flow` for
+cheap: use `office-hours` or `grill-me` for what to build, `intuitive-build` for
 normal development, and `intuitive-refactor` when it is time to clean the
 system without drifting forever.
 
@@ -55,7 +54,7 @@ local guidance:
 
 ```text
 Read or paste this skill:
-https://github.com/MiaoDX/claude-devkit/blob/main/skills/intuitive-init/SKILL.md
+https://github.com/MiaoDX/intuitive-flow/blob/main/skills/intuitive-init/SKILL.md
 
 Then run:
 Use $intuitive-init to initialize this repo's AGENTS.md and CLAUDE.md.
@@ -67,7 +66,7 @@ Propose a diff before applying.
 For agents that can fetch raw files directly, use:
 
 ```text
-https://raw.githubusercontent.com/MiaoDX/claude-devkit/main/skills/intuitive-init/SKILL.md
+https://raw.githubusercontent.com/MiaoDX/intuitive-flow/main/skills/intuitive-init/SKILL.md
 ```
 
 <p align="center">
@@ -76,11 +75,11 @@ https://raw.githubusercontent.com/MiaoDX/claude-devkit/main/skills/intuitive-ini
 
 ## Optional Tool Install
 
-Clone the devkit when you want the update scripts and local skill sync:
+Clone Intuitive Flow when you want the update scripts and local skill sync:
 
 ```bash
-git clone https://github.com/MiaoDX/claude-devkit.git ~/claude-devkit
-~/claude-devkit/scripts/update.sh
+git clone https://github.com/MiaoDX/intuitive-flow.git ~/intuitive-flow
+~/intuitive-flow/scripts/update.sh
 ```
 
 `scripts/update.sh` installs or refreshes supported CLI tools, MCP servers,
@@ -91,11 +90,11 @@ not initialize project root agent files; use `$intuitive-init` for that.
 
 | Skill | Use it for |
 | --- | --- |
-| **intuitive-init** | Merge `/init` suggestions, devkit defaults, and repo evidence into local `AGENTS.md` / `CLAUDE.md` |
+| **intuitive-init** | Merge `/init` suggestions, Intuitive Flow defaults, and repo evidence into local `AGENTS.md` / `CLAUDE.md` |
 | **intuitive-doc** | Keep human-facing docs small, current, and separated from agent evidence/history |
 | **intuitive-layout** | Improve repo/folder organization before deeper architecture work |
 | **intuitive-tests** | Organize, prune, mark, and refactor tests around behavior |
-| **intuitive-flow** | Move a fuzzy idea through plan review, GSD handoff, execution, cleanup, and verification |
+| **intuitive-build** | Move a fuzzy idea through plan review, GSD handoff, execution, cleanup, and verification |
 | **intuitive-refactor** | Bound broad refactors with accepted severities, evidence, and a stop condition |
 
 ## Shared Operating Rules

@@ -3,7 +3,7 @@ name: skill-runner
 description: |
   Run a daily development task through one or more named skills in an isolated
   tmux-backed Codex or Claude session. Use when the user asks to "impl X with
-  $skill", "run X via $intuitive-flow", supervise a skill-driven task,
+  $skill", "run X via $intuitive-build", supervise a skill-driven task,
   keep the main session clean, evaluate the run, or improve custom skills after
   a real task reveals a reusable workflow defect.
 ---
@@ -60,17 +60,17 @@ artifacts and targeted searches through logs.
 From the repo where the task should run:
 
 ```bash
-python3 /home/mi/ws/code_skeleton/skills/skill-runner/scripts/run_skill_runner.py \
+python3 /path/to/intuitive-flow/skills/skill-runner/scripts/run_skill_runner.py \
   --agent codex \
   --cwd "$PWD" \
   -- \
-  'impl <task> with $intuitive-flow then $simplify'
+  'impl <task> with $intuitive-build then $simplify'
 ```
 
 The selected skill must be applied to the `--cwd` workspace. If a run in a
 product repo reveals a reusable custom-skill defect, keep the product run
-grounded in that repo and patch `/home/mi/ws/code_skeleton/skills/...` as a
-separate follow-up. Use `/home/mi/ws/code_skeleton` as `--cwd` only when the
+grounded in that repo and patch `/path/to/intuitive-flow/skills/...` as a
+separate follow-up. Use the Intuitive Flow checkout as `--cwd` only when the
 task is solely custom skill maintenance.
 
 Useful options:
@@ -116,7 +116,7 @@ The worker prompt should be compact and explicit:
 - Verification required
 - Final output shape
 
-For `$intuitive-flow`, require coherent phase scope. Do not create many
+For `$intuitive-build`, require coherent phase scope. Do not create many
 micro-phases unless the worker first stops and asks for grouping approval.
 
 For `$simplify`, scope review to the actual diff or path. Do not expand into a
@@ -165,7 +165,7 @@ Prefer these outcomes, in order:
 6. `SCRIPT_MECHANIC`
 
 Do not edit third-party or system skills directly. For custom behavior, edit
-only custom skills under `/home/mi/ws/code_skeleton/skills`, or wrap external
+only custom skills under `/path/to/intuitive-flow/skills`, or wrap external
 skills from a custom skill.
 
 Before editing a skill, ask:

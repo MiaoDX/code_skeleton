@@ -18,7 +18,7 @@
   <rect width="800" height="360" rx="12" fill="#f8fafc"/>
 
   <rect x="28" y="44" width="252" height="272" rx="12" fill="#172554"/>
-  <text x="154" y="82" text-anchor="middle" class="title" fill="#dbeafe">claude-devkit</text>
+  <text x="154" y="82" text-anchor="middle" class="title" fill="#dbeafe">intuitive-flow</text>
   <text x="154" y="102" text-anchor="middle" class="label" fill="#93c5fd">REUSABLE WORKFLOW KIT</text>
   <line x1="52" y1="124" x2="256" y2="124" stroke="#3b82f6" opacity="0.45"/>
   <text x="54" y="154" class="mono" fill="#bfdbfe">skills/intuitive-init</text>

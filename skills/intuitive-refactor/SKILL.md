@@ -1,6 +1,6 @@
 ---
 name: intuitive-refactor
-description: Set a bounded refactor goal before architecture or cleanup work starts. Use whenever the user wants to improve architecture, refactor safely, "fix all big issues", avoid endless refactors, decide what is in/out of scope, classify P0/P1/P2/Parked findings, or define the tests and stop condition before changing code. This skill works standalone and can also be combined with architecture scanners, intuitive-flow, TDD, or diagnosis skills.
+description: Set a bounded refactor goal before architecture or cleanup work starts. Use whenever the user wants to improve architecture, refactor safely, "fix all big issues", avoid endless refactors, decide what is in/out of scope, classify P0/P1/P2/Parked findings, or define the tests and stop condition before changing code. This skill works standalone and can also be combined with architecture scanners, intuitive-build, TDD, or diagnosis skills.
 ---
 
 # Intuitive Refactor

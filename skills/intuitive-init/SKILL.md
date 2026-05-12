@@ -1,6 +1,6 @@
 ---
 name: intuitive-init
-description: Initialize, audit, merge, and refresh project-local AGENTS.md and CLAUDE.md files from existing repo guidance, agent /init suggestions, and intuitive workflow defaults. Use when setting up a repo for Claude Code/Codex, replacing symlinked agent files with local guidance, rerunning agent init after weeks of drift, or aligning a repo to intuitive-doc, intuitive-layout, intuitive-tests, intuitive-flow, and intuitive-refactor without overwriting project-specific hints.
+description: Initialize, audit, merge, and refresh project-local AGENTS.md and CLAUDE.md files from existing repo guidance, agent /init suggestions, and intuitive workflow defaults. Use when setting up a repo for Claude Code/Codex, replacing symlinked agent files with local guidance, rerunning agent init after weeks of drift, or aligning a repo to intuitive-doc, intuitive-layout, intuitive-tests, intuitive-build, and intuitive-refactor without overwriting project-specific hints.
 ---
 
 # Intuitive Init
@@ -12,7 +12,7 @@ constraints, workflow choices, and hard-won mistakes.
 
 ## Core Rule
 
-Treat generated init output and shared devkit defaults as reviewers, not
+Treat generated init output and Intuitive Flow defaults as reviewers, not
 authority.
 
 Authoritative inputs, in order:
@@ -23,7 +23,7 @@ Authoritative inputs, in order:
    `docs/agents/**`, and command docs.
 4. Actual repo commands, scripts, package metadata, CI config, and tests.
 5. Agent `/init` suggestions.
-6. Shared devkit defaults and skill-routing conventions.
+6. Intuitive Flow defaults and skill-routing conventions.
 
 ## Default Workflow
 
@@ -58,7 +58,7 @@ Use this workflow unless the user asks for report-only or a specific file.
    - `$intuitive-doc` for human-facing docs and doc drift.
    - `$intuitive-layout` for repo/folder organization.
    - `$intuitive-tests` for test-suite structure and behavior-focused cleanup.
-   - `$intuitive-flow` for fuzzy idea to planned execution.
+   - `$intuitive-build` for fuzzy idea to planned execution.
    - `$intuitive-refactor` before broad architecture or refactor work.
 6. Produce a merged proposal first:
    - Summarize the source inputs used.
@@ -111,7 +111,7 @@ root guidance into a manual.
 
 ### Symlink Migration
 
-Use when `AGENTS.md` or `CLAUDE.md` is a symlink to a shared devkit.
+Use when `AGENTS.md` or `CLAUDE.md` is a symlink to a shared toolkit.
 
 Preferred result:
 

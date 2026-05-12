@@ -21,9 +21,9 @@ _copy_dir_contents() {
 #   ~/.claude/commands/   (Claude Code global commands — raw .md copy)
 #   ~/.codex/skills/      (Codex skills — rendered via render_codex_skill)
 run_sync_local_commands_skills() {
-    local devkit_dir commands_src
-    devkit_dir=$(cd "$SCRIPT_DIR/.." && pwd)
-    commands_src="$devkit_dir/.claude/commands"
+    local project_dir commands_src
+    project_dir=$(cd "$SCRIPT_DIR/.." && pwd)
+    commands_src="$project_dir/.claude/commands"
 
     if [ ! -d "$commands_src" ]; then
         echo "  ! no .claude/commands directory — skipping"
@@ -62,7 +62,7 @@ run_sync_local_commands_skills() {
     fi
 
     # ── Sync local .claude/skills/* to ~/.agents/skills/ via npx skills ─
-    local skills_src="$devkit_dir/.claude/skills"
+    local skills_src="$project_dir/.claude/skills"
     if [ -d "$skills_src" ]; then
         local skills_synced=0
         for skill_dir in "$skills_src"/*; do
@@ -85,7 +85,7 @@ run_sync_local_commands_skills() {
     fi
 
     # ── Sync local skills/* (repo root) to ~/.codex/skills/ for Codex ─
-    local root_skills_src="$devkit_dir/skills"
+    local root_skills_src="$project_dir/skills"
     if [ -d "$root_skills_src" ] && [ -d "$codex_dest" ]; then
         local root_skills_synced=0
         for skill_dir in "$root_skills_src"/*; do

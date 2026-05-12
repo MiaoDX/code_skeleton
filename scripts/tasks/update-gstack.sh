@@ -17,10 +17,10 @@ print_gstack_failure_hint() {
 }
 
 run_gstack() {
-    local devkit_dir repo_dir repo_parent
+    local project_dir repo_dir repo_parent
 
-    devkit_dir=$(cd "$SCRIPT_DIR/.." && pwd)
-    repo_dir="${GSTACK_REPO_DIR:-$devkit_dir/vendor/gstack}"
+    project_dir=$(cd "$SCRIPT_DIR/.." && pwd)
+    repo_dir="${GSTACK_REPO_DIR:-$project_dir/vendor/gstack}"
 
     if ! command -v git >/dev/null 2>&1; then
         echo "  ! skipped because git is not installed"

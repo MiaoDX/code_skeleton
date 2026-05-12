@@ -15,7 +15,7 @@ import time
 from pathlib import Path
 
 
-DEFAULT_SKILL_REPO = Path("/home/mi/ws/code_skeleton")
+DEFAULT_SKILL_REPO = Path(__file__).resolve().parents[3]
 DEFAULT_RUN_ROOT = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "skill-runner" / "runs"
 SANDBOX_LOOPBACK_PATTERN = re.compile(
     r"bwrap:\s+loopback:\s+Failed RTM_NEWADDR:\s+Operation not permitted",
@@ -213,7 +213,7 @@ Operating contract:
 - If blocked by credentials, paid APIs, local hardware, Docker, GPU, or a human decision, stop and report BLOCKED_NEEDS_DECISION.
 
 Skill-specific guardrails:
-- For $intuitive-flow: one phase is one coherent delivery unit. Do not create more than three phases from this prompt without stopping for grouping approval. Use tasks/checklists for blockers, proof retries, diagnostics, and small report/checker changes.
+- For $intuitive-build: one phase is one coherent delivery unit. Do not create more than three phases from this prompt without stopping for grouping approval. Use tasks/checklists for blockers, proof retries, diagnostics, and small report/checker changes.
 - For $simplify: review the actual changed scope only. Do not expand into broad architecture discovery.
 - For GSD work: do not hand-write .planning artifacts and claim a downstream GSD skill produced them.
 
