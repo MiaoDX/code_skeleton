@@ -65,11 +65,6 @@ task_run "GSD workflow"     run_gsd_workflow
 # ~/.codex/config.toml, so racing them lets GSD clobber the [tui] block.
 
 skills_names=()
-for agent in claude-code codex; do
-    n="skills-anthro-$agent";     skills_names+=("$n"); task_run "$n" run_skills_anthro     "$agent"
-    n="skills-codex-$agent";      skills_names+=("$n"); task_run "$n" run_skills_codex      "$agent"
-    n="skills-mattpocock-$agent"; skills_names+=("$n"); task_run "$n" run_skills_mattpocock "$agent"
-done
 
 # ── Collect results, gating downstream tasks on CLI success ──────────
 task_await "Global CLI tools"
@@ -89,8 +84,6 @@ task_await "GSD workflow"
 task_run "Codex TUI" run_codex_statusline
 task_await "Codex TUI"
 
-task_await_group "Skills" "${skills_names[@]}"
-
 task_run "GStack State" run_gstack_state
 task_await "GStack State"
 
@@ -101,9 +94,18 @@ else
     task_skip "GStack" "skipped because Global CLI tools failed"
 fi
 
-# Local command/skill sync writes to ~/.codex/skills, the same destination used
-# by the remote skill installers and GStack setup. Run it last so update.sh does
-# not race on that tree and local skill overrides win deterministically.
+# GSD scans ~/.codex/skills, and GStack rewrites the gstack skill links there.
+# Keep those phases ahead of the remaining skill installers so home-level skill
+# updates do not overlap.
+for agent in claude-code codex; do
+    n="skills-anthro-$agent";     skills_names+=("$n"); task_run "$n" run_skills_anthro     "$agent"
+    n="skills-codex-$agent";      skills_names+=("$n"); task_run "$n" run_skills_codex      "$agent"
+    n="skills-mattpocock-$agent"; skills_names+=("$n"); task_run "$n" run_skills_mattpocock "$agent"
+done
+task_await_group "Skills" "${skills_names[@]}"
+
+# Local command/skill sync also writes to ~/.codex/skills. Run it last so local
+# skill overrides win deterministically.
 task_run "Local commands & skills" run_sync_local_commands_skills
 task_await "Local commands & skills"
 

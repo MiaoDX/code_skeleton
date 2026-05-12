@@ -41,6 +41,22 @@ run_global_cli_tools() {
     echo "  ✓ pyright $(pyright --version 2>/dev/null)"
 }
 
+prune_broken_codex_skill_symlinks() {
+    local skills_dir="$HOME/.codex/skills"
+    local link removed=0
+
+    [ -d "$skills_dir" ] || return 0
+
+    while IFS= read -r -d '' link; do
+        rm -f "$link"
+        removed=$((removed + 1))
+    done < <(find "$skills_dir" -xtype l -print0 2>/dev/null)
+
+    if [ "$removed" -gt 0 ]; then
+        echo "  ! removed $removed broken Codex skill symlink(s)"
+    fi
+}
+
 run_claude_plugins() {
     local out
 
@@ -78,6 +94,7 @@ run_gsd_workflow() {
     # GSD #976: strip context-monitor hook from global settings.json (use auto-compact instead)
     out=$(npx -y get-shit-done-cc --claude --global 2>&1) || { echo "$out"; return 1; }
     echo "$out" | grep -E '^  [⚠✗!]' || true
+    prune_broken_codex_skill_symlinks
     out=$(npx -y get-shit-done-cc --codex --global 2>&1) || { echo "$out"; return 1; }
     echo "$out" | grep -E '^  [⚠✗!]' || true
 
