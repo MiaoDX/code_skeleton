@@ -1,99 +1,55 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" width="800" height="360">
   <defs>
     <style>
-      .hub-title { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 17px; font-weight: 700; letter-spacing: 0.3px; }
-      .hub-sub { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 9.5px; font-weight: 700; letter-spacing: 2.2px; }
-      .hub-file { font-family: 'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; font-size: 12px; font-weight: 500; }
-      .hub-tag { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 1.4px; }
-      .proj-name { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13.5px; font-weight: 700; }
-      .proj-path { font-family: 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; font-size: 10.5px; font-weight: 500; }
-      .arrow-label { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 9.5px; font-weight: 600; letter-spacing: 0.5px; }
-      .footer { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 11.5px; font-weight: 500; letter-spacing: 0.3px; }
+      .title { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 17px; font-weight: 700; }
+      .label { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1.4px; }
+      .mono { font-family: 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; font-weight: 500; }
+      .body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12px; font-weight: 500; }
+      .small { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 10.5px; font-weight: 600; }
     </style>
-    <marker id="arr-teal" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="7" markerHeight="6" orient="auto">
-      <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#14b8a6"/>
+    <marker id="arrow-blue" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="7" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#2563eb"/>
     </marker>
-    <marker id="arr-blue" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="7" markerHeight="6" orient="auto">
-      <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#3b82f6"/>
+    <marker id="arrow-teal" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="7" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#0f766e"/>
     </marker>
-    <marker id="arr-violet" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="7" markerHeight="6" orient="auto">
-      <path d="M 0 0 L 10 3.5 L 0 7 Z" fill="#8b5cf6"/>
-    </marker>
-    <linearGradient id="hub-grad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#4338ca" stop-opacity="0.28"/>
-      <stop offset="100%" stop-color="#1e1b4b" stop-opacity="0"/>
-    </linearGradient>
   </defs>
 
-  <!-- ═══ Background ═══ -->
   <rect width="800" height="360" rx="12" fill="#f8fafc"/>
 
-  <!-- ═══ HUB (LEFT) — single source of truth ═══ -->
-  <rect x="24" y="48" width="240" height="264" rx="14" fill="#312e81"/>
-  <rect x="24" y="48" width="240" height="264" rx="14" fill="url(#hub-grad)"/>
-  <rect x="24" y="48" width="240" height="264" rx="14" fill="none" stroke="#4f46e5" stroke-width="1.5"/>
+  <rect x="28" y="44" width="252" height="272" rx="12" fill="#172554"/>
+  <text x="154" y="82" text-anchor="middle" class="title" fill="#dbeafe">claude-devkit</text>
+  <text x="154" y="102" text-anchor="middle" class="label" fill="#93c5fd">REUSABLE WORKFLOW KIT</text>
+  <line x1="52" y1="124" x2="256" y2="124" stroke="#3b82f6" opacity="0.45"/>
+  <text x="54" y="154" class="mono" fill="#bfdbfe">skills/*</text>
+  <text x="54" y="178" class="mono" fill="#bfdbfe">.claude/commands/</text>
+  <text x="54" y="202" class="mono" fill="#bfdbfe">.claude/skills/</text>
+  <text x="54" y="226" class="mono" fill="#bfdbfe">context/</text>
+  <text x="54" y="250" class="mono" fill="#bfdbfe">starter AGENTS.md</text>
+  <text x="54" y="274" class="mono" fill="#bfdbfe">starter CLAUDE.md</text>
+  <text x="154" y="300" text-anchor="middle" class="small" fill="#93c5fd">shared assets, not shared local truth</text>
 
-  <!-- Window-control style dots in upper-left of hub -->
-  <circle cx="42" cy="64" r="3.5" fill="#6366f1" opacity="0.75"/>
-  <circle cx="54" cy="64" r="3.5" fill="#818cf8" opacity="0.55"/>
-  <circle cx="66" cy="64" r="3.5" fill="#a5b4fc" opacity="0.4"/>
+  <rect x="520" y="42" width="252" height="118" rx="12" fill="white" stroke="#cbd5e1"/>
+  <text x="646" y="72" text-anchor="middle" class="title" fill="#0f172a">Project Repo</text>
+  <text x="544" y="102" class="mono" fill="#1e293b">AGENTS.md</text>
+  <text x="544" y="126" class="mono" fill="#1e293b">CLAUDE.md</text>
+  <text x="646" y="146" text-anchor="middle" class="small" fill="#64748b">local commands, constraints, current workflow</text>
 
-  <!-- Hub title block -->
-  <text x="144" y="100" text-anchor="middle" class="hub-title" fill="#e0e7ff">claude-devkit</text>
-  <text x="144" y="118" text-anchor="middle" class="hub-sub" fill="#a5b4fc">SOURCE OF TRUTH</text>
+  <rect x="520" y="206" width="252" height="86" rx="12" fill="white" stroke="#cbd5e1"/>
+  <text x="646" y="236" text-anchor="middle" class="title" fill="#0f172a">Reusable Assets</text>
+  <text x="544" y="264" class="mono" fill="#1e293b">commands, skills, context</text>
+  <text x="646" y="282" text-anchor="middle" class="small" fill="#64748b">linked or synced when the path is free</text>
 
-  <!-- Divider -->
-  <line x1="48" y1="138" x2="240" y2="138" stroke="#4f46e5" stroke-width="0.8" opacity="0.45"/>
+  <path d="M 280 142 C 360 112, 430 92, 520 94" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <rect x="348" y="80" width="118" height="22" rx="5" fill="#eff6ff" stroke="#bfdbfe"/>
+  <text x="407" y="95" text-anchor="middle" class="small" fill="#1d4ed8">copy / merge</text>
 
-  <!-- Hub file list -->
-  <text x="44" y="166" class="hub-file" fill="#c7d2fe">CLAUDE.md</text>
-  <text x="44" y="190" class="hub-file" fill="#c7d2fe">AGENTS.md</text>
-  <text x="44" y="214" class="hub-file" fill="#c7d2fe">.claude/commands/</text>
-  <text x="44" y="238" class="hub-file" fill="#c7d2fe">.claude/skills/</text>
-  <text x="44" y="262" class="hub-file" fill="#c7d2fe">context/</text>
+  <path d="M 280 230 C 360 238, 430 248, 520 250" fill="none" stroke="#0f766e" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrow-teal)"/>
+  <rect x="350" y="238" width="114" height="22" rx="5" fill="#f0fdfa" stroke="#99f6e4"/>
+  <text x="407" y="253" text-anchor="middle" class="small" fill="#0f766e">link / sync</text>
 
-  <!-- Hub footer tag -->
-  <line x1="48" y1="280" x2="240" y2="280" stroke="#4f46e5" stroke-width="0.8" opacity="0.4"/>
-  <text x="144" y="298" text-anchor="middle" class="hub-tag" fill="#818cf8">EDIT ONCE  ·  SYMLINK EVERYWHERE</text>
+  <rect x="304" y="298" width="192" height="28" rx="7" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <text x="400" y="317" text-anchor="middle" class="small" fill="#334155">$intuitive-setup refreshes local guidance</text>
 
-  <!-- ═══ SYMLINK ARROWS (CENTER) ═══ -->
-  <!-- Hub → robotics-arm -->
-  <path d="M 264 124 C 360 116, 430 92, 520 90" fill="none" stroke="#14b8a6" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arr-teal)"/>
-  <rect x="370" y="78" width="56" height="18" rx="4" fill="#f0fdfa" stroke="#ccfbf1" stroke-width="0.6"/>
-  <text x="398" y="91" text-anchor="middle" class="arrow-label" fill="#0d9488">symlink</text>
-
-  <!-- Hub → web-dashboard -->
-  <path d="M 264 184 L 520 190" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arr-blue)"/>
-  <rect x="370" y="178" width="56" height="18" rx="4" fill="#eff6ff" stroke="#dbeafe" stroke-width="0.6"/>
-  <text x="398" y="191" text-anchor="middle" class="arrow-label" fill="#2563eb">symlink</text>
-
-  <!-- Hub → ml-pipeline -->
-  <path d="M 264 244 C 360 252, 430 280, 520 290" fill="none" stroke="#8b5cf6" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arr-violet)"/>
-  <rect x="370" y="278" width="56" height="18" rx="4" fill="#f5f3ff" stroke="#ede9fe" stroke-width="0.6"/>
-  <text x="398" y="291" text-anchor="middle" class="arrow-label" fill="#7c3aed">symlink</text>
-
-  <!-- ═══ PROJECTS (RIGHT) ═══ -->
-  <!-- robotics-arm -->
-  <rect x="520" y="56" width="256" height="68" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
-  <rect x="520" y="56" width="4" height="68" rx="2" fill="#14b8a6"/>
-  <text x="540" y="84" class="proj-name" fill="#134e4a">robotics-arm</text>
-  <text x="540" y="104" class="proj-path" fill="#0d9488">~/projects/robotics-arm</text>
-  <text x="757" y="113" text-anchor="end" class="hub-tag" fill="#5eead4">5 LINKS</text>
-
-  <!-- web-dashboard -->
-  <rect x="520" y="156" width="256" height="68" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
-  <rect x="520" y="156" width="4" height="68" rx="2" fill="#3b82f6"/>
-  <text x="540" y="184" class="proj-name" fill="#1e3a5f">web-dashboard</text>
-  <text x="540" y="204" class="proj-path" fill="#2563eb">~/projects/web-dashboard</text>
-  <text x="757" y="213" text-anchor="end" class="hub-tag" fill="#60a5fa">5 LINKS</text>
-
-  <!-- ml-pipeline -->
-  <rect x="520" y="256" width="256" height="68" rx="10" fill="white" stroke="#e2e8f0" stroke-width="1"/>
-  <rect x="520" y="256" width="4" height="68" rx="2" fill="#8b5cf6"/>
-  <text x="540" y="284" class="proj-name" fill="#3b0764">ml-pipeline</text>
-  <text x="540" y="304" class="proj-path" fill="#7c3aed">~/projects/ml-pipeline</text>
-  <text x="757" y="313" text-anchor="end" class="hub-tag" fill="#a78bfa">5 LINKS</text>
-
-  <!-- ═══ FOOTER ═══ -->
-  <text x="400" y="340" text-anchor="middle" class="footer" fill="#94a3b8">Pull updates at the hub. Every linked project picks them up — no copies, no drift.</text>
+  <text x="400" y="344" text-anchor="middle" class="body" fill="#64748b">Skills travel across repos. Root agent files stay project-local.</text>
 </svg>

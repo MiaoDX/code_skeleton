@@ -23,6 +23,16 @@
 - Add visualization-oriented validation when the project supports it and numeric or log checks can miss geometry or rendering errors.
 - For bug reports and failing CI, start from the failing test or log signal and drive to a verified fix.
 
+## Preferred Skills And Workflow Routing
+
+- Use `$intuitive-setup` when creating or refreshing project-local `AGENTS.md` / `CLAUDE.md`. Treat `/init` output as suggestions to merge, not as an overwrite source.
+- Use `$intuitive-doc` for human-facing docs, especially `README.md`, `ARCHITECTURE.md`, `STATUS.md`, and `docs/human/**`.
+- Use `$intuitive-layout` for repo/folder organization and human-vs-agent surface separation.
+- Use `$intuitive-ut` for test suite organization, markers, pruning, fixtures, and behavior-focused unit tests.
+- Use `$hybrid-phase-pipeline` for large development work that moves from idea shaping to plan review, GSD handoff, execution, cleanup, and verification.
+- Use `$refactor-scope-gate` before broad refactors or architecture cleanup so the target, accepted severities, evidence ladder, and stop condition are explicit.
+- Keep `AGENTS.md` and `CLAUDE.md` project-local. Shared skills and commands can be synced or linked; root agent guidance should preserve each repo's own commands, constraints, and current source-of-truth rules.
+
 ## Engineering Style
 
 - Fix root causes rather than papering over symptoms.

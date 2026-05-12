@@ -71,14 +71,14 @@
     </text>
 
     <!-- Output -->
-    <text x="24" y="214" fill="#8B949E">Linking CLI markdown files...</text>
+    <text x="24" y="214" fill="#8B949E">Preparing project-local agent guidance...</text>
     <text x="24" y="234" fill="#8B949E">Linking context directory...</text>
     <text x="24" y="254" fill="#8B949E">Setting up claude_yolo alias...</text>
     <text x="24" y="274" fill="#8B949E">Linking .claude/commands directory...</text>
     <text x="24" y="294" fill="#8B949E">Linking .claude/skills directory...</text>
     <text x="24" y="314" fill="#8B949E">Setting up claude_yolo alias...</text>
     <text x="24" y="334" fill="#8B949E">claude_yolo alias already exists in /home/user/.bashrc</text>
-    <text x="24" y="354" fill="#3FB950" font-weight="bold">&#x2713; Ready -- 6 symlinks created</text>
+    <text x="24" y="354" fill="#3FB950" font-weight="bold">&#x2713; Ready -- local agent files + shared assets</text>
 
     <!-- Blank line -->
 
@@ -102,14 +102,14 @@
     </text>
 
     <!-- Output -->
-    <text x="24" y="454" fill="#8B949E">Linking CLI markdown files...</text>
+    <text x="24" y="454" fill="#8B949E">Preparing project-local agent guidance...</text>
     <text x="24" y="474" fill="#8B949E">Linking context directory...</text>
     <text x="24" y="494" fill="#8B949E">Setting up claude_yolo alias...</text>
     <text x="24" y="514" fill="#8B949E">Linking .claude/commands directory...</text>
     <text x="24" y="534" fill="#8B949E">Linking .claude/skills directory...</text>
     <text x="24" y="554" fill="#8B949E">Setting up claude_yolo alias...</text>
     <text x="24" y="574" fill="#8B949E">claude_yolo alias already exists in /home/user/.bashrc</text>
-    <text x="24" y="594" fill="#3FB950" font-weight="bold">&#x2713; Ready -- 6 symlinks created</text>
+    <text x="24" y="594" fill="#3FB950" font-weight="bold">&#x2713; Ready -- local agent files + shared assets</text>
 
     <!-- Blank line -->
 
@@ -133,14 +133,14 @@
     </text>
 
     <!-- Output -->
-    <text x="24" y="694" fill="#8B949E">Linking CLI markdown files...</text>
+    <text x="24" y="694" fill="#8B949E">Preparing project-local agent guidance...</text>
     <text x="24" y="714" fill="#8B949E">Linking context directory...</text>
     <text x="24" y="734" fill="#8B949E">Setting up claude_yolo alias...</text>
     <text x="24" y="754" fill="#8B949E">Linking .claude/commands directory...</text>
     <text x="24" y="774" fill="#8B949E">Linking .claude/skills directory...</text>
     <text x="24" y="794" fill="#8B949E">Setting up claude_yolo alias...</text>
     <text x="24" y="814" fill="#8B949E">claude_yolo alias already exists in /home/user/.bashrc</text>
-    <text x="24" y="834" fill="#3FB950" font-weight="bold">&#x2713; Ready -- 6 symlinks created</text>
+    <text x="24" y="834" fill="#3FB950" font-weight="bold">&#x2713; Ready -- local agent files + shared assets</text>
 
     <!-- Blank line -->
 
