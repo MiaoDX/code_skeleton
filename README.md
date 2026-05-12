@@ -38,7 +38,7 @@ I do not want a giant process system. I want community best practices where
 they already exist, and a small set of intuitive skills where they do not.
 
 The workflow should make the big questions expensive and the small questions
-cheap: use `office-hours` or `grill-me` for what to build, `intuitive-build` for
+cheap: use `office-hours` or `grill-me` for what to build, `intuitive-flow` for
 normal development, and `intuitive-refactor` when it is time to clean the
 system without drifting forever.
 
@@ -88,13 +88,16 @@ not initialize project root agent files; use `$intuitive-init` for that.
 
 ## Preferred Skills
 
+`intuitive-flow` is both the project and the default development skill: the repo
+defines the operating model, and `$intuitive-flow` runs it inside a target repo.
+
 | Skill | Use it for |
 | --- | --- |
 | **intuitive-init** | Merge `/init` suggestions, Intuitive Flow defaults, and repo evidence into local `AGENTS.md` / `CLAUDE.md` |
 | **intuitive-doc** | Keep human-facing docs small, current, and separated from agent evidence/history |
 | **intuitive-layout** | Improve repo/folder organization before deeper architecture work |
 | **intuitive-tests** | Organize, prune, mark, and refactor tests around behavior |
-| **intuitive-build** | Move a fuzzy idea through plan review, GSD handoff, execution, cleanup, and verification |
+| **intuitive-flow** | Move a fuzzy idea through plan review, GSD handoff, execution, cleanup, and verification |
 | **intuitive-refactor** | Bound broad refactors with accepted severities, evidence, and a stop condition |
 | **intuitive-squash** | Compress noisy local agent history into a clean reviewable commit story |
 

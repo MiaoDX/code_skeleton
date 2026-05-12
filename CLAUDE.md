@@ -29,7 +29,7 @@
 - Use `$intuitive-doc` for human-facing docs, especially `README.md`, `ARCHITECTURE.md`, `STATUS.md`, and `docs/human/**`.
 - Use `$intuitive-layout` for repo/folder organization and human-vs-agent surface separation.
 - Use `$intuitive-tests` for test suite organization, markers, pruning, fixtures, and behavior-focused unit tests.
-- Use `$intuitive-build` for large development work that moves from idea shaping to plan review, GSD handoff, execution, cleanup, and verification.
+- Use `$intuitive-flow` for large development work that moves from idea shaping to plan review, GSD handoff, execution, cleanup, and verification.
 - Use `$intuitive-refactor` before broad refactors or architecture cleanup so the target, accepted severities, evidence ladder, and stop condition are explicit.
 - Use `$intuitive-squash` before PRs or branch handoff when local agent commits need a clean reviewable story.
 - Keep `AGENTS.md` and `CLAUDE.md` project-local. Shared skills and commands can be synced or linked; root agent guidance should preserve each repo's own commands, constraints, and current source-of-truth rules.

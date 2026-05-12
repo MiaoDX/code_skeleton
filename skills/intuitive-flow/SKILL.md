@@ -1,5 +1,5 @@
 ---
-name: intuitive-build
+name: intuitive-flow
 description: |
   Orchestrate the intuitive idea-to-execution workflow: grill-me or office-hours
   for idea shaping, docs/plans as the pre-execution source of truth, autoplan
@@ -12,10 +12,10 @@ description: |
   source of truth from idea to verified work.
 ---
 
-# Intuitive Build
+# Intuitive Flow
 
-Use this skill to route a feature or project direction through the repo's staged
-build workflow without turning every idea into a full process marathon.
+Use this skill to route a feature or project direction through one staged
+development flow without turning every idea into a full process marathon.
 
 This skill is standalone. It can produce pre-plans, scope gates, and routing
 recommendations inline. When the user explicitly combines it with another skill,
@@ -98,7 +98,7 @@ When this skill selects a downstream step such as `grill-me`, `autoplan`,
 
 Do not hand-write an artifact and claim it was produced by a downstream skill.
 If you produce something inline, label it as inline output from
-`intuitive-build`.
+`intuitive-flow`.
 
 ## Artifact Provenance
 

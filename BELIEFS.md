@@ -57,7 +57,7 @@ Use `office-hours` or `grill-me` for that. Everything else should be cheap.
 
 ## Default Loops
 
-Use `intuitive-build` for normal development.
+Use `intuitive-flow` for normal development.
 
 Use `intuitive-refactor` when you have time to clean the system, or as a
 routine maintenance loop.
