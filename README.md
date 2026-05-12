@@ -96,6 +96,7 @@ not initialize project root agent files; use `$intuitive-init` for that.
 | **intuitive-tests** | Organize, prune, mark, and refactor tests around behavior |
 | **intuitive-build** | Move a fuzzy idea through plan review, GSD handoff, execution, cleanup, and verification |
 | **intuitive-refactor** | Bound broad refactors with accepted severities, evidence, and a stop condition |
+| **intuitive-squash** | Compress noisy local agent history into a clean reviewable commit story |
 
 ## Shared Operating Rules
 
@@ -108,33 +109,11 @@ that every project should inherit wholesale. They capture useful defaults:
 - visualization-aware validation when logs and numbers can miss rendering or geometry failures
 - repo-local command, environment, and cleanup constraints
 
-## Ralph Loop Reviews
-
-The Ralph Loop is an iterative `review -> triage -> fix -> verify` cycle. One
-agent finds problems, another fixes them, and both stop when convergence is
-reached:
-
-| Skill | Reviews | Reviewer |
-| --- | --- | --- |
-| `codex-plan-ralph-refactor` | GSD phase plans | Codex |
-| `codex-impl-ralph-refactor` | Implemented code | Codex |
-| `agent-teams-plan-ralph-refactor` | GSD phase plans | Claude agent teams |
-| `agent-teams-impl-ralph-refactor` | Implemented code | Claude agent teams |
-
-```bash
-# Review plans before executing
-/codex-plan-ralph-refactor 38
-
-# Review code after implementation, auto-fixing must-fix issues
-/codex-impl-ralph-refactor 42 --fix-level must
-```
-
 ## Scripts
 
 | Script | Purpose |
 | --- | --- |
 | `scripts/update.sh` | Install or update CLIs, MCP servers, skills, commands, and GSD |
-| `scripts/convert-docs.sh` | Convert code/docs to LLM-ready markdown |
 
 ## How It Works
 
@@ -151,7 +130,7 @@ scripts.
 | Tool | Integration |
 | --- | --- |
 | **Claude Code** | Primary runtime - skills, slash commands, review workflows |
-| **Codex CLI** | Delegation skills + Ralph Loop code review |
+| **Codex CLI** | Shared skills, delegation, and verification workflows |
 | **GSD workflow** | Vendored lifecycle commands and specialist agents |
 | **MCP servers** | `fetch-mcp` and related tooling installed by `update.sh` |
 

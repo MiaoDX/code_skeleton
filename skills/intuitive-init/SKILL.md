@@ -60,6 +60,7 @@ Use this workflow unless the user asks for report-only or a specific file.
    - `$intuitive-tests` for test-suite structure and behavior-focused cleanup.
    - `$intuitive-build` for fuzzy idea to planned execution.
    - `$intuitive-refactor` before broad architecture or refactor work.
+   - `$intuitive-squash` for cleaning local agent commit history before handoff.
 6. Produce a merged proposal first:
    - Summarize the source inputs used.
    - Explain what was preserved, replaced, and removed.

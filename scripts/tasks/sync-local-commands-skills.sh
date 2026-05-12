@@ -17,6 +17,30 @@ _copy_dir_contents() {
     cp -R "$src_dir"/. "$dest_dir"/
 }
 
+_remove_stale_local_artifacts() {
+    local stale_paths=(
+        "$HOME/.claude/commands/gsd_squash.md"
+        "$HOME/.codex/skills/gsd-squash"
+        "$HOME/.codex/skills/gsd_squash"
+        "$HOME/.agents/skills/agent-teams-impl-ralph-refactor"
+        "$HOME/.agents/skills/agent-teams-plan-ralph-refactor"
+        "$HOME/.agents/skills/codex-impl-ralph-refactor"
+        "$HOME/.agents/skills/codex-plan-ralph-refactor"
+    )
+
+    local stale_path removed=0
+    for stale_path in "${stale_paths[@]}"; do
+        if [ -e "$stale_path" ]; then
+            rm -rf "$stale_path"
+            removed=$((removed + 1))
+        fi
+    done
+
+    if [ "$removed" -gt 0 ]; then
+        echo "  ✓ removed $removed stale local command/skill artifact(s)"
+    fi
+}
+
 # Sync .claude/commands/*.md from this repo to:
 #   ~/.claude/commands/   (Claude Code global commands — raw .md copy)
 #   ~/.codex/skills/      (Codex skills — rendered via render_codex_skill)
@@ -25,10 +49,7 @@ run_sync_local_commands_skills() {
     project_dir=$(cd "$SCRIPT_DIR/.." && pwd)
     commands_src="$project_dir/.claude/commands"
 
-    if [ ! -d "$commands_src" ]; then
-        echo "  ! no .claude/commands directory — skipping"
-        return 0
-    fi
+    _remove_stale_local_artifacts
 
     local claude_dest="$HOME/.claude/commands"
     local codex_dest="$HOME/.codex/skills"
@@ -36,22 +57,24 @@ run_sync_local_commands_skills() {
 
     mkdir -p "$claude_dest"
 
-    for src_file in "$commands_src"/*.md; do
-        [ -f "$src_file" ] || continue
+    if [ -d "$commands_src" ]; then
+        for src_file in "$commands_src"/*.md; do
+            [ -f "$src_file" ] || continue
 
-        filename=$(basename "$src_file")
-        name="${filename%.md}"
-        codex_name="${name//_/-}"
+            filename=$(basename "$src_file")
+            name="${filename%.md}"
+            codex_name="${name//_/-}"
 
-        cp "$src_file" "$claude_dest/$name.md"
+            cp "$src_file" "$claude_dest/$name.md"
 
-        if [ -d "$codex_dest" ]; then
-            render_codex_skill "$src_file" "$codex_dest/$codex_name" "$codex_name"
-        fi
+            if [ -d "$codex_dest" ]; then
+                render_codex_skill "$src_file" "$codex_dest/$codex_name" "$codex_name"
+            fi
 
-        synced=$((synced + 1))
-        echo "  synced: $name"
-    done
+            synced=$((synced + 1))
+            echo "  synced command: $name"
+        done
+    fi
 
     if [ "$synced" -eq 0 ]; then
         echo "  ! no .md files found in .claude/commands/"
@@ -84,10 +107,11 @@ run_sync_local_commands_skills() {
         fi
     fi
 
-    # ── Sync local skills/* (repo root) to ~/.codex/skills/ for Codex ─
+    # ── Sync local skills/* (repo root) to Claude Code + Codex ─
     local root_skills_src="$project_dir/skills"
-    if [ -d "$root_skills_src" ] && [ -d "$codex_dest" ]; then
-        local root_skills_synced=0
+    if [ -d "$root_skills_src" ]; then
+        local root_skills_codex_synced=0
+        local root_skills_claude_synced=0
         for skill_dir in "$root_skills_src"/*; do
             [ -d "$skill_dir" ] || continue
             [ -f "$skill_dir/SKILL.md" ] || continue
@@ -95,16 +119,25 @@ run_sync_local_commands_skills() {
             local skill_name
             skill_name=$(basename "$skill_dir")
 
-            # Copy contents in place so reruns update the existing skill directory
-            # instead of nesting skill_dir/skill_dir on repeated syncs.
-            if ! _copy_dir_contents "$skill_dir" "$codex_dest/$skill_name"; then
-                return 1
+            if npx -y skills add "$skill_dir" -g -y -a claude-code >/dev/null 2>&1; then
+                root_skills_claude_synced=$((root_skills_claude_synced + 1))
+            else
+                echo "  ! failed to sync Claude Code skill: $skill_name"
             fi
-            root_skills_synced=$((root_skills_synced + 1))
+
+            if [ -d "$codex_dest" ]; then
+                # Copy contents in place so reruns update the existing skill
+                # directory instead of nesting skill_dir/skill_dir.
+                if ! _copy_dir_contents "$skill_dir" "$codex_dest/$skill_name"; then
+                    return 1
+                fi
+                root_skills_codex_synced=$((root_skills_codex_synced + 1))
+            fi
             echo "  synced skill: $skill_name"
         done
-        if [ "$root_skills_synced" -gt 0 ]; then
-            echo "  ✓ $root_skills_synced local skill(s) → ~/.codex/skills/"
+        if [ "$root_skills_claude_synced" -gt 0 ] || [ "$root_skills_codex_synced" -gt 0 ]; then
+            echo "  ✓ $root_skills_claude_synced local skill(s) → Claude Code"
+            echo "  ✓ $root_skills_codex_synced local skill(s) → ~/.codex/skills/"
         fi
     fi
 }

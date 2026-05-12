@@ -71,7 +71,7 @@
     <text y="97.5" class="section-header">══ Claude Code Plugins ══</text>
     <text y="117">
       <tspan class="checkmark">  &#x2713; </tspan>
-      <tspan class="tool-name">ralph-wiggum</tspan>
+      <tspan class="tool-name">feature-dev</tspan>
     </text>
 
     <!-- Section: MCP: fetch -->

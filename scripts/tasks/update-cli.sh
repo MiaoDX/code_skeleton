@@ -58,7 +58,6 @@ run_claude_plugins() {
         pr-review-toolkit
         claude-code-setup
         learning-output-style
-        ralph-loop
         feature-dev
         frontend-design
         agent-sdk-dev
