@@ -47,6 +47,21 @@ project in another language or framework. That is the bar.
 
 See [BELIEFS.md](BELIEFS.md) for the full doctrine.
 
+## Human Docs
+
+The authoritative human surface at `HEAD` is:
+
+| Doc | Purpose |
+| --- | --- |
+| [README.md](README.md) | Orientation, first-run commands, and public project map |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Stable subsystem contracts, extension points, and proof boundaries |
+| [STATUS.md](STATUS.md) | Current repo state, supported commands, and next maintenance focus |
+| [docs/human/](docs/human/) | Human-facing docs that are too detailed for the root files |
+
+Generated diagrams, release-note analysis, vendored tools, planning scratchpads,
+and implementation evidence are useful context, but they are not the current
+human source of truth unless one of the docs above promotes them.
+
 ## AI-Native Init
 
 In the target repo, give your AI agent the skill file and ask it to initialize
@@ -137,7 +152,8 @@ bun run verify
 
 Root agent files are initialized by the agent in the target repo. Reusable
 workflow knowledge lives in skills, and install/update automation stays in
-scripts.
+scripts. See [ARCHITECTURE.md](ARCHITECTURE.md) for the subsystem map and
+extension contracts.
 
 ## Supported Tools
 

@@ -55,9 +55,9 @@
 
 ## Docs And Planning
 
-- Keep `README.md` thin and put detailed current-state setup, runtime, and interface docs under `docs/`.
-- Use `docs/` for human-facing truth at `HEAD`, `.planning/` for locked project summaries and execution state, and archive/spec areas for historical design material.
-- When a refactor changes runtime truth, update the canonical `docs/` surface in the same slice; if decisions or scope change too, refresh the live `.planning/` summaries as well.
+- Keep `README.md` thin and put detailed current-state setup, runtime, and interface docs in `ARCHITECTURE.md`, `STATUS.md`, and `docs/human/**`.
+- Use root human docs and `docs/human/**` for human-facing truth at `HEAD`; use `.planning/` for locked project summaries and execution state, and treat generated release notes, archives, and spec areas as historical material unless promoted.
+- When a refactor changes runtime truth, update the relevant root human doc or `docs/human/**` page in the same slice; if decisions or scope change too, refresh the live `.planning/` summaries as well.
 
 ## Codex-Specific Notes
 

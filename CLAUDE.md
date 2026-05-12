@@ -51,8 +51,8 @@
 
 ## Docs And Planning
 
-- Keep `README.md` as the thin entry guide and put detailed current-state docs under `docs/`.
-- Treat `docs/` as the human docs layer and `.planning/` as the live summary/control-plane layer; do not duplicate full manuals across both.
+- Keep `README.md` as the thin entry guide and put detailed current-state docs in `ARCHITECTURE.md`, `STATUS.md`, and `docs/human/**`.
+- Treat root human docs and `docs/human/**` as the human docs layer; treat `.planning/` as the live summary/control-plane layer and generated release notes or archives as historical material unless promoted.
 - Prefer a curated ingest or merge step over broad repo-wide doc discovery when syncing planning from docs.
 
 ## Claude-Specific Notes
