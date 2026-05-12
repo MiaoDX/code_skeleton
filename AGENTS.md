@@ -29,7 +29,7 @@
 
 ## Preferred Skills And Workflow Routing
 
-- Use `$intuitive-setup` when creating or refreshing project-local `AGENTS.md` / `CLAUDE.md`. Treat `/init` output as suggestions to merge, not as an overwrite source.
+- Use `$intuitive-init` when creating or refreshing project-local `AGENTS.md` / `CLAUDE.md`. Treat `/init` output as suggestions to merge, not as an overwrite source.
 - Use `$intuitive-doc` for human-facing docs, especially `README.md`, `ARCHITECTURE.md`, `STATUS.md`, and `docs/human/**`.
 - Use `$intuitive-layout` for repo/folder organization and human-vs-agent surface separation.
 - Use `$intuitive-ut` for test suite organization, markers, pruning, fixtures, and behavior-focused unit tests.

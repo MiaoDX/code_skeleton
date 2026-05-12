@@ -1,11 +1,11 @@
 # claude-devkit
 
-**Shared skills and commands. Project-local agent guidance.**
+**AI-native repo init. Shared skills and commands. Project-local agent guidance.**
 
-`claude-devkit` is a portable workflow kit for Claude Code and Codex. It keeps
-skills, slash commands, update scripts, and shared references reusable across
-projects while keeping each repo's `CLAUDE.md` and `AGENTS.md` local enough to
-carry project-specific setup, constraints, and source-of-truth rules.
+`claude-devkit` is a portable workflow kit for Claude Code and Codex. Its core
+idea is simple: reusable workflows live in skills, while every repo keeps its
+own `CLAUDE.md` and `AGENTS.md` with local commands, constraints, and
+source-of-truth rules.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Shell](https://img.shields.io/badge/Shell-toolkit-4EAA25.svg)](scripts/)
@@ -23,73 +23,56 @@ carry project-specific setup, constraints, and source-of-truth rules.
 
 ## Why This Exists
 
-- **Project-local agent files** - `CLAUDE.md` and `AGENTS.md` should contain each repo's real commands, hazards, and workflow rules, not a one-size-fits-all symlink.
+- **AI-native init** - give the agent `$intuitive-init`, let it inspect the repo, run `/init`-style discovery when available, and propose local guidance updates.
+- **Project-local agent files** - `CLAUDE.md` and `AGENTS.md` should contain each repo's real commands, hazards, and workflow rules.
 - **Reusable skills** - shared workflows live in skills so repos can opt into them without pasting manuals into root guidance.
-- **Init-assisted refresh** - `$intuitive-setup` can use `/init` output as suggestions, merge the useful parts, and preserve project-specific constraints.
-- **Multi-agent ready** - Claude Code and Codex can share vocabulary for planning, review, execution, and cleanup.
+- **Periodic refresh** - rerun `$intuitive-init` after weeks of drift, new command surfaces, or repeated agent mistakes.
 - **One updater** - CLIs, MCP servers, skills, commands, and the GSD workflow stay current with a single script.
 
-## 30-Second Setup
+## AI-Native Init
+
+In the target repo, give your AI agent the skill file and ask it to initialize
+local guidance:
+
+```text
+Read or paste this skill:
+https://github.com/MiaoDX/claude-devkit/blob/main/skills/intuitive-init/SKILL.md
+
+Then run:
+Use $intuitive-init to initialize this repo's AGENTS.md and CLAUDE.md.
+Run /init-style discovery if available.
+Preserve project-specific instructions.
+Propose a diff before applying.
+```
+
+For agents that can fetch raw files directly, use:
+
+```text
+https://raw.githubusercontent.com/MiaoDX/claude-devkit/main/skills/intuitive-init/SKILL.md
+```
+
+<p align="center">
+  <img src="docs/assets/terminal-init.svg" alt="AI-native intuitive-init flow" width="720">
+</p>
+
+## Optional Tool Install
+
+Clone the devkit when you want the update scripts and local skill sync:
 
 ```bash
-# Clone the devkit once
 git clone https://github.com/MiaoDX/claude-devkit.git ~/claude-devkit
-
-# Seed a project with local agent files and shared assets
-cd ~/your-project && ~/claude-devkit/scripts/setup.sh
-
-# Install or refresh supported tooling and synced skills
 ~/claude-devkit/scripts/update.sh
 ```
 
-`setup.sh` creates starter `CLAUDE.md` and `AGENTS.md` only when they are
-missing. If an older project has those files as symlinks, setup converts them
-to regular local files before continuing. Existing project-local files are left
-alone.
+`scripts/update.sh` installs or refreshes supported CLI tools, MCP servers,
+remote skills, local root `skills/*`, and command-to-skill adapters. It does
+not initialize project root agent files; use `$intuitive-init` for that.
 
-<table><tr>
-<td><img src="docs/assets/terminal-setup.svg" alt="setup.sh creating local agent files" width="400"></td>
-<td><img src="docs/assets/terminal-update.svg" alt="update.sh on Ubuntu" width="400"></td>
-</tr><tr>
-<td align="center"><b>macOS</b> - setup.sh</td>
-<td align="center"><b>Ubuntu</b> - update.sh</td>
-</tr></table>
-
-## Use It Everywhere
-
-Run setup once from each repo that should use the shared commands, skills, and
-references:
-
-```bash
-cd ~/projects/robotics-arm   && ~/claude-devkit/scripts/setup.sh
-cd ~/projects/web-dashboard  && ~/claude-devkit/scripts/setup.sh
-cd ~/projects/ml-pipeline    && ~/claude-devkit/scripts/setup.sh
-```
-
-Each project keeps its root agent guidance local. Rerun `$intuitive-setup`
-after major workflow changes or every few weeks if the repo's commands and
-planning conventions have drifted.
-
-## What Setup Touches
-
-| Path | Behavior |
-| --- | --- |
-| `CLAUDE.md` | Starter local file when missing; existing files preserved; old symlinks converted to local files |
-| `AGENTS.md` | Starter local file when missing; existing files preserved; old symlinks converted to local files |
-| `.claude/commands/` | Linked to shared Claude slash commands when the path is free |
-| `.claude/skills/` | Linked to shared Claude skills when the path is free |
-| `context/` | Linked to shared reference material when the path is free |
-
-Run `scripts/update.sh` to install or refresh global CLI tools, MCP servers,
-remote skills, local root `skills/*`, and command-to-skill adapters.
-
-## What's Inside
-
-### Preferred Skills
+## Preferred Skills
 
 | Skill | Use it for |
 | --- | --- |
-| **intuitive-setup** | Merge `/init` suggestions, devkit defaults, and repo evidence into local `AGENTS.md` / `CLAUDE.md` |
+| **intuitive-init** | Merge `/init` suggestions, devkit defaults, and repo evidence into local `AGENTS.md` / `CLAUDE.md` |
 | **intuitive-doc** | Keep human-facing docs small, current, and separated from agent evidence/history |
 | **intuitive-layout** | Improve repo/folder organization before deeper architecture work |
 | **intuitive-ut** | Organize, prune, mark, and refactor tests around behavior |
@@ -98,10 +81,10 @@ remote skills, local root `skills/*`, and command-to-skill adapters.
 | **simplify** | Review changed code for reuse, quality, and efficiency before final verification |
 | **codex** | Delegate analysis, review, and refactoring to Codex CLI where available |
 
-### Shared Operating Rules
+## Shared Operating Rules
 
 The root `CLAUDE.md` and `AGENTS.md` in this repo are starter guidance, not files
-that every project should inherit by symlink. They capture useful defaults:
+that every project should inherit wholesale. They capture useful defaults:
 
 - parallel delegation for independent exploration, review, and verification
 - main-thread focus on requirements, architecture, integration, and synthesis
@@ -109,7 +92,7 @@ that every project should inherit by symlink. They capture useful defaults:
 - visualization-aware validation when logs and numbers can miss rendering or geometry failures
 - repo-local command, environment, and cleanup constraints
 
-### Ralph Loop Reviews
+## Ralph Loop Reviews
 
 The Ralph Loop is an iterative `review -> triage -> fix -> verify` cycle. One
 agent finds problems, another fixes them, and both stop when convergence is
@@ -130,13 +113,10 @@ reached:
 /codex-impl-ralph-refactor 42 --fix-level must
 ```
 
-### Slash Commands And Scripts
+## Scripts
 
-| Command or script | Purpose |
+| Script | Purpose |
 | --- | --- |
-| `/gsd_squash` | Squash noisy commits into clean, logical git history |
-| `/gsd_status [N]` | Show status of the last N GSD phases |
-| `scripts/setup.sh` | Seed local agent files and link shared command/skill assets into a project |
 | `scripts/update.sh` | Install or update CLIs, MCP servers, skills, commands, and GSD |
 | `scripts/convert-docs.sh` | Convert code/docs to LLM-ready markdown |
 
@@ -146,9 +126,9 @@ reached:
   <img src="docs/assets/architecture.svg" alt="Architecture" width="800">
 </p>
 
-Root agent files are copied or preserved per project. Reusable workflows live in
-skills, and shared command/skill assets can still be linked or synced because
-they are not expected to carry project-only rules.
+Root agent files are initialized by the agent in the target repo. Reusable
+workflow knowledge lives in skills, and install/update automation stays in
+scripts.
 
 ## Supported Tools
 

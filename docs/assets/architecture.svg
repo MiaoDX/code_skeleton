@@ -21,13 +21,12 @@
   <text x="154" y="82" text-anchor="middle" class="title" fill="#dbeafe">claude-devkit</text>
   <text x="154" y="102" text-anchor="middle" class="label" fill="#93c5fd">REUSABLE WORKFLOW KIT</text>
   <line x1="52" y1="124" x2="256" y2="124" stroke="#3b82f6" opacity="0.45"/>
-  <text x="54" y="154" class="mono" fill="#bfdbfe">skills/*</text>
-  <text x="54" y="178" class="mono" fill="#bfdbfe">.claude/commands/</text>
-  <text x="54" y="202" class="mono" fill="#bfdbfe">.claude/skills/</text>
-  <text x="54" y="226" class="mono" fill="#bfdbfe">context/</text>
-  <text x="54" y="250" class="mono" fill="#bfdbfe">starter AGENTS.md</text>
-  <text x="54" y="274" class="mono" fill="#bfdbfe">starter CLAUDE.md</text>
-  <text x="154" y="300" text-anchor="middle" class="small" fill="#93c5fd">shared assets, not shared local truth</text>
+  <text x="54" y="154" class="mono" fill="#bfdbfe">skills/intuitive-init</text>
+  <text x="54" y="178" class="mono" fill="#bfdbfe">skills/*</text>
+  <text x="54" y="202" class="mono" fill="#bfdbfe">.claude/commands/</text>
+  <text x="54" y="226" class="mono" fill="#bfdbfe">.claude/skills/</text>
+  <text x="54" y="250" class="mono" fill="#bfdbfe">scripts/update.sh</text>
+  <text x="154" y="300" text-anchor="middle" class="small" fill="#93c5fd">shared workflows, not shared local truth</text>
 
   <rect x="520" y="42" width="252" height="118" rx="12" fill="white" stroke="#cbd5e1"/>
   <text x="646" y="72" text-anchor="middle" class="title" fill="#0f172a">Project Repo</text>
@@ -37,19 +36,19 @@
 
   <rect x="520" y="206" width="252" height="86" rx="12" fill="white" stroke="#cbd5e1"/>
   <text x="646" y="236" text-anchor="middle" class="title" fill="#0f172a">Reusable Assets</text>
-  <text x="544" y="264" class="mono" fill="#1e293b">commands, skills, context</text>
-  <text x="646" y="282" text-anchor="middle" class="small" fill="#64748b">linked or synced when the path is free</text>
+  <text x="544" y="264" class="mono" fill="#1e293b">commands, skills, tooling</text>
+  <text x="646" y="282" text-anchor="middle" class="small" fill="#64748b">installed or synced by update.sh</text>
 
   <path d="M 280 142 C 360 112, 430 92, 520 94" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow-blue)"/>
   <rect x="348" y="80" width="118" height="22" rx="5" fill="#eff6ff" stroke="#bfdbfe"/>
-  <text x="407" y="95" text-anchor="middle" class="small" fill="#1d4ed8">copy / merge</text>
+  <text x="407" y="95" text-anchor="middle" class="small" fill="#1d4ed8">agent init</text>
 
   <path d="M 280 230 C 360 238, 430 248, 520 250" fill="none" stroke="#0f766e" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrow-teal)"/>
   <rect x="350" y="238" width="114" height="22" rx="5" fill="#f0fdfa" stroke="#99f6e4"/>
-  <text x="407" y="253" text-anchor="middle" class="small" fill="#0f766e">link / sync</text>
+  <text x="407" y="253" text-anchor="middle" class="small" fill="#0f766e">install / sync</text>
 
   <rect x="304" y="298" width="192" height="28" rx="7" fill="#f1f5f9" stroke="#cbd5e1"/>
-  <text x="400" y="317" text-anchor="middle" class="small" fill="#334155">$intuitive-setup refreshes local guidance</text>
+  <text x="400" y="317" text-anchor="middle" class="small" fill="#334155">$intuitive-init refreshes local guidance</text>
 
   <text x="400" y="344" text-anchor="middle" class="body" fill="#64748b">Skills travel across repos. Root agent files stay project-local.</text>
 </svg>

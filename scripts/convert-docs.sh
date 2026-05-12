@@ -10,7 +10,7 @@ OUTPUT_FILE=""
 
 usage() {
     echo "Usage: $0 --in <input_dir> --out <output_file>"
-    echo "Example: $0 --in ./vendor/repo --out ./context/repo.md"
+    echo "Example: $0 --in ./vendor/repo --out ./docs/generated/repo.md"
     exit 1
 }
 

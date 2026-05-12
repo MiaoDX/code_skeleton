@@ -1,9 +1,9 @@
 ---
-name: intuitive-setup
-description: Audit, merge, and refresh project-local AGENTS.md and CLAUDE.md files from existing repo guidance, agent /init suggestions, and the intuitive workflow defaults. Use when setting up a repo for Claude Code/Codex, replacing symlinked agent files with local guidance, rerunning agent init after weeks of drift, or aligning a repo to intuitive-doc, intuitive-layout, intuitive-ut, hybrid-phase-pipeline, and refactor-scope-gate without overwriting project-specific hints.
+name: intuitive-init
+description: Initialize, audit, merge, and refresh project-local AGENTS.md and CLAUDE.md files from existing repo guidance, agent /init suggestions, and intuitive workflow defaults. Use when setting up a repo for Claude Code/Codex, replacing symlinked agent files with local guidance, rerunning agent init after weeks of drift, or aligning a repo to intuitive-doc, intuitive-layout, intuitive-ut, hybrid-phase-pipeline, and refactor-scope-gate without overwriting project-specific hints.
 ---
 
-# Intuitive Setup
+# Intuitive Init
 
 Set up repo-local AI agent guidance without turning shared defaults into a
 symlinked source of truth. Shared skills should travel across projects;
@@ -54,7 +54,7 @@ Use this workflow unless the user asks for report-only or a specific file.
    - **Remove**: obsolete commands, absolute paths from another project,
      process notes that belong in skills instead of root guidance.
 5. Add or refresh a short preferred-skills block when relevant:
-   - `$intuitive-setup` for agent guidance setup and periodic refresh.
+   - `$intuitive-init` for agent guidance initialization and periodic refresh.
    - `$intuitive-doc` for human-facing docs and doc drift.
    - `$intuitive-layout` for repo/folder organization.
    - `$intuitive-ut` for test-suite structure and behavior-focused cleanup.
@@ -93,12 +93,12 @@ Use when the user explicitly asks to update the repo guidance.
 Steps:
 
 1. Run the default workflow.
-2. Edit only `AGENTS.md`, `CLAUDE.md`, and directly related setup docs/scripts
+2. Edit only `AGENTS.md`, `CLAUDE.md`, and directly related init docs/scripts
    the user named.
 3. Keep the files self-contained. Do not replace critical rules with "see
    another file" unless the repo already requires that pattern.
 4. Preserve differences between Claude and Codex when they matter.
-5. Search for stale setup claims after editing.
+5. Search for stale setup/init claims after editing.
 
 ### Refresh
 
@@ -120,9 +120,9 @@ Preferred result:
 - Merge in project-specific hints from repo evidence and init suggestions.
 - Keep reusable workflows in skills, not pasted into the root files.
 
-Do not silently overwrite local agent files with shared templates. If a setup
-script is in scope, make it create starter copies only when files are missing
-and preserve existing project-local files.
+Do not silently overwrite local agent files with shared templates. If a legacy
+bootstrap script is in scope, make it defer to this AI-native merge flow or
+remove it from the recommended path.
 
 ## Merge Rules
 

@@ -18,7 +18,7 @@
   <circle cx="32" cy="26" r="6" fill="#FF5F57"/>
   <circle cx="52" cy="26" r="6" fill="#FEBC2E"/>
   <circle cx="72" cy="26" r="6" fill="#28C840"/>
-  <text x="390" y="31" font-family="Menlo, Monaco, Consolas, 'Courier New', monospace" font-size="12" fill="#4B4B4B" text-anchor="middle">Terminal - zsh - 80x24</text>
+  <text x="390" y="31" font-family="Menlo, Monaco, Consolas, 'Courier New', monospace" font-size="12" fill="#4B4B4B" text-anchor="middle">Claude Code - repo init</text>
 
   <rect x="10" y="44" width="760" height="356" fill="#1E1E2E"/>
   <rect x="10" y="390" width="760" height="10" rx="10" ry="10" fill="#1E1E2E"/>
@@ -26,25 +26,23 @@
   <g font-family="Menlo, Monaco, Consolas, 'Courier New', monospace" font-size="13">
     <text x="22" y="72">
       <tspan fill="#A6E3A1">user@macbook ~/my-robotics-project $</tspan>
-      <tspan fill="#CDD6F4"> ~/claude-devkit/scripts/setup.sh</tspan>
+      <tspan fill="#CDD6F4"> claude</tspan>
     </text>
 
-    <text x="22" y="96" fill="#7F849C">Preparing project-local agent guidance...</text>
-    <text x="22" y="118" fill="#A6E3A1">Created starter CLAUDE.md</text>
-    <text x="22" y="140" fill="#A6E3A1">Created starter AGENTS.md</text>
-    <text x="22" y="162" fill="#7F849C">Tip: run /init for suggestions, then use $intuitive-setup.</text>
-    <text x="22" y="184" fill="#7F849C">Linking shared reference and Claude assets...</text>
-    <text x="22" y="206" fill="#89DCEB">Linked context directory -&gt; /Users/user/claude-devkit/context</text>
-    <text x="22" y="228" fill="#89DCEB">Linked .claude/commands directory -&gt; shared commands</text>
-    <text x="22" y="250" fill="#89DCEB">Linked .claude/skills directory -&gt; shared skills</text>
+    <text x="22" y="104" fill="#F9E2AF">&gt; Read this skill:</text>
+    <text x="42" y="126" fill="#89DCEB">https://github.com/MiaoDX/claude-devkit/blob/main/skills/intuitive-init/SKILL.md</text>
 
-    <text x="22" y="292">
-      <tspan fill="#A6E3A1">user@macbook ~/my-robotics-project $</tspan>
-      <tspan fill="#CDD6F4"> ls -l CLAUDE.md AGENTS.md</tspan>
-    </text>
+    <text x="22" y="164" fill="#F9E2AF">&gt; Use $intuitive-init to initialize this repo.</text>
+    <text x="42" y="188" fill="#CDD6F4">Run /init-style discovery if available.</text>
+    <text x="42" y="212" fill="#CDD6F4">Preserve project-specific instructions.</text>
+    <text x="42" y="236" fill="#CDD6F4">Propose a diff before applying.</text>
 
-    <text x="22" y="316" fill="#7F849C">-rw-r--r--  user  staff  CLAUDE.md</text>
-    <text x="22" y="338" fill="#7F849C">-rw-r--r--  user  staff  AGENTS.md</text>
+    <text x="22" y="276" fill="#A6E3A1">Agent:</text>
+    <text x="82" y="276" fill="#7F849C">Reading README.md, AGENTS.md, CLAUDE.md, commands, and tests...</text>
+    <text x="22" y="300" fill="#A6E3A1">Agent:</text>
+    <text x="82" y="300" fill="#7F849C">Treating /init output as suggestions, not overwrite text.</text>
+    <text x="22" y="324" fill="#A6E3A1">Agent:</text>
+    <text x="82" y="324" fill="#7F849C">Ready to show a merged AGENTS.md / CLAUDE.md diff.</text>
 
     <text x="22" y="374">
       <tspan fill="#A6E3A1">user@macbook ~/my-robotics-project $</tspan>
