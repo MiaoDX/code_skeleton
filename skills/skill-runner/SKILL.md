@@ -3,7 +3,7 @@ name: skill-runner
 description: |
   Run a daily development task through one or more named skills in an isolated
   tmux-backed Codex or Claude session. Use when the user asks to "impl X with
-  $skill", "run X via $hybrid-phase-pipeline", supervise a skill-driven task,
+  $skill", "run X via $intuitive-flow", supervise a skill-driven task,
   keep the main session clean, evaluate the run, or improve custom skills after
   a real task reveals a reusable workflow defect.
 ---
@@ -64,7 +64,7 @@ python3 /home/mi/ws/code_skeleton/skills/skill-runner/scripts/run_skill_runner.p
   --agent codex \
   --cwd "$PWD" \
   -- \
-  'impl <task> with $hybrid-phase-pipeline then $simplify'
+  'impl <task> with $intuitive-flow then $simplify'
 ```
 
 The selected skill must be applied to the `--cwd` workspace. If a run in a
@@ -116,7 +116,7 @@ The worker prompt should be compact and explicit:
 - Verification required
 - Final output shape
 
-For `$hybrid-phase-pipeline`, require coherent phase scope. Do not create many
+For `$intuitive-flow`, require coherent phase scope. Do not create many
 micro-phases unless the worker first stops and asks for grouping approval.
 
 For `$simplify`, scope review to the actual diff or path. Do not expand into a

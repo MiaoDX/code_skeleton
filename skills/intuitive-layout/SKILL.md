@@ -180,7 +180,7 @@ tests/
 ```
 
 Defer detailed test taxonomy, marker strategy, pruning, fixture extraction, and
-test behavior quality to `intuitive-ut`.
+test behavior quality to `intuitive-tests`.
 
 Scripts:
 
@@ -210,7 +210,7 @@ Package internals:
 
 - Use `intuitive-doc` when the change splits doc audiences, moves human docs,
   changes doc indexes, or risks stale links.
-- Use `intuitive-ut` when the test folder layout, markers, fixtures, pruning,
+- Use `intuitive-tests` when the test folder layout, markers, fixtures, pruning,
   or behavior quality becomes the main issue.
 - Use `improve-codebase-architecture` after layout friction is reduced and the
   next question is module depth, interface design, or code locality.

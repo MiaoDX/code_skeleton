@@ -23,11 +23,30 @@ source-of-truth rules.
 
 ## Why This Exists
 
-- **AI-native init** - give the agent `$intuitive-init`, let it inspect the repo, run `/init`-style discovery when available, and propose local guidance updates.
-- **Project-local agent files** - `CLAUDE.md` and `AGENTS.md` should contain each repo's real commands, hazards, and workflow rules.
-- **Reusable skills** - shared workflows live in skills so repos can opt into them without pasting manuals into root guidance.
-- **Periodic refresh** - rerun `$intuitive-init` after weeks of drift, new command surfaces, or repeated agent mistakes.
-- **One updater** - CLIs, MCP servers, skills, commands, and the GSD workflow stay current with a single script.
+AI agents write all my code.
+
+That means the repo needs two surfaces.
+
+The human surface should be tiny: `README.md`, `ARCHITECTURE.md`, `STATUS.md`,
+`docs/human/**`, the layout, and the tests. This is where I decide what the
+project is, what good means, and what must not break.
+
+Everything else is agent territory: source code, plans, logs, generated
+evidence, retrospectives, scratch work, and low-level churn. Humans can inspect
+it when something is risky or broken. They should not have to live there.
+
+I do not want a giant process system. I want community best practices where
+they already exist, and a small set of intuitive skills where they do not.
+
+The workflow should make the big questions expensive and the small questions
+cheap: use `office-hours` or `grill-me` for what to build, `intuitive-flow` for
+normal development, and `intuitive-refactor` when it is time to clean the
+system without drifting forever.
+
+If the human docs are good enough, an agent should be able to rebuild the
+project in another language or framework. That is the bar.
+
+See [BELIEFS.md](BELIEFS.md) for the full doctrine.
 
 ## AI-Native Init
 
@@ -75,11 +94,9 @@ not initialize project root agent files; use `$intuitive-init` for that.
 | **intuitive-init** | Merge `/init` suggestions, devkit defaults, and repo evidence into local `AGENTS.md` / `CLAUDE.md` |
 | **intuitive-doc** | Keep human-facing docs small, current, and separated from agent evidence/history |
 | **intuitive-layout** | Improve repo/folder organization before deeper architecture work |
-| **intuitive-ut** | Organize, prune, mark, and refactor tests around behavior |
-| **hybrid-phase-pipeline** | Move a fuzzy idea through plan review, GSD handoff, execution, cleanup, and verification |
-| **refactor-scope-gate** | Bound broad refactors with accepted severities, evidence, and a stop condition |
-| **simplify** | Review changed code for reuse, quality, and efficiency before final verification |
-| **codex** | Delegate analysis, review, and refactoring to Codex CLI where available |
+| **intuitive-tests** | Organize, prune, mark, and refactor tests around behavior |
+| **intuitive-flow** | Move a fuzzy idea through plan review, GSD handoff, execution, cleanup, and verification |
+| **intuitive-refactor** | Bound broad refactors with accepted severities, evidence, and a stop condition |
 
 ## Shared Operating Rules
 

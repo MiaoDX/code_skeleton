@@ -1,19 +1,18 @@
 ---
-name: hybrid-phase-pipeline
+name: intuitive-flow
 description: |
-  Orchestrate the staged hybrid planning-to-execution workflow: grill-me or
-  office-hours for idea shaping, docs/plans as the pre-execution source of
-  truth, autoplan for hard review, optional to-issues for vertical slices, GSD
-  ingest/plan for committed execution, GSD execute/verify for implementation,
-  simplify for changed-code cleanup, bounded scoping for architecture/refactor
-  work, and tdd inside risky slices. Use when the user asks to combine Matt
-  Pocock skills, gstack, and GSD; asks for a durable pipeline; mentions
-  grill-me/office-hours/autoplan/to-issues/simplify/tdd/gsd together; asks to
-  run improve-codebase-architecture via a pipeline; or wants to move an idea
-  from fuzzy concept to implemented phase without duplicating sources of truth.
+  Orchestrate the intuitive idea-to-execution workflow: grill-me or office-hours
+  for idea shaping, docs/plans as the pre-execution source of truth, autoplan
+  for hard review, optional to-issues for vertical slices, GSD ingest/plan for
+  committed execution, GSD execute/verify for implementation, simplify for
+  changed-code cleanup, bounded scoping for architecture/refactor work, and tdd
+  inside risky slices. Use when the user asks for normal development flow,
+  durable planning, fuzzy idea to implementation, Matt Pocock skills + gstack +
+  GSD together, improve-codebase-architecture via a pipeline, or one coherent
+  source of truth from idea to verified work.
 ---
 
-# Hybrid Phase Pipeline
+# Intuitive Flow
 
 Use this skill to route a feature or project direction through the repo's staged
 hybrid workflow without turning every idea into a full process marathon.
@@ -99,7 +98,7 @@ When this skill selects a downstream step such as `grill-me`, `autoplan`,
 
 Do not hand-write an artifact and claim it was produced by a downstream skill.
 If you produce something inline, label it as inline output from
-`hybrid-phase-pipeline`.
+`intuitive-flow`.
 
 ## Artifact Provenance
 
@@ -506,27 +505,3 @@ README or architecture docs unless the user asks.
   user explicitly wants GitHub tracking added midstream.
 - Do not use `tdd` to write all tests up front. Use one red-green-refactor loop
   per behavior.
-
-## MolmoSpaces Pilot
-
-For this repo, the pilot plan is:
-
-```text
-docs/plans/molmospaces-manipulation-spike.md
-```
-
-Recommended next sequence:
-
-```text
-autoplan docs/plans/molmospaces-manipulation-spike.md
-update docs/plans/molmospaces-manipulation-spike.md in place after approval
-to-issues docs/plans/molmospaces-manipulation-spike.md   # optional
-gsd-ingest-docs --manifest <manifest> --mode merge   # if the phase does not exist yet
-gsd-plan-phase <created-or-existing-phase> --prd docs/plans/molmospaces-manipulation-spike.md
-gsd-execute-phase <created-or-existing-phase>
-simplify <changed-scope>
-gsd-verify-work <created-or-existing-phase>
-```
-
-Use `tdd` inside the MolmoSpaces slices for scenario scoring, manifest parsing,
-MCP tool contracts, artifact schemas, and regressions.

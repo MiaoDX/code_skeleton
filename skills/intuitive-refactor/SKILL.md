@@ -1,9 +1,9 @@
 ---
-name: refactor-scope-gate
-description: Set a bounded refactor goal before architecture or cleanup work starts. Use whenever the user wants to improve architecture, refactor safely, "fix all big issues", avoid endless refactors, decide what is in/out of scope, classify P0/P1/P2/Parked findings, or define the tests and stop condition before changing code. This skill works standalone and can also be combined with architecture scanners, planning pipelines, TDD, or diagnosis skills.
+name: intuitive-refactor
+description: Set a bounded refactor goal before architecture or cleanup work starts. Use whenever the user wants to improve architecture, refactor safely, "fix all big issues", avoid endless refactors, decide what is in/out of scope, classify P0/P1/P2/Parked findings, or define the tests and stop condition before changing code. This skill works standalone and can also be combined with architecture scanners, intuitive-flow, TDD, or diagnosis skills.
 ---
 
-# Refactor Scope Gate
+# Intuitive Refactor
 
 Use this skill to set the goal, scope, evidence, and stop condition for a
 refactor before code changes start.
@@ -285,7 +285,7 @@ to ladder levels in the safety plan.
 Use this shape when the user wants a bounded architecture pass:
 
 ```text
-Run $refactor-scope-gate.
+Run $intuitive-refactor.
 
 Scope: one named module/seam only.
 Start report-only.

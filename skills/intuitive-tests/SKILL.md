@@ -1,9 +1,9 @@
 ---
-name: intuitive-ut
-description: Use this skill whenever the user asks about unit test best practices, UT organization, flat test suites, redundant tests, test refactors, pytest/JUnit/Jest/xUnit layout, test taxonomy, flaky tests, coverage quality, fixtures, mocks, parametrization, or "which tests are worth keeping." It turns broad testing advice into a practical, behavior-first cleanup workflow. For broad suite refactors, audit first, propose a recommended path across markers, folder layout, pruning, fixtures, and parameterization, then wait for user feedback before applying disruptive changes.
+name: intuitive-tests
+description: Use this skill whenever the user asks about unit test best practices, test organization, flat test suites, redundant tests, test refactors, pytest/JUnit/Jest/xUnit layout, test taxonomy, flaky tests, coverage quality, fixtures, mocks, parametrization, or "which tests are worth keeping." It turns broad testing advice into a practical, behavior-first cleanup workflow. For broad suite refactors, audit first, propose a recommended path across markers, folder layout, pruning, fixtures, and parameterization, then wait for user feedback before applying disruptive changes.
 ---
 
-# Intuitive Unit Tests
+# Intuitive Tests
 
 Use this skill to make a test suite easier to understand, faster to run, and
 less coupled to implementation details. The goal is not "more tests." The goal

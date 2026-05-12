@@ -1,6 +1,6 @@
 ---
 name: intuitive-init
-description: Initialize, audit, merge, and refresh project-local AGENTS.md and CLAUDE.md files from existing repo guidance, agent /init suggestions, and intuitive workflow defaults. Use when setting up a repo for Claude Code/Codex, replacing symlinked agent files with local guidance, rerunning agent init after weeks of drift, or aligning a repo to intuitive-doc, intuitive-layout, intuitive-ut, hybrid-phase-pipeline, and refactor-scope-gate without overwriting project-specific hints.
+description: Initialize, audit, merge, and refresh project-local AGENTS.md and CLAUDE.md files from existing repo guidance, agent /init suggestions, and intuitive workflow defaults. Use when setting up a repo for Claude Code/Codex, replacing symlinked agent files with local guidance, rerunning agent init after weeks of drift, or aligning a repo to intuitive-doc, intuitive-layout, intuitive-tests, intuitive-flow, and intuitive-refactor without overwriting project-specific hints.
 ---
 
 # Intuitive Init
@@ -57,9 +57,9 @@ Use this workflow unless the user asks for report-only or a specific file.
    - `$intuitive-init` for agent guidance initialization and periodic refresh.
    - `$intuitive-doc` for human-facing docs and doc drift.
    - `$intuitive-layout` for repo/folder organization.
-   - `$intuitive-ut` for test-suite structure and behavior-focused cleanup.
-   - `$hybrid-phase-pipeline` for fuzzy idea to planned execution.
-   - `$refactor-scope-gate` before broad architecture or refactor work.
+   - `$intuitive-tests` for test-suite structure and behavior-focused cleanup.
+   - `$intuitive-flow` for fuzzy idea to planned execution.
+   - `$intuitive-refactor` before broad architecture or refactor work.
 6. Produce a merged proposal first:
    - Summarize the source inputs used.
    - Explain what was preserved, replaced, and removed.
