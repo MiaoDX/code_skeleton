@@ -13,6 +13,19 @@ Default human surface:
 - `STATUS.md`
 - `docs/human/**`
 
+When any default human surface is missing, `$intuitive-doc` should make the
+next action obvious. In audit/guard output, report the missing file or folder
+and give the smallest generation hint that would restore the default surface.
+Do not silently create files in audit mode.
+
+Default generation hints:
+- Missing `README.md` -> suggest `/intuitive-doc update README.md`
+- Missing `ARCHITECTURE.md` -> suggest `/intuitive-doc update ARCHITECTURE.md`
+- Missing `STATUS.md` -> suggest `/intuitive-doc update STATUS.md`
+- Missing `docs/human/` -> suggest `/intuitive-doc update docs/human/README.md`
+- Missing `docs/human/README.md` while `docs/human/` exists -> suggest
+  `/intuitive-doc update docs/human/README.md`
+
 AI-agent-developed repos often contain many plans, execution logs, ADRs,
 retrospectives, proof reports, and implementation notes. Keep those useful, but
 do not make human developers read them for normal review.
@@ -82,34 +95,48 @@ Identify the human-facing doc surface, then verify its testable claims against t
    - Include `docs/human/**` when present
    - Use ADR indexes, `.planning/**`, and `docs/plans/**` as evidence only unless the user explicitly targets them
    - Exclude `.planning/**`, `docs/plans/**`, `docs/status/active/**`, `docs/retrospectives/**`, `output/**`, generated reports, and archives unless the user targets them or an authoritative doc links one as current truth
-4. Build a codebase freshness map before detailed claims:
+4. Detect missing default human surface:
+   - Check for `README.md`, `ARCHITECTURE.md`, `STATUS.md`, `docs/human/`, and
+     `docs/human/README.md`
+   - If `STATUS.md` is missing but `README.md` or `docs/human/README.md`
+     clearly covers current focus, next action, and blockers, report
+     `STATUS.md` as "missing but covered"; otherwise report missing L0 current
+     state
+   - If `docs/human/` is missing, report that the repo lacks the default
+     human-doc extension folder
+   - For each missing piece, include the matching generation hint from
+     "Default generation hints"
+   - Do not create missing files during AUDIT mode unless the user explicitly
+     asked for an update/create action
+5. Build a codebase freshness map before detailed claims:
    - Top-level packages and their roles
    - Example/demo entrypoints
    - Script and `just` recipe surfaces
    - Public protocols/contracts, schemas, reports, and artifact outputs
    - Active focus from `STATUS.md` and, as evidence only, `.planning/STATE.md`
    - Any major subsystem present in code but missing or underweighted in L0/L1 docs
-5. Report the selected doc set and skipped buckets before claim results,
+6. Report the selected doc set, skipped buckets, and missing-surface hints before
+   claim results,
    including agent-operational files skipped as human docs
-6. For each **human-authoritative design or runbook doc**:
+7. For each **human-authoritative design or runbook doc**:
    a. Read the doc
    b. Extract **testable claims** — statements about interfaces, responsibilities, data flow, extension points, valid/invalid combinations
    c. For L0/L1 docs, also extract **coverage claims by omission**: what major subsystems or run modes the doc implies are the whole project
    d. For each claim, search the codebase to verify it still holds
    e. For each coverage-by-omission claim, check whether the freshness map shows a missing major subsystem, public contract, or runnable mode
    f. Classify each claim as: ✅ VERIFIED, ⚠️ DRIFTED, ❓ UNVERIFIABLE
-7. Check agent-operational files only for boundary drift:
+8. Check agent-operational files only for boundary drift:
    - agent files point to stale or missing human docs
    - agent files duplicate milestone goals, non-goals, review gates, or doc-tier taxonomy that belongs in human docs
    - agent files conflict with the human-authoritative surface
    Report these as agent-guidance drift and suggest `$intuitive-init refresh`;
    do not rewrite agent files from this skill unless the user explicitly
    targeted them.
-8. Report findings as a table:
+9. Report findings as a table:
    ```
    | Doc | Claims | Verified | Drifted | Unverifiable |
    ```
-9. For each DRIFTED claim, show: what the doc says or omits vs what the code shows
+10. For each DRIFTED claim, show: what the doc says or omits vs what the code shows
 
 **What counts as a testable claim:**
 - "The solver returns a GraspPlan" → grep for the return type
@@ -131,7 +158,10 @@ Identify the human-facing doc surface, then verify its testable claims against t
 Update a specific doc that has drifted.
 
 **Steps:**
-1. Read the target doc
+1. Read the target doc. If the target is a missing default human-facing doc
+   (`README.md`, `ARCHITECTURE.md`, `STATUS.md`, or `docs/human/README.md`),
+   create the parent directory as needed and draft the smallest useful doc at
+   the correct perspective level.
 2. Determine whether it is human-authoritative, stage-authoritative, evidence/history, or implementation detail
 3. If the target is generated planning/history/evidence, update it only when the user explicitly requested that file; otherwise update the human-facing doc that points to it
 4. Read the README.md documentation standards (if present)
@@ -152,6 +182,8 @@ Update a specific doc that has drifted.
 - Do NOT downgrade a design doc to implementation detail
 - Do NOT remove extension points or "future" slots
 - Do NOT add function names or line numbers to design docs
+- DO create a missing default human-facing target when the user runs
+  `/intuitive-doc update <target>` for that path
 - DO update interface contracts if they changed
 - DO update valid/invalid combination rules if new modes were added
 - DO add new extension points if new swappable components emerged
@@ -199,6 +231,8 @@ Always end audit/guard output with an actionable summary:
 ```
 ## Summary
 - Authoritative set: [list docs audited]
+- Missing default surface: [list missing files/folders, or none]
+- Generation hints: [commands to create missing human-facing docs/folders]
 - Skipped as generated/detail/history: [list buckets]
 - N docs checked, M have drift
 - Critical: [list docs with broken interface claims]
@@ -208,7 +242,10 @@ Always end audit/guard output with an actionable summary:
 
 ## What This Skill Does NOT Do
 
-- Does not create broad new doc suites from scratch; it may create a small `docs/human/README.md` index or move existing docs into the human surface
+- Does not create broad new doc suites from scratch; it may create the missing
+  default human-facing docs (`README.md`, `ARCHITECTURE.md`, `STATUS.md`, or
+  `docs/human/README.md`) only when the user explicitly runs update for that
+  target
 - Does not sweep every markdown file in the repo
 - Does not validate generated planning/history/detail docs by default
 - Does not treat implementation references as human-review authoritative just because they exist
