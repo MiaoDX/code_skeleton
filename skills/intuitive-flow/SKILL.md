@@ -48,6 +48,40 @@ Default to:
 If the simple path is enough, use it. Split only when the split makes execution
 or verification clearer.
 
+## Upfront Route Brief
+
+Before executing a non-trivial request or producing artifacts, show the proposed
+pipeline route first. The goal is to make shortcuts visible, not to ask for
+permission for every small step.
+
+Use this shape:
+
+```text
+Current state: <fuzzy idea | draft plan | reviewed plan | GSD phase | changed code | refactor goal | direct implementation>
+Selected path: <stage or skill sequence>
+Why: <one sentence>
+Bypassed/left behind: <stage - reason; stage - reason>
+Stop/continue point: <where work pauses or what will run now>
+```
+
+Give this brief before edits when the request could reasonably have gone
+through `docs/plans`, `autoplan`, `to-issues`, `gsd-ingest-docs`,
+`gsd-plan-phase`, `gsd-execute-phase`, `simplify`, or `gsd-verify-work`.
+
+If the chosen path bypasses one of those stages, name the skipped stage and why.
+Examples: "skipping `autoplan` because the user asked for a direct tiny edit",
+"skipping `gsd-ingest-docs` because an existing GSD phase already owns the
+roadmap scope", or "skipping `gsd-plan-phase` because no accepted
+`docs/plans/` handoff exists yet."
+
+When the user says "impl", asks to execute a specific doc directly, or gives a
+small concrete code change, a direct implementation path is allowed. Still say
+which planning or GSD stages are being left behind and why. For tiny direct
+questions, compress the brief to one sentence.
+
+This brief does not override Required Checkpoints. If the selected path crosses
+a checkpoint below, stop there and ask.
+
 ## Idea-Shaping Mode Selection
 
 At the beginning of a fuzzy-idea run, before the first `grill-me` or
@@ -252,7 +286,9 @@ decisions the roadmap merge must respect.
 
 ## Stage Router
 
-Start by classifying the user's current state.
+Start by classifying the user's current state, then give the Upfront Route Brief
+before running the selected route. If you choose a shortened path, say what was
+left behind and why.
 
 ### A. Fuzzy Idea
 
@@ -503,6 +539,10 @@ When the user asks for the whole durable pipeline, propose this compact sequence
 For parallel standalone tasks, write progress to
 `docs/status/active/<task-slug>.md` and keep `STATUS.md` repo-level only.
 
+The agent may choose a shortened path when the user's request is already scoped,
+trivial, or already under an authoritative source of truth. When shortening,
+announce the selected path and every material stage left behind before moving.
+
 Do not run `office-hours` by default if `grill-me` already made the direction
 crisp. Add `office-hours` only if value, wedge, audience, or demo framing is
 still uncertain.
@@ -552,6 +592,21 @@ Stop and ask before crossing these boundaries:
 
 ## Output Shapes
 
+### If Giving An Upfront Route Brief
+
+Return this before the first artifact or edit:
+
+```text
+Current state: <classification>
+Selected path: <stage/skill sequence>
+Why: <one sentence>
+Bypassed/left behind: <stage - reason; stage - reason>
+Stop/continue point: <what happens before the next checkpoint>
+```
+
+For tiny direct work, one sentence is enough, but it still needs to name the
+selected path when a heavier route was plausible.
+
 ### If Producing A Pre-Plan
 
 Write to:
@@ -596,6 +651,9 @@ README or architecture docs unless the user asks.
 ## Anti-Patterns
 
 - Do not run every skill just because it exists.
+- Do not silently bypass `autoplan`, `to-issues`, GSD handoff, execution,
+  cleanup, or verification stages when they were plausible routes. Say what was
+  left behind and why before continuing.
 - Do not silently choose auto-guided idea shaping when the user asked for direct
   `grill-me` or `office-hours`.
 - Do not auto-decide user-owned product, scope, contract, cost, security,
