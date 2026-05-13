@@ -82,8 +82,44 @@ small concrete code change, a direct implementation path is allowed. Still say
 which planning or GSD stages are being left behind and why. For tiny direct
 questions, compress the brief to one sentence.
 
+This direct path does not apply to plan-backed implementation when the
+`autoplan` gate has not already run. If the request points at a
+`docs/plans/*.md` file, committed plan, or reviewed-looking implementation plan,
+run the autoplan precheck below before GSD handoff or execution.
+
 This brief does not override Required Checkpoints. If the selected path crosses
 a checkpoint below, stop there and ask.
+
+## Autoplan Precheck Before Plan Implementation
+
+When the user asks to implement a specific plan, says "LGTM", or says "impl"
+while pointing at a plan, first check whether `autoplan` already ran and its
+accepted decisions were reconciled into the canonical plan file.
+
+Treat as `autoplan` evidence:
+
+- the canonical `docs/plans/<slug>.md` contains accepted review decisions for
+  scope, risks, tests, DX, and execution, or links a review summary while keeping
+  those decisions in the plan body
+- recent conversation or repo history explicitly shows `autoplan` ran and the
+  plan was updated in place afterward
+
+Do not treat as `autoplan` evidence:
+
+- the user saying "LGTM", "approved", "go implement", or "keep this plan"
+- a commit containing the plan without a visible `autoplan` review/update step
+- a raw `~/.gstack` review log, restore file, or final-gate summary that was not
+  reconciled into the canonical plan
+
+If evidence is missing, classify the request as `Draft Plan Exists` and run:
+
+```text
+autoplan docs/plans/<slug>.md
+```
+
+Then stop at the review, in-place update, and execution checkpoints as usual.
+Do not say `autoplan` was bypassed because the user approved implementation;
+say `autoplan` is selected because pipeline review evidence is missing.
 
 ## Idea-Shaping Mode Selection
 
@@ -323,7 +359,9 @@ Stop after the plan doc unless the user explicitly asks to continue.
 
 ### B. Draft Plan Exists
 
-Use when a human-readable plan exists and the user wants hard review.
+Use when a human-readable plan exists and the user wants hard review. Also use
+when the user wants implementation of a plan but the autoplan precheck does not
+find evidence that `autoplan` already ran and was reconciled into the plan.
 
 Default path:
 
@@ -356,7 +394,14 @@ explicitly approves execution.
 
 ### C. Reviewed Plan, Not Yet Committed To Execution
 
-Use when the plan is accepted but not yet under GSD.
+Use when the plan is accepted, already passed the autoplan precheck, and is not
+yet under GSD. A user's implementation approval alone is not enough to enter
+this stage.
+
+Before treating any plan as reviewed, run the autoplan precheck. If `autoplan`
+has not run or its accepted decisions were not reconciled into the canonical
+plan, reclassify the request as `Draft Plan Exists` and run `autoplan` before
+`to-issues`, `gsd-ingest-docs`, `gsd-plan-phase`, or implementation.
 
 Before `to-issues`, `gsd-ingest-docs`, or `gsd-plan-phase`, confirm that the
 accepted plan lives in `docs/plans/<slug>.md`. Do not use a generated
@@ -548,6 +593,10 @@ announce the selected path and every material stage left behind before moving.
 This includes idea-shaping stages: if `grill-me` or `office-hours` would have
 been plausible but are skipped, name them and explain why.
 
+Do not shorten a plan-backed implementation past `autoplan` unless the autoplan
+precheck finds evidence it already ran and was reconciled, or the task is a tiny
+direct edit that is not using a plan as the source of truth.
+
 Do not run `office-hours` by default if `grill-me` already made the direction
 crisp. Add `office-hours` only if value, wedge, audience, or demo framing is
 still uncertain.
@@ -658,6 +707,9 @@ README or architecture docs unless the user asks.
 - Do not run every skill just because it exists.
 - Do not silently bypass idea shaping. If `grill-me` or `office-hours` would
   have been plausible, say whether they are selected or skipped and why.
+- Do not bypass `autoplan` for plan-backed implementation because the user said
+  "LGTM", "impl", or approved a plan. Run the autoplan precheck first unless
+  review evidence is present.
 - Do not silently bypass `autoplan`, `to-issues`, GSD handoff, execution,
   cleanup, or verification stages when they were plausible routes. Say what was
   left behind and why before continuing.
