@@ -1,6 +1,6 @@
 ---
 name: intuitive-init
-description: Initialize, audit, merge, and refresh project-local AGENTS.md and CLAUDE.md files from existing repo guidance, agent /init suggestions, and intuitive workflow defaults. Use when setting up a repo for Claude Code/Codex, replacing symlinked agent files with local guidance, rerunning agent init after weeks of drift, or aligning a repo to intuitive-doc, intuitive-layout, intuitive-tests, intuitive-flow, and intuitive-refactor without overwriting project-specific hints.
+description: Initialize, audit, merge, and refresh project-local AGENTS.md and CLAUDE.md files from existing repo guidance, agent /init suggestions, standalone read-only Codex init-style discovery, and intuitive workflow defaults. Use when setting up a repo for Claude Code/Codex, replacing symlinked agent files with local guidance, rerunning agent init after weeks of drift, or aligning a repo to intuitive-doc, intuitive-layout, intuitive-tests, intuitive-flow, and intuitive-refactor without overwriting project-specific hints.
 ---
 
 # Intuitive Init
@@ -22,7 +22,8 @@ Authoritative inputs, in order:
 3. Root orientation docs such as `README.md`, `ARCHITECTURE.md`, `STATUS.md`,
    `docs/agents/**`, and command docs.
 4. Actual repo commands, scripts, package metadata, CI config, and tests.
-5. Agent `/init` suggestions.
+5. Agent `/init` suggestions or standalone init-style discovery from a read-only
+   Codex run.
 6. Intuitive Flow defaults and skill-routing conventions.
 
 ## Default Workflow
@@ -43,8 +44,8 @@ Use this workflow unless the user asks for report-only or a specific file.
    - If `/init` refuses because `AGENTS.md` or `CLAUDE.md` already exists,
      prompt it to "help refactor the current file" rather than overwrite.
    - Capture useful suggestions only. Do not treat init output as final text.
-   - If the current interface cannot run `/init`, say so and continue from the
-     repo evidence.
+   - If native slash commands are not exposed in the current interface, try the
+     standalone Codex fallback below before continuing from repo evidence alone.
 4. Classify current guidance:
    - **Preserve**: project commands, env setup, permissions, local hazards,
      workflow source-of-truth rules, domain vocabulary, test gates.
@@ -68,6 +69,79 @@ Use this workflow unless the user asks for report-only or a specific file.
 7. Apply changes only when the user has asked for direct implementation or
    approves the proposal. When applying, update both `AGENTS.md` and
    `CLAUDE.md` if both exist and the rule applies to both agents.
+
+## Agent-Init Discovery Fallbacks
+
+Use this order so the skill benefits from init-style review even when the
+current host cannot call interactive slash commands directly.
+
+### Native slash command
+
+Use this when the host exposes `/init` or an equivalent tool:
+
+```text
+/init
+```
+
+If root agent files already exist, ask for suggestion/refactor mode rather than
+overwrite mode:
+
+```text
+Help refactor the current AGENTS.md and CLAUDE.md. Produce suggestions only;
+do not overwrite files.
+```
+
+### Standalone Codex CLI discovery
+
+Use this when native `/init` is not exposed but the `codex` CLI is installed.
+This is not a file-editing pass. It is a second-opinion reviewer that should
+only produce suggestions to merge into the proposal.
+
+Run from the repository root:
+
+```bash
+codex --ask-for-approval never exec --skip-git-repo-check --sandbox read-only -C "$PWD" \
+  "Act like Codex /init in suggestion-only mode for this repository. Read the local orientation, agent, package, test, and CI files. Do not edit files. Do not propose a full replacement unless the current files are unusable. Return: source inputs inspected, project-specific guidance to preserve, stale or duplicated guidance to remove, missing operational rules, and concise suggested edits for AGENTS.md and CLAUDE.md."
+```
+
+If the host supports `--ephemeral`, add it to avoid persisting this discovery
+session:
+
+```bash
+codex --ask-for-approval never exec --ephemeral --skip-git-repo-check --sandbox read-only -C "$PWD" \
+  "Act like Codex /init in suggestion-only mode for this repository. Read the local orientation, agent, package, test, and CI files. Do not edit files. Do not propose a full replacement unless the current files are unusable. Return: source inputs inspected, project-specific guidance to preserve, stale or duplicated guidance to remove, missing operational rules, and concise suggested edits for AGENTS.md and CLAUDE.md."
+```
+
+If Codex starts but its internal sandbox cannot run read commands, for example
+with a `bwrap` / user-namespace / loopback error, do not switch immediately to
+an unrestricted Codex run. Build a context bundle with the host tools and pipe
+it into Codex instead:
+
+```bash
+{
+  printf '# AGENTS.md\n'
+  sed -n '1,260p' AGENTS.md 2>/dev/null || true
+  printf '\n# CLAUDE.md\n'
+  sed -n '1,260p' CLAUDE.md 2>/dev/null || true
+  printf '\n# pyproject.toml selected sections\n'
+  awk '
+    /^\[project.optional-dependencies\]/ {p=1}
+    /^\[tool.pytest.ini_options\]/ {p=1}
+    /^\[tool.coverage.run\]/ {p=1}
+    /^\[/ && !/^\[project.optional-dependencies\]/ && !/^\[tool.pytest.ini_options\]/ && !/^\[tool.coverage.run\]/ {if (p) p=0}
+    p {print}
+  ' pyproject.toml 2>/dev/null || true
+  printf '\n# Orientation and automation files present\n'
+  rg --files -g 'README.md' -g 'ARCHITECTURE.md' -g 'STATUS.md' -g 'Makefile' -g 'justfile' -g '.github/workflows/*.yml' -g '.github/workflows/*.yaml' -g 'docs/agents/**' 2>/dev/null | sort || true
+} | codex --ask-for-approval never exec --ephemeral --skip-git-repo-check --sandbox read-only -C "$PWD" \
+  "Act like Codex /init in suggestion-only mode for this repository. Analyze only the context bundle provided on stdin; do not run shell commands and do not edit files. Return: source inputs inspected, project-specific guidance to preserve, stale or duplicated guidance to remove, missing operational rules, and concise suggested edits for AGENTS.md and CLAUDE.md."
+```
+
+Treat the output as advisory. If it conflicts with repo evidence, preserve the
+repo evidence and mention the disagreement in the proposal.
+
+If `codex` is missing, exits non-zero, or the environment cannot run external
+agents, say so briefly and continue from repo evidence.
 
 ## Modes
 
