@@ -2,11 +2,12 @@
 name: intuitive-flow
 description: |
   Orchestrate the intuitive idea-to-execution workflow: grill-me or office-hours
-  for idea shaping, docs/plans as the pre-execution source of truth, autoplan
-  for hard review, optional to-issues for vertical slices, GSD ingest/plan for
-  committed execution, GSD execute/verify for implementation, simplify for
-  changed-code cleanup, bounded scoping for architecture/refactor work, and tdd
-  inside risky slices. Use when the user asks for normal development flow,
+  for direct or auto-guided idea shaping, docs/plans as the pre-execution source
+  of truth, autoplan for hard review, optional to-issues for vertical slices,
+  GSD ingest/plan for committed execution, GSD execute/verify for
+  implementation, simplify for changed-code cleanup, bounded scoping for
+  architecture/refactor work, and tdd inside risky slices. Use when the user asks
+  for normal development flow,
   durable planning, fuzzy idea to implementation, Matt Pocock skills + gstack +
   GSD together, improve-codebase-architecture via a pipeline, or one coherent
   source of truth from idea to verified work.
@@ -46,6 +47,34 @@ Default to:
 
 If the simple path is enough, use it. Split only when the split makes execution
 or verification clearer.
+
+## Idea-Shaping Mode Selection
+
+At the beginning of a fuzzy-idea run, before the first `grill-me` or
+`office-hours` question, hint the user to choose the shaping route:
+
+```text
+Which route should we use?
+
+A. Direct route (preferred) - plain, more detailed, and user-led. I ask the
+   important questions directly and wait for your answers.
+B. Auto-guided route (experimental) - I auto-accept obvious defaults, save those
+   decisions into the plan, and ask you only for scope, premise, or hard-to-reason
+   choices.
+```
+
+Mode selection rules:
+
+- If the user explicitly asks for direct/manual shaping, `grill-me`, or
+  `office-hours`, use the direct route.
+- If the user explicitly asks for auto mode, "make the decisions", "move fast",
+  or similar, use the auto-guided route.
+- If the user gives no preference and a safe default is needed, use the direct
+  route.
+- Skip this prompt when a draft plan already exists and the next step is
+  `autoplan`.
+- This choice is not approval to review, hand off to GSD, or execute. All later
+  required checkpoints still apply.
 
 ## Phase Granularity
 
@@ -100,6 +129,60 @@ Do not hand-write an artifact and claim it was produced by a downstream skill.
 If you produce something inline, label it as inline output from
 `intuitive-flow`.
 
+## Auto-Guided Idea Shaping (Experimental)
+
+Use this only for fuzzy ideas before `docs/plans/<slug>.md` exists, and only
+when the user chose or clearly requested the auto-guided route.
+
+Auto-guided shaping borrows the question style of `grill-me` and
+`office-hours`, but it is not the normal interactive version of either skill.
+Label the work as `intuitive-flow` auto-guided shaping unless the downstream
+skill is actually invoked without overrides.
+
+Routing inside auto-guided shaping:
+
+- Product direction, wedge, audience, demand, or "is this worth building?" uses
+  an `office-hours`-style pass first.
+- Implementation shape, scope, design, architecture, or delivery sequencing uses
+  a `grill-me`-style pass.
+- If both are present, run product shaping first, then implementation shaping.
+
+Decision handling:
+
+- **Mechanical** - auto-decide when the repo, docs, existing conventions, or the
+  user's own words already answer the question.
+- **Assumption** - auto-decide when the default is low-risk, reversible, and
+  does not materially change scope. Mark it as an assumption.
+- **Taste** - choose the strongest recommendation, but surface it at the plan
+  checkpoint because reasonable builders could choose differently.
+- **User-owned** - stop and ask. This includes target user, demand premise,
+  narrowest wedge, goal vs non-goal boundaries, public contracts, security or
+  privacy posture, external services, API keys, paid infrastructure, phase
+  creation/splitting, and any change that overrides the user's stated intent.
+
+Product-premise rule: do not auto-answer demand reality, painful status quo,
+buyer/user identity, or narrowest wedge unless the user's message already gives
+concrete evidence. Ask the user for those.
+
+Record decisions in the generated pre-plan under:
+
+```markdown
+## Idea Shaping Decisions
+
+| # | Question | Classification | Decision | Rationale | Revisit if |
+|---|----------|----------------|----------|-----------|------------|
+```
+
+At the pre-plan checkpoint, show only the necessary parts:
+
+- user-owned questions still open
+- taste decisions worth reviewing
+- assumptions that could change scope
+- skipped unknowns that would affect execution or validation
+
+Do not ask the user every mechanical question in auto-guided mode. Do not
+silently decide user-owned questions.
+
 ## Artifact Provenance
 
 - `docs/plans/<slug>.md` pre-plans may be produced inline by this skill when the
@@ -107,6 +190,10 @@ If you produce something inline, label it as inline output from
 - Matt Pocock discussion skills such as `grill-me` shape decisions through
   questions. The current agent still writes any resulting plan file unless a
   specific writing skill is invoked.
+- Auto-guided idea shaping is inline `intuitive-flow` output. It may use
+  `grill-me` or `office-hours` question styles, but do not claim either
+  downstream skill produced the auto-decisions unless it was actually invoked
+  according to its own workflow.
 - ADRs are not a default output of this skill. Create or update ADRs only when a
   documentation/ADR-capable skill is explicitly used or the user explicitly asks
   for an ADR. ADRs record durable architecture or product decisions, not
@@ -172,14 +259,26 @@ Start by classifying the user's current state.
 Use when the user is still deciding what to build, why it matters, or what the
 scope should be.
 
-Default path:
+First choose the idea-shaping route unless the user already made the mode clear.
+
+Direct route default path:
 
 ```text
 grill-me -> docs/plans/<slug>.md
 ```
 
+Auto-guided route default path:
+
+```text
+intuitive-flow auto-guided shaping -> docs/plans/<slug>.md
+```
+
 Use `office-hours` instead of or after `grill-me` when the question is about
 product direction, wedge, audience, demand, or "is this worth building?"
+
+In auto-guided mode, use `office-hours`-style questions for product direction
+and `grill-me`-style questions for implementation shape, but record decisions
+as inline `intuitive-flow` output.
 
 Stop after the plan doc unless the user explicitly asks to continue.
 
@@ -380,20 +479,25 @@ against code already changed in this slice.
 When the user asks for the whole durable pipeline, propose this compact sequence:
 
 ```text
-1. grill-me
-2. docs/plans/<feature>.md
-3. autoplan
-4. update docs/plans/<feature>.md in place after approval
-5. to-issues (optional)
-6. choose the GSD handoff:
+1. choose idea-shaping mode:
+   - direct route (preferred)
+   - auto-guided route (experimental)
+2. shape the idea:
+   - direct -> grill-me, plus office-hours when product/wedge/demand is unclear
+   - auto-guided -> intuitive-flow auto-decisions with user-owned stops
+3. docs/plans/<feature>.md
+4. autoplan
+5. update docs/plans/<feature>.md in place after approval
+6. to-issues (optional)
+7. choose the GSD handoff:
    - existing phase -> gsd-plan-phase <phase> --prd docs/plans/<feature>.md
    - missing .planning or roadmap scope -> gsd-ingest-docs via manifest, then
      gsd-plan-phase --prd
-7. gsd-execute-phase
-8. tdd inside risky slices
-9. simplify changed code
-10. gsd-verify-work
-11. update STATUS.md if the current focus, latest phase, next action, or blocker changed
+8. gsd-execute-phase
+9. tdd inside risky slices
+10. simplify changed code
+11. gsd-verify-work
+12. update STATUS.md if the current focus, latest phase, next action, or blocker changed
 ```
 
 For parallel standalone tasks, write progress to
@@ -421,22 +525,29 @@ checklist.
 
 Stop and ask before crossing these boundaries:
 
-1. **Pre-plan -> Review:** "Is this the plan file you want reviewed?"
-2. **Review -> In-place update:** "Do you approve these review decisions, and
+1. **Idea-shaping route:** for fuzzy ideas, ask whether to use the direct route
+   (preferred) or auto-guided route (experimental), unless the user already made
+   the choice clear.
+2. **Auto-guided user-owned decision:** in auto-guided mode, ask before deciding
+   target user, demand premise, narrowest wedge, scope boundary, public contract,
+   external-service dependency, paid infrastructure, phase split, or any override
+   of stated user intent.
+3. **Pre-plan -> Review:** "Is this the plan file you want reviewed?"
+4. **Review -> In-place update:** "Do you approve these review decisions, and
    should I update the plan file in place?"
-3. **Review -> Issues/GSD:** "Do you approve this updated plan for execution?"
-4. **GSD handoff choice:** "Does this map to an existing GSD phase for
+5. **Review -> Issues/GSD:** "Do you approve this updated plan for execution?"
+6. **GSD handoff choice:** "Does this map to an existing GSD phase for
    `gsd-plan-phase --prd`, or should `gsd-ingest-docs` create/merge roadmap
    scope first?"
-5. **Issues -> GSD:** "Do you want GitHub issue tracking, or go straight to GSD?"
-6. **GSD plan -> Execute:** "Execute now, or stop after plan generation?"
-7. **Many phases:** before creating more than three phases from one prompt, ask
+7. **Issues -> GSD:** "Do you want GitHub issue tracking, or go straight to GSD?"
+8. **GSD plan -> Execute:** "Execute now, or stop after plan generation?"
+9. **Many phases:** before creating more than three phases from one prompt, ask
    "Should this be grouped into a smaller set of coherent phases instead?"
-8. **Simplify -> Verify:** "Review and clean the changed code with `simplify`
+10. **Simplify -> Verify:** "Review and clean the changed code with `simplify`
    before final verification, or skip because the change is docs-only/trivial?"
-9. **Refactor scope -> Execute:** "Do you approve this P0/P1 checklist and stop
+11. **Refactor scope -> Execute:** "Do you approve this P0/P1 checklist and stop
    condition for implementation?"
-10. **Local-dev gate:** if proof depends on real simulator, real Gateway, real VLM,
+12. **Local-dev gate:** if proof depends on real simulator, real Gateway, real VLM,
    Docker, GPU, or API keys, stop unless the current session is local and equipped.
 
 ## Output Shapes
@@ -452,7 +563,9 @@ docs/plans/<slug>.md
 Include:
 
 - problem / goal
+- idea-shaping mode: direct or auto-guided
 - decisions already made
+- idea shaping decisions table when auto-guided mode was used
 - non-goals
 - smallest demo
 - fuller demo
@@ -483,6 +596,12 @@ README or architecture docs unless the user asks.
 ## Anti-Patterns
 
 - Do not run every skill just because it exists.
+- Do not silently choose auto-guided idea shaping when the user asked for direct
+  `grill-me` or `office-hours`.
+- Do not auto-decide user-owned product, scope, contract, cost, security,
+  privacy, or phase-boundary choices.
+- Do not claim `grill-me` or `office-hours` produced auto-guided decisions. Label
+  that output as inline `intuitive-flow` auto-guided shaping.
 - Do not create a new GSD phase for every small task, diagnostic, proof retry,
   report tweak, checker tweak, blocker, or commit. Keep those inside the
   current coherent phase unless they need separate acceptance evidence.
