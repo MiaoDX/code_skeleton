@@ -17,6 +17,13 @@ AI-agent-developed repos often contain many plans, execution logs, ADRs,
 retrospectives, proof reports, and implementation notes. Keep those useful, but
 do not make human developers read them for normal review.
 
+`AGENTS.md` and `CLAUDE.md` are agent-operational docs, not part of the
+human-authoritative surface. Use them to discover pointers to the human docs,
+but do not classify them as human-facing truth by default and do not update them
+as part of the default audit/update flow. If they contain duplicated milestone
+state, documentation taxonomy, or human source-of-truth policy, report that as
+agent-guidance drift and suggest `$intuitive-init refresh`.
+
 ## Perspective Levels
 
 Use the right level of abstraction before checking details:
@@ -60,12 +67,15 @@ Identify the human-facing doc surface, then verify its testable claims against t
 **Steps:**
 1. Find the doc orientation surface:
    - Prefer explicit pointers in root `README.md`, `STATUS.md`, `AGENTS.md`, `CLAUDE.md`, or `docs/README.md`
+   - Treat `AGENTS.md` and `CLAUDE.md` as pointer sources only unless the user
+     explicitly asks to audit agent guidance
    - Then look for architecture indexes such as `ARCHITECTURE.md`, `docs/architecture/README.md`, or similar
 2. Classify docs into:
    - **Human-authoritative**: root `README.md`, `ARCHITECTURE.md`, `STATUS.md`, and docs under `docs/human/**`
    - **Stage-authoritative**: docs authoritative only for a workflow stage (`docs/plans/`, `.planning/STATE.md`, ADRs, active status notes)
    - **Evidence/history**: retrospectives, generated reports, proof bundles, logs, screenshots, benchmark output
    - **Implementation detail**: low-level internals, generated API notes, detailed phase implementation references
+   - **Agent-operational**: `AGENTS.md`, `CLAUDE.md`, `.claude/**`, `.codex/**`, and similar agent runtime guidance
 3. Select a small audit set:
    - Include files explicitly named as current human-facing sources
    - Include root `README.md`, `ARCHITECTURE.md`, and `STATUS.md` when present, even if not cross-linked
@@ -79,7 +89,8 @@ Identify the human-facing doc surface, then verify its testable claims against t
    - Public protocols/contracts, schemas, reports, and artifact outputs
    - Active focus from `STATUS.md` and, as evidence only, `.planning/STATE.md`
    - Any major subsystem present in code but missing or underweighted in L0/L1 docs
-5. Report the selected doc set and skipped buckets before claim results
+5. Report the selected doc set and skipped buckets before claim results,
+   including agent-operational files skipped as human docs
 6. For each **human-authoritative design or runbook doc**:
    a. Read the doc
    b. Extract **testable claims** — statements about interfaces, responsibilities, data flow, extension points, valid/invalid combinations
@@ -87,11 +98,18 @@ Identify the human-facing doc surface, then verify its testable claims against t
    d. For each claim, search the codebase to verify it still holds
    e. For each coverage-by-omission claim, check whether the freshness map shows a missing major subsystem, public contract, or runnable mode
    f. Classify each claim as: ✅ VERIFIED, ⚠️ DRIFTED, ❓ UNVERIFIABLE
-7. Report findings as a table:
+7. Check agent-operational files only for boundary drift:
+   - agent files point to stale or missing human docs
+   - agent files duplicate milestone goals, non-goals, review gates, or doc-tier taxonomy that belongs in human docs
+   - agent files conflict with the human-authoritative surface
+   Report these as agent-guidance drift and suggest `$intuitive-init refresh`;
+   do not rewrite agent files from this skill unless the user explicitly
+   targeted them.
+8. Report findings as a table:
    ```
    | Doc | Claims | Verified | Drifted | Unverifiable |
    ```
-8. For each DRIFTED claim, show: what the doc says or omits vs what the code shows
+9. For each DRIFTED claim, show: what the doc says or omits vs what the code shows
 
 **What counts as a testable claim:**
 - "The solver returns a GraspPlan" → grep for the return type
@@ -195,4 +213,6 @@ Always end audit/guard output with an actionable summary:
 - Does not validate generated planning/history/detail docs by default
 - Does not treat implementation references as human-review authoritative just because they exist
 - Does not auto-apply broad documentation sweeps without explicit user approval
+- Does not own `AGENTS.md` or `CLAUDE.md`; it may report agent-guidance drift
+  and route cleanup to `$intuitive-init refresh`
 - Does not touch code — only reads code, writes docs

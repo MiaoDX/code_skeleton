@@ -10,6 +10,18 @@ symlinked source of truth. Shared skills should travel across projects;
 `AGENTS.md` and `CLAUDE.md` should preserve the local repo's commands,
 constraints, workflow choices, and hard-won mistakes.
 
+## Human/Agent Documentation Boundary
+
+`AGENTS.md` and `CLAUDE.md` are agent-operational docs. Human-facing project
+truth belongs in `README.md`, `ARCHITECTURE.md`, `STATUS.md`, and
+`docs/human/**` unless a repo explicitly declares a different human surface.
+
+Agent files may point to human-authoritative docs and say how agents should
+react when those docs conflict with a request. Do not copy milestone goals,
+non-goals, steering policy, documentation taxonomy, or other human-facing
+project state into agent files. Those copied blocks drift after `$intuitive-doc`
+cleans or reorganizes the human surface.
+
 ## Core Rule
 
 Treat generated init output and Intuitive Flow defaults as reviewers, not
@@ -63,6 +75,8 @@ Use this workflow unless the user asks for report-only or a specific file.
    - `$intuitive-flow` for fuzzy idea to planned execution.
    - `$intuitive-refactor` before broad architecture or refactor work.
    - `$intuitive-squash` for cleaning local agent commit history before handoff.
+   Keep this block as routing guidance only. Do not use it to define the human
+   documentation surface; `$intuitive-doc` owns that split.
 6. Produce a merged proposal first:
    - Summarize the source inputs used.
    - Explain what was preserved, replaced, and removed.
@@ -182,6 +196,11 @@ Run the same workflow as Apply, but be stricter about removing stale commands
 and softer about adding new process. A refresh should reduce drift, not expand
 root guidance into a manual.
 
+Also use Refresh after `$intuitive-doc` has created, moved, or clarified the
+human documentation surface. In that case, update agent files to point at the
+final surface and remove copied project strategy, milestone state, or doc-tier
+policy that now belongs in human docs.
+
 ### Symlink Migration
 
 Use when `AGENTS.md` or `CLAUDE.md` is a symlink to a shared toolkit.
@@ -208,6 +227,12 @@ Good root agent guidance is short, local, and operational:
 - which local network, API, hardware, or sandbox constraints matter
 - which custom skills to use for recurring work
 
+Use stable operational bridges instead of policy copies. Prefer wording like
+"Before broad work, read the active status or steering doc when present; if it
+conflicts with the request, ask the user" over repo-specific sections that
+duplicate the current milestone, non-goals, review gates, or documentation
+taxonomy.
+
 Move reusable procedures into skills instead of expanding root guidance.
 Examples: documentation audits, layout refactors, test suite cleanup, phase
 pipelines, and bounded refactor gates.
@@ -226,5 +251,7 @@ Stop after edits when:
 - `AGENTS.md` and `CLAUDE.md` are project-local and aligned
 - stale symlink-first guidance has been removed or explicitly narrowed to
   shared assets
+- copied human-facing project state has been replaced with stable pointers to
+  the human docs that own it
 - preferred skills are routed by task, not mandated for every turn
 - validation/search checks show no obvious stale claims in touched files
