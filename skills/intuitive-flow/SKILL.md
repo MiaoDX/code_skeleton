@@ -65,14 +65,17 @@ Stop/continue point: <where work pauses or what will run now>
 ```
 
 Give this brief before edits when the request could reasonably have gone
-through `docs/plans`, `autoplan`, `to-issues`, `gsd-ingest-docs`,
-`gsd-plan-phase`, `gsd-execute-phase`, `simplify`, or `gsd-verify-work`.
+through `grill-me`, `office-hours`, `docs/plans`, `autoplan`, `to-issues`,
+`gsd-ingest-docs`, `gsd-plan-phase`, `gsd-execute-phase`, `simplify`, or
+`gsd-verify-work`.
 
 If the chosen path bypasses one of those stages, name the skipped stage and why.
-Examples: "skipping `autoplan` because the user asked for a direct tiny edit",
-"skipping `gsd-ingest-docs` because an existing GSD phase already owns the
-roadmap scope", or "skipping `gsd-plan-phase` because no accepted
-`docs/plans/` handoff exists yet."
+Examples: "skipping `grill-me` because the request is already scoped",
+"skipping `office-hours` because value, wedge, and audience are not in question",
+"skipping `autoplan` because the user asked for a direct tiny edit", "skipping
+`gsd-ingest-docs` because an existing GSD phase already owns the roadmap
+scope", or "skipping `gsd-plan-phase` because no accepted `docs/plans/` handoff
+exists yet."
 
 When the user says "impl", asks to execute a specific doc directly, or gives a
 small concrete code change, a direct implementation path is allowed. Still say
@@ -149,9 +152,9 @@ micro-phases.
 This skill is an orchestrator, not a magic executor. Be explicit about whether
 an artifact was produced inline by this skill or by a downstream skill.
 
-When this skill selects a downstream step such as `grill-me`, `autoplan`,
-`to-issues`, `gsd-ingest-docs`, `gsd-plan-phase`, `gsd-execute-phase`,
-`simplify`, `gsd-verify-work`, or `tdd`, do one of these:
+When this skill selects a downstream step such as `grill-me`, `office-hours`,
+`autoplan`, `to-issues`, `gsd-ingest-docs`, `gsd-plan-phase`,
+`gsd-execute-phase`, `simplify`, `gsd-verify-work`, or `tdd`, do one of these:
 
 - actually invoke/load that named skill and follow its workflow
 - say the named skill is unavailable or blocked, then stop or give a routing
@@ -542,6 +545,8 @@ For parallel standalone tasks, write progress to
 The agent may choose a shortened path when the user's request is already scoped,
 trivial, or already under an authoritative source of truth. When shortening,
 announce the selected path and every material stage left behind before moving.
+This includes idea-shaping stages: if `grill-me` or `office-hours` would have
+been plausible but are skipped, name them and explain why.
 
 Do not run `office-hours` by default if `grill-me` already made the direction
 crisp. Add `office-hours` only if value, wedge, audience, or demo framing is
@@ -651,6 +656,8 @@ README or architecture docs unless the user asks.
 ## Anti-Patterns
 
 - Do not run every skill just because it exists.
+- Do not silently bypass idea shaping. If `grill-me` or `office-hours` would
+  have been plausible, say whether they are selected or skipped and why.
 - Do not silently bypass `autoplan`, `to-issues`, GSD handoff, execution,
   cleanup, or verification stages when they were plausible routes. Say what was
   left behind and why before continuing.
