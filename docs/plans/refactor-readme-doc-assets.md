@@ -15,8 +15,9 @@ DONE
 
 ## Target
 
-Update `README.md` and `docs/assets/architecture.svg` so the public docs stay
-small and match the current updater implementation.
+Update `README.md`, `docs/assets/architecture.svg`, and `docs/assets/hero.png`
+so the public docs stay small, visually coherent, and aligned with the current
+updater implementation.
 
 ## Accepted Severities
 
@@ -33,6 +34,7 @@ small and match the current updater implementation.
 - [x] Remove the duplicated README Supported Tools section and represent those
   details in the single architecture diagram.
 - [x] Align `docs/assets/architecture.svg` with the current updater phases.
+- [x] Add exactly one generated hero image to the front of `README.md`.
 
 ## Parked P2 / Future Ideas
 
@@ -67,3 +69,5 @@ architecture diagram has been refreshed as the parked visual polish item, and
   paragraph.
 - 2026-05-13: Removed standalone utility callouts from the public architecture
   map while keeping larger community workflow sources visible.
+- 2026-05-13: Generated one raster hero image with `$imagegen`, saved it as
+  `docs/assets/hero.png`, and placed it near the front of `README.md`.
