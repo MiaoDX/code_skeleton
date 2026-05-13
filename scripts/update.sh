@@ -8,6 +8,11 @@ usage() {
     echo "Usage: ${0##*/} [--tmp-fix] [--skip-codex-running-check]"
 }
 
+codex_running_hint() {
+    echo "Hint: If you only want to update versions and do not care whether existing Codex sessions overwrite status-line config on exit, rerun with:"
+    echo "  ${0##*/} --skip-codex-running-check"
+}
+
 # --tmp-fix → run only the dirty-patch script (scripts/support/tmp-fix.sh) and exit.
 # Used to repair upstream-version drift (e.g. codex schema changes) without
 # re-running the full update. Drop fixes from tmp-fix.sh when upstream catches up.
@@ -52,7 +57,12 @@ ensure_clean_env
 if [ "$SKIP_CODEX_RUNNING_CHECK" = true ]; then
     echo "  ! Skipping Codex running-process check by request."
 else
-    ensure_no_running_codex
+    if ! ensure_no_running_codex; then
+        echo
+        usage
+        codex_running_hint
+        exit 1
+    fi
 fi
 
 task_init
