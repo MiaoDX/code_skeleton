@@ -119,9 +119,12 @@ say `autoplan` is selected because pipeline review evidence is missing.
 When the user starts a durable run such as `/goal` with
 `$intuitive-flow for docs/plans/<slug>.md`, optimize for forward motion. Treat
 the named plan and the selected workflow as authorization to continue through
-routine review, reconciliation, and local verification steps. Do not repeatedly
-ask the user to type `Confirm` for checkpoints whose recommended answer is
-obvious from the plan, repo evidence, or the user's current request.
+routine review, reconciliation, deterministic GSD handoff, GSD plan generation,
+and local verification steps. A direct prompt like
+`$intuitive-flow for docs/plans/<slug>.md` counts as this durable path unless
+the user says review-only, plan-only, or otherwise names a stop point. Do not
+repeatedly ask the user to type `Confirm` for checkpoints whose recommended
+answer is obvious from the plan, repo evidence, or the user's current request.
 
 Before any question or downstream gate, classify it:
 
@@ -129,14 +132,15 @@ Before any question or downstream gate, classify it:
   briefly, and continue. Use this when the question preserves the user's stated
   plan, restates premises already present in the canonical artifact, chooses an
   existing repo convention, runs a normal review/test/verification step, updates
-  docs with accepted review findings, or selects a reversible default with low
-  blast radius.
+  docs with accepted review findings, selects a reversible default with low
+  blast radius, or chooses the only GSD handoff route supported by repo
+  evidence.
 - **Hard stop** - stop and ask the user. Use this when the answer would change
   target user, demand premise, narrowest wedge, scope boundary, public contract,
   security or privacy posture, external-service dependency, API key use, paid
-  infrastructure, data model, phase split, GSD roadmap ownership, destructive
-  action, real-device/local-dev requirement, or anything that overrides the
-  user's stated intent.
+  infrastructure, data model, phase split, ambiguous or competing GSD roadmap
+  ownership, destructive action, real-device/local-dev requirement, or anything
+  that overrides the user's stated intent.
 - **Unclear impact** - investigate repo/docs context first. If still unclear and
   the wrong answer could materially change scope, cost, safety, or architecture,
   treat it as a hard stop. Otherwise use the smallest reversible default and log
@@ -152,6 +156,54 @@ If a downstream skill asks a `Confirm`/`Revise` style question and the gate is a
 soft continuation, answer `Confirm` yourself with a one-line rationale instead
 of waiting for the user. If it is a hard stop, ask once with the concrete impact
 and the smallest useful set of options.
+
+For GSD handoff gates, auto-continue when exactly one routing row applies:
+
+- an existing roadmap phase clearly matches the accepted plan, so run
+  `gsd-plan-phase <phase> --prd docs/plans/<slug>.md`;
+- `.planning/` is missing, so create a minimal manifest for the selected plan,
+  run `gsd-ingest-docs --manifest <manifest> --mode new`, inspect the created
+  phase, then run `gsd-plan-phase <created-phase> --prd ...`;
+- `.planning/` exists and no existing phase matches, so create a minimal
+  manifest for the selected plan, run `gsd-ingest-docs --manifest <manifest>
+  --mode merge`, inspect the created or changed phase, then run
+  `gsd-plan-phase <created-or-updated-phase> --prd ...`.
+
+Stop only when the repo evidence leaves multiple plausible existing phases,
+would require more than one new phase, conflicts with locked docs/ADRs, changes
+roadmap ownership beyond the accepted plan, or crosses a local-dev/destructive
+gate. For a single reviewed plan that already names GSD handoff, "create/merge
+one roadmap phase first" is a soft continuation, not a human decision.
+
+## Commit Rhythm For Durable Runs
+
+When a durable `$intuitive-flow` run continues across subprocesses, commit each
+completed unit before moving to the next one. This keeps long auto-runs
+recoverable and makes review history match the workflow stages.
+
+Default rhythm:
+
+- After `autoplan` reconciles review decisions into `docs/plans/<slug>.md`,
+  commit the plan update before GSD handoff.
+- After `gsd-ingest-docs` creates or merges roadmap scope, commit the planning
+  state before `gsd-plan-phase`.
+- After `gsd-plan-phase` creates the executable phase plan, commit that GSD
+  plan before execution.
+- After each coherent implementation slice, commit the code/tests/docs for that
+  slice before starting the next slice.
+- After `simplify` changes code, commit the cleanup separately when it is not
+  naturally part of the immediately preceding implementation slice.
+- After verification or closeout updates docs/status/retrospectives, commit the
+  evidence/update separately when it is material.
+
+Use one commit per subprocess by default. Split into multiple commits only when
+the diff contains separate concerns that a reviewer would want to accept or
+revert independently. Do not commit when the user says not to, when the run is
+review-only/plan-only, when there are unresolved blockers in the current unit,
+or when unrelated dirty worktree changes make a safe commit boundary unclear.
+If unrelated changes exist, commit only the files owned by the completed unit
+and leave the rest untouched. Use the target repo's commit-message rules and AI
+co-author trailer when applicable.
 
 ## Idea-Shaping Mode Selection
 
@@ -429,9 +481,11 @@ If the only in-repo change after `autoplan` is a restore comment or appended
 review report, do not hand off yet. First edit the body of the plan so the next
 stage ingests the approved plan, not the review artifact.
 
-After the approval gate and in-place reconciliation, continue only if the user
-already asked for execution or the active `/goal` objective clearly covers the
-handoff/implementation stage. Otherwise stop with the updated plan ready.
+After the approval gate and in-place reconciliation, continue when the user
+asked for execution, the active `/goal` objective covers the handoff or
+implementation stage, or the current request is a durable
+`$intuitive-flow for docs/plans/<slug>.md` run without a review-only stop point.
+Otherwise stop with the updated plan ready.
 
 ### C. Reviewed Plan, Not Yet Committed To Execution
 
@@ -476,6 +530,12 @@ create or verify an ingest manifest that includes docs/plans/<slug>.md
 gsd-ingest-docs --manifest <manifest> --mode merge
 gsd-plan-phase <created-or-updated-phase> --prd docs/plans/<slug>.md
 ```
+
+If exactly one of these paths matches the repo evidence, auto-select it and log
+the rationale. Do not stop merely because the selected route creates or merges
+one roadmap phase for the reviewed plan; that is the normal handoff path. Stop
+only for competing phase matches, multiple new phases, conflicting locked docs,
+or a local-dev/destructive gate.
 
 This is a real handoff only if the named GSD skill is invoked and its workflow
 is followed. If you only recommend this step, say no GSD artifact has been
@@ -674,9 +734,12 @@ summary, and continue.
 4. **Review -> In-place update:** "Do you approve these review decisions, and
    should I update the plan file in place?"
 5. **Review -> Issues/GSD:** "Do you approve this updated plan for execution?"
-6. **GSD handoff choice:** "Does this map to an existing GSD phase for
-   `gsd-plan-phase --prd`, or should `gsd-ingest-docs` create/merge roadmap
-   scope first?"
+6. **GSD handoff choice:** Auto-select the route when repo evidence gives one
+   clear answer: existing phase -> `gsd-plan-phase --prd`; missing planning ->
+   manifest + `gsd-ingest-docs --mode new`; existing planning with no matching
+   phase -> manifest + `gsd-ingest-docs --mode merge`. Ask only when multiple
+   phases match, more than one new phase would be created, locked docs conflict,
+   or the route changes roadmap ownership beyond the accepted plan.
 7. **Issues -> GSD:** "Do you want GitHub issue tracking, or go straight to GSD?"
 8. **GSD plan -> Execute:** "Execute now, or stop after plan generation?"
 9. **Many phases:** before creating more than three phases from one prompt, ask
