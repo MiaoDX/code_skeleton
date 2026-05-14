@@ -10,6 +10,8 @@ Start here:
   points
 - [STATUS.md](../../STATUS.md) for current state and maintenance focus
 - [BELIEFS.md](../../BELIEFS.md) for the doctrine behind the workflow
+- [legacy-repo-migration.md](legacy-repo-migration.md) for the copy/paste
+  `$intuitive-migrate` prompt
 
 ## Doc Tiers
 

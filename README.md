@@ -79,6 +79,7 @@ repo.
 | **intuitive-layout** | Improve repo/folder organization before deeper architecture work |
 | **intuitive-tests** | Organize, prune, mark, and refactor tests around behavior |
 | **intuitive-flow** | Move a fuzzy idea through plan review, GSD handoff, execution, cleanup, and verification |
+| **intuitive-migrate** | Run a bounded legacy-repo migration loop across agent guidance, docs, layout, tests, and cleanup gates |
 | **intuitive-refactor** | Bound broad refactors with accepted severities, evidence, and a stop condition |
 | **intuitive-squash** | Compress noisy local agent history into a clean reviewable commit story |
 
@@ -88,6 +89,7 @@ repo.
 - [ARCHITECTURE.md](ARCHITECTURE.md): subsystem contracts, extension points, and proof boundaries
 - [STATUS.md](STATUS.md): current state, supported commands, and next maintenance focus
 - [docs/human/](docs/human/): human-facing detail that should not bloat root docs
+- [Legacy repo migration](docs/human/legacy-repo-migration.md): copy/paste prompt for full agent-friendly cleanup loops
 
 Generated diagrams, release-note analysis, vendored tools, planning scratchpads,
 and implementation evidence are context, not current truth unless a human doc
