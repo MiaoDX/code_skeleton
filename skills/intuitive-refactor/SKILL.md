@@ -1,12 +1,14 @@
 ---
 name: intuitive-refactor
-description: Set a bounded refactor goal before architecture or cleanup work starts. Use whenever the user wants to improve architecture, refactor safely, "fix all big issues", avoid endless refactors, decide what is in/out of scope, classify P0/P1/P2/Parked findings, or define the tests and stop condition before changing code. This skill works standalone and can also be combined with architecture scanners, intuitive-flow, TDD, or diagnosis skills.
+description: Set a bounded aggressive refactor goal before architecture or cleanup work starts. Use whenever the user wants to improve architecture, clean up aggressively, "fix all big issues", avoid endless refactors, decide what is in/out of scope, classify P0/P1/P2/Parked findings, remove stale APIs or compatibility shims, or define the tests and stop condition before changing code. This skill works standalone and can also be combined with architecture scanners, intuitive-flow, TDD, or diagnosis skills.
 ---
 
 # Intuitive Refactor
 
 Use this skill to set the goal, scope, evidence, and stop condition for a
-refactor before code changes start.
+bounded refactor before code changes start. Once a target slice is accepted, the
+default posture is aggressive cleanup: move callers to the new intuitive API,
+layout, or module boundary and remove stale compatibility surfaces.
 
 This skill is standalone. If no other skill is invoked, it should gather enough
 repo context itself to produce a scope gate, write/update the persistent gate
@@ -19,20 +21,43 @@ proof, planning, or implementation.
 
 ## Operating rule
 
-Start report-only.
+Start with a scope gate. For broad or ambiguous requests, make the first pass
+report-only. When the user names a bounded target and asks for execution, treat
+that as approval to clean the target up aggressively.
 
 Do not edit production code until all of these are explicit:
 
 - the target module or seam
 - the accepted issue checklist
-- which issue severities are in scope
+- which issue severities are in scope, defaulting to P0/P1/P2 inside the target
 - the required evidence level
 - the stop condition
 - the persistent gate file, if this is more than advice
 
 The goal is not "no more possible refactors." Any healthy project will always
-have possible refactor points. The goal is "the accepted P0/P1 checklist is
-green, and lower-priority ideas are parked instead of implemented by drift."
+have possible refactor points. The goal is "the accepted checklist inside the
+target is green, the new API/layout is canonical, and cross-seam ideas are
+parked instead of implemented by drift."
+
+## Cleanup and compatibility posture
+
+Prefer the new intuitive API, path, module boundary, or command shape over
+backward compatibility. In a refactor phase, old APIs are migration targets, not
+contracts.
+
+- Update known in-repo callers, docs, tests, recipes, and examples to the new
+  shape.
+- Delete old wrappers, aliases, command paths, import paths, dead branches, and
+  compatibility shims after known consumers are migrated.
+- Do not preserve old script locations or command APIs by default. For example,
+  if `scripts/foo.ts` moves to a clearer domain layout with a better CLI/API,
+  update consumers to the new path and remove the old entrypoint.
+- Keep compatibility only when the user explicitly protects it, a published
+  external contract must remain live, or verification shows a non-migratable
+  outside-repo consumer. If kept, mark it temporary and record the removal
+  trigger in the gate file.
+- Prefer a breaking cleanup with clear migration notes over a mixed old/new
+  surface that leaves future agents unsure which path is canonical.
 
 If the user asks for a full autonomous run, continue only through safe,
 deterministic gates. Pause before local-only, paid-provider, Docker/Gateway, or
@@ -59,7 +84,8 @@ The gate file must mark its status explicitly. Use these exact status values:
 - `CONTINUE` — accepted P0/P1 item remains incomplete.
 - `REOPEN` — user explicitly expanded scope or new evidence shows a P0/P1
   regression.
-- `PARK` — no active P0/P1 work remains; only P2/Parked ideas exist.
+- `PARK` — no active target-local cleanup remains; only cross-seam or future
+  ideas exist.
 
 When creating or updating the gate file, write the status in both places:
 
@@ -75,6 +101,7 @@ status: CONTINUE
 accepted_severities:
   - P0
   - P1
+  - P2
 last_verified: null
 ---
 
@@ -88,9 +115,9 @@ CONTINUE
 
 ## Accepted Severities
 
-## Accepted P0/P1 Checklist
+## Accepted Cleanup Checklist
 
-## Parked P2 / Future Ideas
+## Parked Cross-Seam / Future Ideas
 
 ## Evidence Ladder
 
@@ -104,10 +131,10 @@ On a repeated run, read the existing gate file first. Check the frontmatter
 current state as:
 
 - **DONE** — accepted checklist is complete and evidence is still green; stop.
-- **CONTINUE** — accepted P0/P1 item remains incomplete; continue that item.
+- **CONTINUE** — accepted cleanup item remains incomplete; continue that item.
 - **REOPEN** — the user explicitly expands scope or new evidence shows a P0/P1
   regression; update the same gate file.
-- **PARK** — only P2/Parked ideas remain; record them and stop.
+- **PARK** — only cross-seam or future ideas remain; record them and stop.
 
 ## Severity gate
 
@@ -117,15 +144,16 @@ Classify every finding before implementation:
 | --- | --- | --- |
 | P0 | Current breakage, data loss, security exposure, deploy failure, or a verifier that gives false green on real failure | Fix now |
 | P1 | A real correctness, source-of-truth, or testability gap that can hide failure in the named seam | Fix now |
-| P2 | Maintainability, duplication, naming, drift risk, or "this could be cleaner" without current failure evidence | Park unless the user explicitly opts in |
-| Parked | Speculative, cross-seam, broad cleanup, taste preference, or future-proofing | Record only |
+| P2 | Maintainability, duplication, naming, drift risk, stale API surface, compatibility shim, or "this could be cleaner" inside the accepted target | Fix by default when it simplifies the target |
+| Parked | Speculative, cross-seam, broad cleanup, taste preference, or future-proofing outside the accepted target | Record only |
 
 When the user's prompt says "all big known issues," interpret "big" as P0/P1
-unless they explicitly widen the scope.
+plus target-local P2 cleanup that removes stale surfaces or makes the new shape
+canonical.
 
 After implementation starts, do not add newly discovered P2/Parked items to the
-active checklist. Only add a new item mid-run if it is a P0/P1 regression found
-while verifying the accepted checklist.
+active checklist unless they are inside the accepted target and directly support
+the canonical new shape. Park cross-seam cleanup and unrelated taste changes.
 
 ## Confidence ladder
 
@@ -149,9 +177,11 @@ Read the user's goal and identify:
 
 - target area or module
 - target seam, if known
-- whether the request is bug/perf shaped, architecture shaped, or feature shaped
+- whether the request is bug/perf shaped, architecture shaped, cleanup shaped, or
+  feature shaped
 - user-visible behavior that must not regress
 - what "done" would prove from a caller's perspective
+- old APIs, paths, wrappers, or compatibility shims that should be removed
 - minimum required confidence level
 - whether any evidence is local-only, paid, slow, or environment-sensitive
 
@@ -176,8 +206,8 @@ through the whole repo looking for unrelated cleanup.
 ### 2. Decide whether to stay standalone or hand off
 
 By default, stay standalone: produce the scope gate, write/update the persistent
-gate file when appropriate, and stop before implementation unless the user has
-approved execution.
+gate file when appropriate, and execute the accepted cleanup when the user has
+approved the target.
 
 Use another skill only when it materially improves the current pass:
 
@@ -206,6 +236,8 @@ Before implementation, present this compact gate:
 - Accepted severities:
 - Accepted issue checklist:
 - Parked issues:
+- Compatibility kept:
+- Compatibility removed:
 - Minimum confidence level:
 - Existing evidence:
 - Missing evidence:
@@ -218,16 +250,17 @@ Before implementation, present this compact gate:
 The stop condition must be concrete enough that an agent can stop even if it can
 still imagine more cleanup. Good stop conditions look like:
 
-- "All accepted P0/P1 items pass `npm run test:publish-rules` and
-  `npm run quality:check`; P2 findings are recorded only."
+- "All accepted cleanup items pass `npm run test:publish-rules` and
+  `npm run quality:check`; old APIs are removed or explicitly protected."
 - "Stop after report-only architecture candidates; wait for the user to pick
   one candidate."
 - "Stop before implementation because the next proof requires real Gateway
   access."
 
 If implementation is approved, write or update the persistent gate file before
-editing production code. If there are accepted P0/P1 items, mark it
-`CONTINUE`. If the scan finds only P2/Parked ideas, mark it `PARK` and stop.
+editing production code. If there are accepted cleanup items, mark it
+`CONTINUE`. If the scan finds only cross-seam or speculative ideas, mark it
+`PARK` and stop.
 
 ### 4. Execute one vertical slice
 
@@ -235,7 +268,7 @@ When the user approves action, work in one tracer bullet:
 
 1. Add or identify the proof first.
 2. Watch the proof fail if adding new coverage.
-3. Apply the smallest implementation/refactor.
+3. Apply the smallest coherent aggressive cleanup/refactor.
 4. Run the required ladder levels.
 5. Summarize evidence and residual risk.
 
@@ -246,18 +279,20 @@ multiple seams, split it with `/to-issues` or park the extra seams.
 
 Before declaring completion, audit the accepted checklist against real evidence:
 
-- every P0/P1 item has a concrete change or a documented "no change needed"
-  reason
+- every accepted cleanup item has a concrete change or a documented "no change
+  needed" reason
 - every required evidence level has command output or a stated skipped gate
-- every P2/Parked item is recorded and not silently implemented
+- target-local P2 cleanup is either completed or explicitly deferred
+- every cross-seam/Parked item is recorded and not silently implemented
+- every old API/path/compatibility surface is removed or explicitly protected
 - no unapproved new refactor work was added after implementation began
 
 Update the gate file with the final checklist status, evidence commands, skipped
 gates, and parked ideas. Also update both status markers:
 
 - mark `DONE` when the accepted checklist is complete and evidence is green
-- mark `CONTINUE` when accepted P0/P1 work remains
-- mark `PARK` when only lower-priority ideas remain
+- mark `CONTINUE` when accepted cleanup work remains
+- mark `PARK` when only cross-seam or future ideas remain
 - mark `REOPEN` only when the user explicitly widens scope or new P0/P1 evidence
   invalidates a previous `DONE`
 
@@ -288,13 +323,14 @@ Use this shape when the user wants a bounded architecture pass:
 Run $intuitive-refactor.
 
 Scope: one named module/seam only.
-Start report-only.
+Start with a scope gate. For a named target, execute the accepted cleanup.
 Load any existing docs/plans/refactor-*.md or architecture plan first.
 Classify findings as P0/P1/P2/Parked.
-Implement only accepted P0/P1 items.
+Implement accepted P0/P1/P2 cleanup inside the target.
 Write/update one persistent gate file in docs/plans/.
-Record P2/Parked items there instead of implementing them.
-Stop when the accepted P0/P1 checklist passes the required confidence ladder.
+Remove old APIs, wrappers, and compatibility shims unless explicitly protected.
+Record cross-seam/Parked items there instead of implementing them.
+Stop when the accepted cleanup checklist passes the required confidence ladder.
 Commit each coherent slice.
 ```
 
