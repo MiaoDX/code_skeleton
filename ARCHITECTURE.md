@@ -151,9 +151,14 @@ bun run verify
 ```
 
 That checks generated intuitive skills for drift, runs TypeScript checking, and
-runs Bun tests. At the moment, the test suite covers the local skill manifest
-parser, root-skill manifest checks, generated intuitive skill expansion, unsafe
-name/include rejection, and pruning of manifest-owned legacy artifacts.
+runs Bun tests. GitHub Actions mirrors the same proof in
+`.github/workflows/verify.yml`, so direct edits to generated
+`skills/intuitive-*` output fail CI unless `skills-src/` is updated and
+`bun run build:skills` has refreshed the flattened output.
+
+At the moment, the test suite covers the local skill manifest parser, root-skill
+manifest checks, generated intuitive skill expansion, unsafe name/include
+rejection, and pruning of manifest-owned legacy artifacts.
 
 `scripts/update.sh` is intentionally not part of the default proof command
 because it mutates global tool installations and user-level agent config.

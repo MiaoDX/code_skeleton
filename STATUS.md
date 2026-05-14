@@ -12,6 +12,7 @@ currently provides:
 - generated intuitive skill sources and shared fragments under `skills-src/`
 - update and sync automation under `scripts/`
 - Bun TypeScript helpers and tests under `scripts/lib/`
+- a GitHub Actions verification workflow under `.github/workflows/verify.yml`
 - local workstation utilities under `scripts/dev/`
 - vendored GSD and gstack tooling under `vendor/`
 - generated Claude Code release-note visualizations under `docs/release-notes/`
@@ -45,6 +46,7 @@ The current maintenance focus is keeping the repo dogfoodable:
 - keep the human docs small and accurate
 - keep root skills listed in `scripts/local-skill-manifest.txt`
 - edit intuitive-family skills in `skills-src/`, then regenerate `skills/`
+- keep CI and local `bun run verify` aligned
 - keep Bash as the orchestration layer and Bun TypeScript as the structured
   validation layer
 - keep stable updater entrypoints at `scripts/update.sh` and put local helpers
