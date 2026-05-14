@@ -114,6 +114,45 @@ Then stop at the review, in-place update, and execution checkpoints as usual.
 Do not say `autoplan` was bypassed because the user approved implementation;
 say `autoplan` is selected because pipeline review evidence is missing.
 
+## Goal And Auto-Run Question Triage
+
+When the user starts a durable run such as `/goal` with
+`$intuitive-flow for docs/plans/<slug>.md`, optimize for forward motion. Treat
+the named plan and the selected workflow as authorization to continue through
+routine review, reconciliation, and local verification steps. Do not repeatedly
+ask the user to type `Confirm` for checkpoints whose recommended answer is
+obvious from the plan, repo evidence, or the user's current request.
+
+Before any question or downstream gate, classify it:
+
+- **Soft continuation** - auto-answer the recommended option, log the decision
+  briefly, and continue. Use this when the question preserves the user's stated
+  plan, restates premises already present in the canonical artifact, chooses an
+  existing repo convention, runs a normal review/test/verification step, updates
+  docs with accepted review findings, or selects a reversible default with low
+  blast radius.
+- **Hard stop** - stop and ask the user. Use this when the answer would change
+  target user, demand premise, narrowest wedge, scope boundary, public contract,
+  security or privacy posture, external-service dependency, API key use, paid
+  infrastructure, data model, phase split, GSD roadmap ownership, destructive
+  action, real-device/local-dev requirement, or anything that overrides the
+  user's stated intent.
+- **Unclear impact** - investigate repo/docs context first. If still unclear and
+  the wrong answer could materially change scope, cost, safety, or architecture,
+  treat it as a hard stop. Otherwise use the smallest reversible default and log
+  it as an assumption.
+
+For `autoplan` premise gates specifically, auto-confirm only when the premises
+are direct restatements of the plan or low-risk assumptions needed for review.
+Stop only when a premise is new, contradicted by repo evidence, disputed by both
+review voices, or would materially change product direction, scope, contracts,
+security, privacy, cost, data shape, external services, or execution ownership.
+
+If a downstream skill asks a `Confirm`/`Revise` style question and the gate is a
+soft continuation, answer `Confirm` yourself with a one-line rationale instead
+of waiting for the user. If it is a hard stop, ask once with the concrete impact
+and the smallest useful set of options.
+
 ## Idea-Shaping Mode Selection
 
 At the beginning of a fuzzy-idea run, before the first `grill-me` or
@@ -365,10 +404,18 @@ autoplan docs/plans/<slug>.md
 `autoplan` is a review pipeline, not an implementation tool. It may refine the
 plan, surface scope changes, and produce review logs. It must not start coding.
 
-When the user approves the `autoplan` gate, reconcile the approved decisions back
-into the same `docs/plans/<slug>.md` file before moving on. `~/.gstack` artifacts
-are supporting evidence, restore points, and review logs; they are not the
-handoff source of truth.
+Apply Goal And Auto-Run Question Triage to `autoplan` gates. A `/goal` or
+explicit whole-flow request may auto-confirm soft premise, review, and
+reconciliation gates when they preserve the canonical plan and add only
+low-risk review findings. Stop for hard-stop changes such as new premises,
+scope changes, phase split choices, public contracts, cost, security, privacy,
+external services, data model changes, or rejected user intent.
+
+When the user approves the `autoplan` gate, or when triage classifies the gate
+as a soft continuation, reconcile the approved decisions back into the same
+`docs/plans/<slug>.md` file before moving on. `~/.gstack` artifacts are
+supporting evidence, restore points, and review logs; they are not the handoff
+source of truth.
 
 Approval means:
 
@@ -382,8 +429,9 @@ If the only in-repo change after `autoplan` is a restore comment or appended
 review report, do not hand off yet. First edit the body of the plan so the next
 stage ingests the approved plan, not the review artifact.
 
-Stop after the approval gate and in-place reconciliation unless the user
-explicitly approves execution.
+After the approval gate and in-place reconciliation, continue only if the user
+already asked for execution or the active `/goal` objective clearly covers the
+handoff/implementation stage. Otherwise stop with the updated plan ready.
 
 ### C. Reviewed Plan, Not Yet Committed To Execution
 
@@ -564,7 +612,7 @@ When the user asks for the whole durable pipeline, propose this compact sequence
    - auto-guided -> intuitive-flow auto-decisions with user-owned stops
 3. docs/plans/<feature>.md
 4. autoplan
-5. update docs/plans/<feature>.md in place after approval
+5. update docs/plans/<feature>.md in place after approval or soft-continuation triage
 6. to-issues (optional)
 7. choose the GSD handoff:
    - existing phase -> gsd-plan-phase <phase> --prd docs/plans/<feature>.md
@@ -610,7 +658,10 @@ checklist.
 
 ## Required Checkpoints
 
-Stop and ask before crossing these boundaries:
+Apply Goal And Auto-Run Question Triage before crossing these boundaries. Stop
+and ask only for hard-stop decisions. For soft continuations, auto-answer the
+recommended option, record the rationale in the relevant artifact or progress
+summary, and continue.
 
 1. **Idea-shaping route:** for fuzzy ideas, ask whether to use the direct route
    (preferred) or auto-guided route (experimental), unless the user already made
