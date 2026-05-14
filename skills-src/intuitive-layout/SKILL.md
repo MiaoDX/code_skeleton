@@ -11,50 +11,11 @@ layout slice that makes the new intuitive layout canonical. Once a slice is
 approved, migrate callers to the new paths/APIs and remove stale entrypoints by
 default.
 
-## Human/Agent Surface Rule
+{{> intuitive-common/human-agent-surface.md}}
 
-The default human-facing source of truth is intentionally small:
+{{> intuitive-common/bounded-proposal.md}}
 
-- `README.md`
-- `ARCHITECTURE.md`
-- `STATUS.md`
-- `docs/human/**`
-
-`AGENTS.md` and `CLAUDE.md` are agent-operational docs. Use them for startup
-rules, local hazards, command pointers, and skill routing, but do not treat them
-as human-authoritative project truth by default.
-
-Agent planning, generated evidence, history, and working notes belong in
-explicit agent/process surfaces such as `.planning/**`, `docs/plans/**`,
-`docs/retrospectives/**`, `docs/status/active/**`, and `output/**` unless a
-human doc intentionally promotes a specific artifact into current truth.
-
-## Bounded Proposal Rule
-
-For broad or ambiguous cleanup, audit first and stop after a decision-complete
-proposal. Do not move files, delete tests, rewrite guidance, or edit production
-code until the target slice, accepted checklist, evidence level, and stop
-condition are explicit.
-
-For a precise target where the user asks for implementation, apply one coherent
-vertical slice. Keep newly discovered unrelated ideas parked instead of letting
-the work expand by drift.
-
-## Canonical Cleanup Rule
-
-Prefer the new intuitive API, path, module boundary, command shape, or folder
-layout over backward compatibility. In an approved cleanup/refactor slice, old
-surfaces are migration targets, not contracts.
-
-- Update known in-repo callers, docs, tests, recipes, examples, CI, and command
-  references to the new shape.
-- Delete old wrappers, aliases, command paths, import paths, dead branches, and
-  compatibility shims after known consumers are migrated.
-- Keep compatibility only when the user explicitly protects it, a published
-  external contract must remain live, or verification shows a non-migratable
-  outside-repo consumer.
-- If compatibility is kept, mark it temporary and record the removal trigger in
-  the active plan, scope gate, or output report.
+{{> intuitive-common/canonical-cleanup.md}}
 
 ## Core Principles
 

@@ -1,6 +1,6 @@
 # Status
 
-Last reviewed: 2026-05-12
+Last reviewed: 2026-05-14
 
 ## Current State
 
@@ -8,7 +8,8 @@ Last reviewed: 2026-05-12
 currently provides:
 
 - root human docs and starter agent guidance
-- reusable skills under `skills/`
+- reusable installed skills under `skills/`
+- generated intuitive skill sources and shared fragments under `skills-src/`
 - update and sync automation under `scripts/`
 - Bun TypeScript helpers and tests under `scripts/lib/`
 - local workstation utilities under `scripts/dev/`
@@ -43,6 +44,7 @@ The current maintenance focus is keeping the repo dogfoodable:
 
 - keep the human docs small and accurate
 - keep root skills listed in `scripts/local-skill-manifest.txt`
+- edit intuitive-family skills in `skills-src/`, then regenerate `skills/`
 - keep Bash as the orchestration layer and Bun TypeScript as the structured
   validation layer
 - keep stable updater entrypoints at `scripts/update.sh` and put local helpers
@@ -61,6 +63,8 @@ There is no active `.planning/` roadmap or GSD phase in this checkout.
   environment surfaces, not human docs.
 - `scripts/update.sh` is not a harmless test command; it mutates installed tools
   and user config.
+- `skills/intuitive-*` is generated install output; edit `skills-src/` first and
+  use `bun run build:skills` to refresh it.
 
 ## Next Maintenance
 

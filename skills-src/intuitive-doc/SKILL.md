@@ -7,23 +7,7 @@ description: Create and maintain an intuitive human documentation surface for AI
 
 Maintain a small human-facing documentation surface and keep it aligned with code.
 
-## Human/Agent Surface Rule
-
-The default human-facing source of truth is intentionally small:
-
-- `README.md`
-- `ARCHITECTURE.md`
-- `STATUS.md`
-- `docs/human/**`
-
-`AGENTS.md` and `CLAUDE.md` are agent-operational docs. Use them for startup
-rules, local hazards, command pointers, and skill routing, but do not treat them
-as human-authoritative project truth by default.
-
-Agent planning, generated evidence, history, and working notes belong in
-explicit agent/process surfaces such as `.planning/**`, `docs/plans/**`,
-`docs/retrospectives/**`, `docs/status/active/**`, and `output/**` unless a
-human doc intentionally promotes a specific artifact into current truth.
+{{> intuitive-common/human-agent-surface.md}}
 
 When any default human surface is missing, `$intuitive-doc` should make the
 next action obvious. In audit/guard output, report the missing file or folder

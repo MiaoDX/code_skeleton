@@ -17,6 +17,9 @@ agent guidance
         |
         v
 reusable workflows
+  skills-src/*/SKILL.md + skills-src/intuitive-common/*.md
+        |
+        v
   skills/*/SKILL.md
         |
         v
@@ -29,9 +32,10 @@ local/global agent surfaces
 ```
 
 The root docs define what the project is. Agent guidance files define how
-Claude Code and Codex should operate inside a repo. Skills carry reusable
-workflow behavior. Scripts install and sync those workflows into local agent
-tooling.
+Claude Code and Codex should operate inside a repo. `skills-src/` is the
+authoring surface for generated intuitive-family skills, `skills/` is the
+flattened install surface, and scripts install and sync those workflows into
+local agent tooling.
 
 ## Human Documentation Contract
 
@@ -61,9 +65,22 @@ defaults into project-local `AGENTS.md` and `CLAUDE.md` files.
 
 ## Skill Contract
 
-Each reusable workflow lives under `skills/<name>/SKILL.md`. A skill should
+Each reusable workflow installs from `skills/<name>/SKILL.md`. A skill should
 describe when it activates, how it should run, and what output or side effects
-are expected. The root `skills/` directory is the repo-owned skill source.
+are expected.
+
+The intuitive-family skills are authored under `skills-src/<name>/SKILL.md` and
+may include shared fragments from `skills-src/intuitive-common/*.md` with this
+source-only syntax:
+
+```text
+{{> intuitive-common/<fragment>.md}}
+```
+
+`scripts/lib/build-intuitive-skills.ts` expands those fragments and writes
+flattened standalone outputs under `skills/`. Claude Code and Codex still
+install from `skills/`, so runtime skill consumers do not depend on native
+`@import` or cross-skill loading support.
 
 The install surface is controlled by `scripts/local-skill-manifest.txt`:
 
@@ -73,9 +90,12 @@ The install surface is controlled by `scripts/local-skill-manifest.txt`:
 - The manifest check fails if a root skill exists but is not listed, or if the
   manifest lists a missing root skill.
 
-To add a public skill, create `skills/<name>/SKILL.md`, add it to the manifest,
-update `README.md` if it belongs in the preferred skill list, and run
-`bun run verify`.
+To add a public non-generated skill, create `skills/<name>/SKILL.md`, add it to
+the manifest, update `README.md` if it belongs in the preferred skill list, and
+run `bun run verify`. To change an intuitive-family skill, edit
+`skills-src/<name>/SKILL.md` or `skills-src/intuitive-common/*.md`, run
+`bun run build:skills`, and commit both the source and flattened `skills/`
+output.
 
 ## Update Pipeline Contract
 
@@ -130,9 +150,10 @@ The basic local proof command is:
 bun run verify
 ```
 
-That runs TypeScript checking and Bun tests. At the moment, the test suite covers
-the local skill manifest parser, root-skill manifest checks, unsafe name
-rejection, and pruning of manifest-owned legacy artifacts.
+That checks generated intuitive skills for drift, runs TypeScript checking, and
+runs Bun tests. At the moment, the test suite covers the local skill manifest
+parser, root-skill manifest checks, generated intuitive skill expansion, unsafe
+name/include rejection, and pruning of manifest-owned legacy artifacts.
 
 `scripts/update.sh` is intentionally not part of the default proof command
 because it mutates global tool installations and user-level agent config.

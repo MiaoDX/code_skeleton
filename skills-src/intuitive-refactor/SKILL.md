@@ -39,32 +39,9 @@ have possible refactor points. The goal is "the accepted checklist inside the
 target is green, the new API/layout is canonical, and cross-seam ideas are
 parked instead of implemented by drift."
 
-## Bounded Proposal Rule
+{{> intuitive-common/bounded-proposal.md}}
 
-For broad or ambiguous cleanup, audit first and stop after a decision-complete
-proposal. Do not move files, delete tests, rewrite guidance, or edit production
-code until the target slice, accepted checklist, evidence level, and stop
-condition are explicit.
-
-For a precise target where the user asks for implementation, apply one coherent
-vertical slice. Keep newly discovered unrelated ideas parked instead of letting
-the work expand by drift.
-
-## Canonical Cleanup Rule
-
-Prefer the new intuitive API, path, module boundary, command shape, or folder
-layout over backward compatibility. In an approved cleanup/refactor slice, old
-surfaces are migration targets, not contracts.
-
-- Update known in-repo callers, docs, tests, recipes, examples, CI, and command
-  references to the new shape.
-- Delete old wrappers, aliases, command paths, import paths, dead branches, and
-  compatibility shims after known consumers are migrated.
-- Keep compatibility only when the user explicitly protects it, a published
-  external contract must remain live, or verification shows a non-migratable
-  outside-repo consumer.
-- If compatibility is kept, mark it temporary and record the removal trigger in
-  the active plan, scope gate, or output report.
+{{> intuitive-common/canonical-cleanup.md}}
 
 If the user asks for a full autonomous run, continue only through safe,
 deterministic gates. Pause before local-only, paid-provider, Docker/Gateway, or
