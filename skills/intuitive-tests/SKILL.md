@@ -1,6 +1,6 @@
 ---
 name: intuitive-tests
-description: Use this skill whenever the user asks about unit test best practices, test organization, flat test suites, redundant tests, test refactors, pytest/JUnit/Jest/xUnit layout, test taxonomy, flaky tests, coverage quality, fixtures, mocks, parametrization, or "which tests are worth keeping." It turns broad testing advice into a practical, behavior-first cleanup workflow. For broad suite refactors, audit first, propose a recommended path across markers, folder layout, pruning, fixtures, and parameterization, then wait for user feedback before applying disruptive changes.
+description: Use this skill whenever the user asks about unit test best practices, test organization, flat test suites, redundant tests, test refactors, pytest/JUnit/Jest/xUnit layout, test taxonomy, flaky tests, coverage quality, fixtures, mocks, parametrization, pruning existing UTs, or "which tests are worth keeping." It turns broad testing advice into a practical, behavior-first cleanup workflow. For broad suite refactors, audit first, propose a recommended path across markers, folder layout, pruning, fixtures, and parameterization, then wait for user feedback before applying disruptive changes.
 ---
 
 # Intuitive Tests
@@ -8,6 +8,12 @@ description: Use this skill whenever the user asks about unit test best practice
 Use this skill to make a test suite easier to understand, faster to run, and
 less coupled to implementation details. The goal is not "more tests." The goal
 is a suite where each test has an obvious reason to exist.
+
+Existing tests are not grandfathered in. If a current unit test does not prove
+project logic, caller-visible behavior, a meaningful failure mode, or a real
+contract, remove it, merge it into a stronger behavior test, or reclassify it to
+the correct layer. Treat structure-only, metadata-only, wiring-only, and
+implementation-shape tests as deletion candidates by default.
 
 The workflow is framework-agnostic, but the examples assume Python/pytest.
 
@@ -31,6 +37,15 @@ truth, then report those skipped checks explicitly.
 
 Prefer tests that verify observable behavior through public interfaces.
 
+Unit tests should exercise code logic at the right confidence level: parsing,
+validation, state transitions, branching, transformations, error handling,
+fallbacks, and domain rules. They should not exist just to assert static shape:
+repository layout, file names, file presence, import locations, decorator
+presence, registration tables, config keys, copied constants, class wiring, or
+implementation trivia. Those checks belong in contract tests only when
+packaging, runtime discovery, CLI behavior, plugin registration, schemas, or a
+documented public artifact actually depends on them.
+
 Good unit tests are:
 
 - **Readable**: Arrange, Act, Assert is visually obvious.
@@ -44,8 +59,18 @@ Avoid tests that only prove:
 - dataclass/record fields store values
 - a private helper was called
 - a constant equals a copied constant
+- a file has a particular name
 - a file exists, unless packaging or runtime discovery depends on it
+- a directory contains a hard-coded list of files
+- an import path or module location exists after all in-repo consumers have
+  migrated to a new layout
+- a module imports successfully without exercising behavior
+- a decorator, marker, class inheritance edge, registry entry, or config key is
+  present but no caller-visible behavior changes
+- a CLI command, plugin, or route is listed but not invoked through its public
+  interface
 - a mock saw an internal call that does not affect caller-visible behavior
+- coverage increased without a meaningful assertion
 
 ## Useful Community Patterns
 
@@ -105,7 +130,8 @@ Default for broad or ambiguous test-suite refactors.
 3. Classify each file as `unit`, `contract`, `integration`, `regression`,
    `local`, or `slow`.
 4. Identify low-signal candidates, repeated setup, table-driven opportunities,
-   implementation-coupled tests, and external-boundary tests.
+   implementation-coupled tests, shape/metadata/wiring-only assertions, and
+   external-boundary tests.
 5. Recommend one primary path and one fallback:
    - **Marker-first**: safest when path consumers are many or CI is fragile.
    - **Layout-first**: good when file names already map cleanly to layers and
@@ -167,16 +193,24 @@ tests into a layer-based structure.
 
 ### 4. PRUNE / CONSOLIDATE mode
 
-Use when the user approves pruning low-signal tests.
+Use when the user approves pruning low-signal tests, or when the requested slice
+is explicitly about unnecessary unit tests.
 
 **Steps:**
-1. For each candidate, identify the stronger behavior/contract/regression test
-   that preserves the caller-facing guarantee.
-2. Merge one-field-at-a-time tests into behavior tests when that improves
+1. For each candidate, decide whether it protects code logic, caller-visible
+   behavior, a failure mode, or a real public contract.
+2. If it protects a real guarantee, identify the stronger
+   behavior/contract/regression test that already covers it or should absorb it.
+3. Merge one-field-at-a-time tests into behavior tests when that improves
    readability.
-3. Delete only tests that fail the low-signal checklist and are covered by a
-   stronger contract.
-4. Keep a short report of what was kept, merged, deleted, or reclassified.
+4. Delete tests that only assert static shape: file names, file existence,
+   directory shape, import smoke, registry membership, decorator presence,
+   config keys, language mechanics, copied constants, private-call
+   choreography, or stale implementation layout.
+5. Reclassify file/artifact checks as contract tests only when they protect
+   packaging, runtime discovery, CLI output, schemas, report payloads, or
+   documented public artifacts.
+6. Keep a short report of what was kept, merged, deleted, or reclassified.
 
 ### 5. FIXTURE / FACTORY mode
 
@@ -208,7 +242,8 @@ Use a small, reversible sequence:
 4. **Prompt for slice choice** when the request is broad or the best path is not obvious.
 5. **Add markers** and strict marker checking before directory moves unless the
    user approved a layout-first migration.
-6. **Prune low-signal tests** only when the replacement behavior test still proves the same caller-facing contract.
+6. **Prune low-signal tests** aggressively. Keep or replace them only when they
+   prove real behavior or a real contract.
 7. **Extract factories** when three or more tests build the same dense object/dict.
 8. **Run focused tests** for touched modules, then the relevant layer (`-m unit`, `-m contract`, etc.).
 
@@ -223,13 +258,22 @@ For each candidate test, ask:
 - Is this assertion already covered by a stronger behavior or contract test?
 - Is this testing framework/language mechanics rather than project behavior?
 - Does this protect a public API, artifact, or compatibility promise?
+- Is this only checking a file name, file existence, directory listing, import
+  path, or stale layout?
+- Is this only checking static shape, metadata, registration, wiring, decorator
+  presence, or private-call choreography?
 
 Actions:
 
 - **Keep** if it protects safety, parsing, fallback behavior, schema, CLI/report compatibility, or a known regression.
 - **Merge** if several tests assert one behavior one field at a time.
-- **Delete** if it only asserts language mechanics or duplicated implementation shape.
-- **Reclassify** if it is not really a unit test but is valuable as contract or regression coverage.
+- **Delete** if it only asserts language mechanics, duplicated implementation
+  shape, static metadata/wiring, file/path/name trivia, or a stale layout/API
+  that is no longer canonical.
+- **Reclassify** if it is not really a unit test but is valuable as contract or
+  regression coverage.
+- **Replace** only when deletion would remove the last proof of meaningful
+  behavior.
 
 ## Pytest Implementation Notes
 
