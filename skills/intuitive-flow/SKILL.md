@@ -193,35 +193,32 @@ roadmap ownership beyond the accepted plan, or crosses a local-dev/destructive
 gate. For a single reviewed plan that already names GSD handoff, "create/merge
 one roadmap phase first" is a soft continuation, not a human decision.
 
-## Commit Rhythm For Durable Runs
+## Recoverability Checkpoints For Durable Runs
 
-When a durable `$intuitive-flow` run continues across subprocesses, commit each
-completed unit before moving to the next one. This keeps long auto-runs
-recoverable and makes review history match the workflow stages.
+When a durable `$intuitive-flow` run continues across subprocesses, leave a
+recoverable boundary after each completed unit. A commit is a good boundary only
+when the user authorized commits, the repo policy allows it, and the changed
+files form a clean review unit. Otherwise, update the canonical artifact or
+progress summary and keep the next handoff explicit.
 
-Default rhythm:
+Useful checkpoint moments:
 
-- After `autoplan` reconciles review decisions into `docs/plans/<slug>.md`,
-  commit the plan update before GSD handoff.
-- After `gsd-ingest-docs` creates or merges roadmap scope, commit the planning
-  state before `gsd-plan-phase`.
-- After `gsd-plan-phase` creates the executable phase plan, commit that GSD
-  plan before execution.
-- After each coherent implementation slice, commit the code/tests/docs for that
-  slice before starting the next slice.
-- After `simplify` changes code, commit the cleanup separately when it is not
-  naturally part of the immediately preceding implementation slice.
-- After verification or closeout updates docs/status/retrospectives, commit the
-  evidence/update separately when it is material.
+- after `autoplan` reconciles accepted review decisions into
+  `docs/plans/<slug>.md`
+- after `gsd-ingest-docs` creates or merges roadmap scope
+- after `gsd-plan-phase` creates an executable phase plan
+- after each coherent implementation slice
+- after `simplify` changes code outside the immediately preceding slice
+- after verification or closeout updates docs/status/retrospectives materially
 
-Use one commit per subprocess by default. Split into multiple commits only when
-the diff contains separate concerns that a reviewer would want to accept or
-revert independently. Do not commit when the user says not to, when the run is
-review-only/plan-only, when there are unresolved blockers in the current unit,
-or when unrelated dirty worktree changes make a safe commit boundary unclear.
-If unrelated changes exist, commit only the files owned by the completed unit
-and leave the rest untouched. Use the target repo's commit-message rules and AI
-co-author trailer when applicable.
+When committing is appropriate, prefer one commit per completed unit. Split into
+multiple commits only when the diff contains separate concerns that a reviewer
+would want to accept or revert independently. Do not commit when the user says
+not to, when the run is review-only/plan-only, when there are unresolved
+blockers in the current unit, or when unrelated dirty worktree changes make a
+safe commit boundary unclear. If unrelated changes exist, commit only the files
+owned by the completed unit and leave the rest untouched. Use the target repo's
+commit-message rules and AI co-author trailer when applicable.
 
 ## Idea-Shaping Mode Selection
 

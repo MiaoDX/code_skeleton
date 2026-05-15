@@ -177,15 +177,22 @@ Before editing a skill, ask:
 - Will this rule still help a stronger future model, or should the skill state
   the principle and leave the tactic open?
 
-After a custom skill change:
+After a custom skill change, keep the boundary clear:
+
+- Edit the repo-owned source surface, not an installed copy.
+- Run the relevant verification for the changed skill or runner script.
+- Sync installed local skills only when intentionally refreshing user-level
+  tooling.
+- Commit separately from product-task changes only when the user or repo
+  workflow asks for a commit.
+
+Useful commands in this repo, when those side effects are intended:
 
 ```bash
 scripts/tasks/sync-local-commands-skills.sh
 git add skills scripts/tasks
 git commit -m "docs: refine <skill-name> skill"
 ```
-
-Keep skill refactor commits separate from product-task commits.
 
 ## Stop Conditions
 

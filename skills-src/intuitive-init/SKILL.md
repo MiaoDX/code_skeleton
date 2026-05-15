@@ -93,14 +93,14 @@ Use this workflow unless the user asks for report-only or a specific file.
    - package metadata
    - `justfile`, `Makefile`, scripts, CI workflows, test config
    - skill folders or command folders
-3. Run agent-init discovery by default when available:
-   - Use `/init` or the tool's equivalent in suggestion/refactor mode.
+3. Use init-style discovery when it is available and worth the extra evidence:
+   - Prefer `/init` or the tool's equivalent in suggestion/refactor mode.
    - If `/init` refuses because `AGENTS.md` or `CLAUDE.md` already exists,
      prompt it to "help refactor the current file" rather than overwrite.
    - Capture useful suggestions only. Do not treat init output as final text.
-   - If native slash commands are not exposed in the current interface, use the
-     stdin-bundled Codex CLI discovery below before continuing from repo
-     evidence alone.
+   - If native slash commands are not exposed, either continue from repo
+     evidence or use the stdin-bundled Codex CLI discovery below when the host
+     supports it. Missing nested-agent support is not a blocker.
 4. Classify current guidance:
    - **Preserve**: project commands, env setup, permissions, local hazards,
      workflow source-of-truth rules, domain vocabulary, test gates.
@@ -139,8 +139,10 @@ Use this workflow unless the user asks for report-only or a specific file.
 
 ## Agent-Init Discovery
 
-Use this order so the skill benefits from init-style review without depending
-on nested sandbox support.
+Use init-style discovery as an optional reviewer, not as the source of truth.
+The durable requirement is that repo evidence wins and generated suggestions are
+merged deliberately. Skip discovery when the host cannot run it cheaply or
+reliably.
 
 ### Native slash command
 
@@ -160,8 +162,8 @@ do not overwrite files.
 
 ### Default Codex CLI discovery
 
-Use this when native `/init` is not exposed but the `codex` CLI is installed.
-This is not a file-editing pass. It is a second-opinion reviewer that should
+Use this when a second-opinion review is useful, native `/init` is not exposed,
+and the `codex` CLI is installed. This is not a file-editing pass. It should
 only produce suggestions to merge into the proposal. Build a context bundle
 with the host tools and pipe it into Codex so Codex does not need to run nested
 read commands through its own sandbox.

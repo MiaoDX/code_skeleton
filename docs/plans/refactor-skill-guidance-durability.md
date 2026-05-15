@@ -15,8 +15,9 @@ DONE
 
 ## Target
 
-Repo-owned skill guidance under `skills-src/` and non-generated root skills
-under `skills/`.
+Repo-owned skill guidance under `skills-src/`, non-generated root skills under
+`skills/`, and the reusable durability prompt at
+`docs/agents/skill-guidance-durability-prompt.md`.
 
 ## Accepted Severities
 
@@ -36,6 +37,21 @@ under `skills/`.
 - [x] Simplify `$simplify` by replacing Codex adapter mechanics with reusable
       review lenses.
 - [x] Regenerate flattened `skills/intuitive-*` outputs from `skills-src/`.
+- [x] Refactor `docs/agents/skill-guidance-durability-prompt.md` so it is
+      durable, copy/pasteable, explicit about source-of-truth boundaries, and
+      clear about local commands as repo defaults rather than universal
+      ceremony.
+- [x] Re-audit current repo-owned skills and refactor target-local guidance
+      that encodes brittle current-tool mechanics instead of durable intent.
+- [x] Reframe `$intuitive-init` init-style discovery as an optional evidence
+      path, not a mandatory nested-Codex ceremony.
+- [x] Reframe `$intuitive-flow` durable-run commit rhythm as recoverability
+      checkpoints that respect authorization, clean boundaries, and repo
+      commit policy.
+- [x] Reframe `$skill-runner` post-run skill-change mechanics as source,
+      verification, sync, and commit boundaries rather than an unconditional
+      command recipe.
+- [x] Regenerate flattened `skills/intuitive-*` outputs from `skills-src/`.
 
 ## Parked Cross-Seam / Future Ideas
 
@@ -43,6 +59,8 @@ under `skills/`.
   score whether the skill improves agent behavior without over-constraining it.
 - Consider moving non-generated root skills to a source/build surface if they
   start sharing substantial common doctrine.
+- Qualitative pass over every skill for length and task ergonomics after this
+  targeted durability cleanup.
 
 ## Evidence Ladder
 
@@ -52,9 +70,9 @@ under `skills/`.
 
 ## Stop Condition
 
-Stop when the accepted checklist is complete, generated skill output is in sync,
-the audit no longer finds the targeted meta-maintainer phrasing, and
-`bun run verify` passes.
+Stop when the accepted checklist is complete, generated skill output is in sync
+when source skills change, the prompt no longer treats local mechanics as
+universal ceremony, and `bun run verify` passes.
 
 ## Execution Log
 
@@ -63,3 +81,17 @@ the audit no longer finds the targeted meta-maintainer phrasing, and
   guidance.
 - 2026-05-15: Refactored affected skills toward durable intent, provenance,
   evidence paths, and suggested tactics.
+- 2026-05-15: Reopened narrowly for
+  `docs/agents/skill-guidance-durability-prompt.md`; broad skill re-audit
+  remains parked.
+- 2026-05-15: Refactored the durability prompt around bounded targets,
+  source-of-truth boundaries, local command semantics, and installed-surface
+  sync side effects. Verified with `bun run verify`.
+- 2026-05-15: Reopened for the user-requested current-skills pass via
+  `docs/agents/skill-guidance-durability-prompt.md`; accepted target is
+  repo-owned skills only, with broad qualitative ergonomics parked.
+- 2026-05-15: Refactored `$intuitive-init` init-style discovery into an
+  optional evidence path, `$intuitive-flow` commit rhythm into recoverability
+  checkpoints, and `$skill-runner` skill-change commands into source,
+  verification, sync, and commit boundaries. Regenerated intuitive skills and
+  verified with `bun run verify`.
