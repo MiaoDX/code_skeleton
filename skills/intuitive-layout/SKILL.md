@@ -187,9 +187,11 @@ Steps:
 3. If the folder layout is already clear enough, say so and hand off to
    `improve-codebase-architecture` for module/interface depth.
 
-Do not propose new module interfaces in this skill. Layout can reveal
-architecture friction, but deeper module design belongs to
-`improve-codebase-architecture`.
+Keep layout work centered on navigation, audience boundaries, package
+boundaries, command organization, docs surfaces, examples, and test layout.
+Layout can reveal architecture friction; redesign module interfaces only when it
+is necessary to make the approved move coherent, otherwise park that work for a
+deeper architecture/refactor pass.
 
 ## Target Patterns
 
@@ -267,7 +269,8 @@ Package internals:
 
 ## Out of Scope
 
-- Do not perform architecture refactors in this skill.
+- Keep architecture refactors out of scope unless they are necessary to make the
+  approved layout slice coherent.
 - Do not reorganize an entire repository in one pass.
 - Do not delete planning history, generated evidence, or retrospectives just
   because they are not human-facing.

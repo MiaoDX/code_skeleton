@@ -58,10 +58,10 @@ Use the right level of abstraction before checking details:
 
 For L0/L1 docs, do a zoom-out pass before claim-by-claim checking: map the
 top-level packages, examples, scripts, just recipes, and active status into the
-project's domain language. If an available `zoom-out` skill exists, use it when
-the repo has grown a new major subsystem, the user asks for higher-level
-perspective, or the architecture/design docs feel locally correct but globally
-incomplete.
+project's domain language. Use any available zoom-out workflow when it improves
+the project map, but the durable requirement is perspective: the doc should
+explain why the current implementation is shaped this way and where it can
+change.
 
 ## When to Activate
 
@@ -130,9 +130,9 @@ Identify the human-facing doc surface, then verify its testable claims against t
    - agent files point to stale or missing human docs
    - agent files duplicate milestone goals, non-goals, review gates, or doc-tier taxonomy that belongs in human docs
    - agent files conflict with the human-authoritative surface
-   Report these as agent-guidance drift and suggest `$intuitive-init refresh`;
-   do not rewrite agent files from this skill unless the user explicitly
-   targeted them.
+   Report these as agent-guidance drift and prefer `$intuitive-init refresh`.
+   Edit agent files here only when the user targeted them or the doc update
+   would otherwise leave stale pointers.
 9. Report findings as a table:
    ```
    | Doc | Claims | Verified | Drifted | Unverifiable |

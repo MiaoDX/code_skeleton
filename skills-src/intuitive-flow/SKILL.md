@@ -18,9 +18,9 @@ description: |
 Use this skill to route a feature or project direction through one staged
 development flow without turning every idea into a full process marathon.
 
-This skill is standalone. It can produce pre-plans, scope gates, and routing
-recommendations inline. When the user explicitly combines it with another skill,
-use that skill for its specialty but keep one source of truth per stage.
+It can produce pre-plans, scope gates, and routing recommendations inline.
+When another workflow would add useful evidence or structure, use it as an
+input while keeping one source of truth per stage.
 
 {{> intuitive-common/stage-source-of-truth.md}}
 
@@ -152,7 +152,7 @@ Stop only when a premise is new, contradicted by repo evidence, disputed by both
 review voices, or would materially change product direction, scope, contracts,
 security, privacy, cost, data shape, external services, or execution ownership.
 
-When this wrapper invokes gstack `autoplan`, keep the auto-choice behavior here:
+When `$intuitive-flow` invokes gstack `autoplan`, keep the auto-choice behavior:
 if gstack offers a recommended/default choice and the gate is a soft
 continuation, choose that option, record the rationale briefly, and continue.
 
@@ -271,34 +271,21 @@ If the user asks for "each item has its own phase," interpret that as "each
 coherent deliverable has its own phase," then confirm before creating many
 micro-phases.
 
-## Execution Honesty
+## Provenance Honesty
 
-This skill is an orchestrator, not a magic executor. Be explicit about whether
-an artifact was produced inline by this skill or by a downstream skill.
-
-When this skill selects a downstream step such as `grill-me`, `office-hours`,
-`autoplan`, `to-issues`, `gsd-ingest-docs`, `gsd-plan-phase`,
-`gsd-execute-phase`, `simplify`, `gsd-verify-work`, or `tdd`, do one of these:
-
-- actually invoke/load that named skill and follow its workflow
-- say the named skill is unavailable or blocked, then stop or give a routing
-  recommendation
-- if the user asked only for advice, state that this is a recommendation and no
-  downstream skill has run
-
-Do not hand-write an artifact and claim it was produced by a downstream skill.
-If you produce something inline, label it as inline output from
-`intuitive-flow`.
+Name where decisions and artifacts came from. If another workflow actually ran,
+say so and use its result as evidence. If you produced the output inline with
+similar reasoning, label it as `intuitive-flow` output instead of borrowing the
+other workflow's name. The point is clear handoff provenance, not ceremony.
 
 ## Auto-Guided Idea Shaping (Experimental)
 
 Use this only for fuzzy ideas before `docs/plans/<slug>.md` exists, and only
 when the user chose or clearly requested the auto-guided route.
 
-Auto-guided shaping borrows the question style of `grill-me` and
-`office-hours`, but it is not the normal interactive version of either skill.
-Label the work as `intuitive-flow` auto-guided shaping unless the downstream
-skill is actually invoked without overrides.
+Auto-guided shaping can borrow the question style of `grill-me` and
+`office-hours`, but label the work as `intuitive-flow` auto-guided shaping
+unless those workflows actually ran.
 
 Routing inside auto-guided shaping:
 
@@ -352,9 +339,7 @@ silently decide user-owned questions.
   questions. The current agent still writes any resulting plan file unless a
   specific writing skill is invoked.
 - Auto-guided idea shaping is inline `intuitive-flow` output. It may use
-  `grill-me` or `office-hours` question styles, but do not claim either
-  downstream skill produced the auto-decisions unless it was actually invoked
-  according to its own workflow.
+  `grill-me` or `office-hours` question styles, but keep the provenance clear.
 - ADRs are not a default output of this skill. Create or update ADRs only when a
   documentation/ADR-capable skill is explicitly used or the user explicitly asks
   for an ADR. ADRs record durable architecture or product decisions, not
@@ -828,8 +813,8 @@ README or architecture docs unless the user asks.
   `grill-me` or `office-hours`.
 - Do not auto-decide user-owned product, scope, contract, cost, security,
   privacy, or phase-boundary choices.
-- Do not claim `grill-me` or `office-hours` produced auto-guided decisions. Label
-  that output as inline `intuitive-flow` auto-guided shaping.
+- Keep auto-guided shaping provenance clear: style inspiration is not the same
+  as running `grill-me` or `office-hours`.
 - Do not create a new GSD phase for every small task, diagnostic, proof retry,
   report tweak, checker tweak, blocker, or commit. Keep those inside the
   current coherent phase unless they need separate acceptance evidence.

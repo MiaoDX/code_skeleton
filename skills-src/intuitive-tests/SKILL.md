@@ -22,10 +22,10 @@ The workflow is framework-agnostic, but the examples assume Python/pytest.
 For test-suite cleanup, a good proposal lets the user choose between
 conservative, layout-first, pruning-first, or fixture-extraction paths.
 
-Do not bake repo-specific verification skips into this skill. If some tests
-must not run because of network, credentials, simulator, hardware, paid APIs, or
-local services, use the user's prompt and repo instructions as the source of
-truth, then report those skipped checks explicitly.
+Verification skips are repo truth, not reusable skill truth. If some tests must
+not run because of network, credentials, simulator, hardware, paid APIs, or
+local services, derive the skip from the user's prompt and repo instructions,
+then report those skipped checks explicitly.
 
 ## Core Principles
 

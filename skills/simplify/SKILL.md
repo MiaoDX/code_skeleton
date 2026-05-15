@@ -5,46 +5,12 @@ metadata:
   short-description: "Review changed code for reuse, quality, and efficiency"
 ---
 
-<codex_skill_adapter>
-## A. Skill Invocation
-- This skill is invoked by mentioning `$simplify`.
-- Treat all user text after `$simplify` as `{{ARGS}}`.
-- If no arguments are present, treat `{{ARGS}}` as empty.
-
-## B. AskUserQuestion → request_user_input Mapping
-- `header` → `header`
-- `question` → `question`
-- Options formatted as `"Label" — description` → `{label: "Label", description: "description"}`
-- Generate `id` from header: lowercase, replace spaces with underscores
-
-Batched calls:
-- `AskUserQuestion([q1, q2])` → single `request_user_input` with multiple entries in `questions[]`
-
-Multi-select workaround:
-- Codex has no `multiSelect`. Use sequential single-selects, or present a numbered freeform list asking the user to enter comma-separated numbers.
-
-Execute mode fallback:
-- When `request_user_input` is rejected (Execute mode), present a plain-text numbered list and pick a reasonable default.
-
-## C. Task() → spawn_agent Mapping
-- `Task(subagent_type="X", prompt="Y")` → `spawn_agent(agent_type="X", message="Y")`
-- `Task(model="...")` → omit (Codex uses per-role config, not inline model selection)
-- `fork_context: false` by default — agents load their own context via `<files_to_read>` blocks
-
-Parallel fan-out:
-- Spawn multiple agents → collect agent IDs → `wait(ids)` for all to complete
-
-Result parsing:
-- Look for structured markers in agent output: `CHECKPOINT`, `SUMMARY`, `FINDINGS`, etc.
-- `close_agent(id)` after collecting results from each agent
-</codex_skill_adapter>
-
 <objective>
 Review all changed files for reuse, quality, and efficiency. Fix any issues found.
 
 Three-phase workflow:
 1. Identify changes via `git diff`
-2. Launch three review agents in parallel (reuse, quality, efficiency)
+2. Review through three lenses: reuse, quality, and efficiency
 3. Aggregate findings and fix each issue directly
 
 Arguments:
@@ -68,52 +34,33 @@ Extract changed files list and full diff content.
 
 If no changes found, report: "No changes to review." and stop.
 
-## Phase 2: Launch Three Review Agents in Parallel
+## Phase 2: Review Through Three Lenses
 
-Spawn all three agents concurrently. Pass each agent the full diff and changed files list.
+Use parallel reviewers when the runtime and user authorization make delegation
+cheap; otherwise do the same review locally. The important part is the three
+lenses, not the mechanics.
 
-### Agent 1: Code Reuse Review
+### Lens 1: Code Reuse Review
 
-Spawn agent with message:
-
-```
-You are a Code Reuse Reviewer. Review the following code changes for duplication and missed reuse opportunities.
-
-## Changed Files
-{CHANGED_FILES}
-
-## Full Diff
-{DIFF_CONTENT}
-
-## Instructions
+Review the diff for duplication and missed reuse opportunities.
 
 For each change:
-1. Search for existing utilities and helpers that could replace newly written code. Look for similar patterns elsewhere in the codebase — common locations are utility directories, shared modules, and files adjacent to the changed ones.
-2. Flag any new function that duplicates existing functionality. Suggest the existing function to use instead.
-3. Flag any inline logic that could use an existing utility — hand-rolled string manipulation, manual path handling, custom environment checks, ad-hoc type guards, and similar patterns are common candidates.
+1. Search for existing utilities and helpers that could replace newly written
+   code. Common locations are utility directories, shared modules, and adjacent
+   files.
+2. Flag new functions that duplicate existing functionality.
+3. Flag inline logic that could use an existing utility: hand-rolled string
+   manipulation, manual path handling, custom environment checks, ad-hoc type
+   guards, and similar patterns.
 
-For each finding, provide:
+For each finding, capture:
 - File:Line location
 - Description of the duplication/missed reuse
 - Suggested existing utility or pattern to use instead
 
-If no reuse issues found, state "NO_REUSE_ISSUES".
-```
+If no reuse issues are found, record `NO_REUSE_ISSUES`.
 
-### Agent 2: Code Quality Review
-
-Spawn agent with message:
-
-```
-You are a Code Quality Reviewer. Review the following code changes for hacky patterns and quality issues.
-
-## Changed Files
-{CHANGED_FILES}
-
-## Full Diff
-{DIFF_CONTENT}
-
-## Instructions
+### Lens 2: Code Quality Review
 
 Review for these patterns:
 1. Redundant state: state that duplicates existing state, cached values that could be derived, observers/effects that could be direct calls
@@ -131,23 +78,9 @@ For each finding, provide:
 - Severity: MUST_FIX | IMPROVE | NITPICK
 - Suggested fix
 
-If no quality issues found, state "NO_QUALITY_ISSUES".
-```
+If no quality issues are found, record `NO_QUALITY_ISSUES`.
 
-### Agent 3: Efficiency Review
-
-Spawn agent with message:
-
-```
-You are an Efficiency Reviewer. Review the following code changes for performance and efficiency issues.
-
-## Changed Files
-{CHANGED_FILES}
-
-## Full Diff
-{DIFF_CONTENT}
-
-## Instructions
+### Lens 3: Efficiency Review
 
 Review for these patterns:
 1. Unnecessary work: redundant computations, repeated file reads, duplicate network/API calls, N+1 patterns
@@ -164,10 +97,7 @@ For each finding, provide:
 - Severity: MUST_FIX | IMPROVE | NITPICK
 - Suggested fix
 
-If no efficiency issues found, state "NO_EFFICIENCY_ISSUES".
-```
-
-Wait for all three agents to complete. Collect their outputs.
+If no efficiency issues are found, record `NO_EFFICIENCY_ISSUES`.
 
 ## Phase 3: Fix Issues
 

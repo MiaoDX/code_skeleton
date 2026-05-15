@@ -164,9 +164,9 @@ Prefer these outcomes, in order:
 5. `MOVE_TO_REFERENCE`
 6. `SCRIPT_MECHANIC`
 
-Do not edit third-party or system skills directly. For custom behavior, edit
-only custom skills under `/path/to/intuitive-flow/skills`, or wrap external
-skills from a custom skill.
+Keep reusable behavior changes in surfaces the project owns. If a needed policy
+depends on third-party or system skill behavior, wrap it locally or document the
+local policy unless the task is explicitly upstream maintenance.
 
 Before editing a skill, ask:
 
@@ -174,7 +174,8 @@ Before editing a skill, ask:
 - Can optional detail move to a reference file?
 - Can deterministic mechanics move to a script?
 - Is this actually a one-off task issue?
-- Will this rule still help a stronger model?
+- Will this rule still help a stronger future model, or should the skill state
+  the principle and leave the tactic open?
 
 After a custom skill change:
 

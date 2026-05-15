@@ -1,0 +1,65 @@
+---
+refactor_scope: skill-guidance-durability
+status: DONE
+accepted_severities:
+  - P1
+  - P2
+last_verified: 2026-05-15
+---
+
+# Refactor Scope: Skill Guidance Durability
+
+## Status
+
+DONE
+
+## Target
+
+Repo-owned skill guidance under `skills-src/` and non-generated root skills
+under `skills/`.
+
+## Accepted Severities
+
+- P1: Skill guidance must keep provenance, source-of-truth boundaries, safety
+      gates, and verification expectations clear.
+- P2: Skill guidance should explain durable intent and suggested tactics
+      instead of encoding brittle current-tool mechanics or maintainer notes.
+
+## Accepted Cleanup Checklist
+
+- [x] Remove or reframe meta-maintainer guidance that does not help the runtime
+      agent perform the skill.
+- [x] Prefer "why and evidence path" language over rigid "invoke this skill"
+      mechanics where equivalent inline work is acceptable.
+- [x] Keep necessary safety and provenance rules, but express them as durable
+      boundaries rather than tool-specific ceremony.
+- [x] Simplify `$simplify` by replacing Codex adapter mechanics with reusable
+      review lenses.
+- [x] Regenerate flattened `skills/intuitive-*` outputs from `skills-src/`.
+
+## Parked Cross-Seam / Future Ideas
+
+- Add qualitative evals that run representative tasks through each skill and
+  score whether the skill improves agent behavior without over-constraining it.
+- Consider moving non-generated root skills to a source/build surface if they
+  start sharing substantial common doctrine.
+
+## Evidence Ladder
+
+- L0 Static: `bun run build:skills:check`
+- L1 Unit/mock: `bun run test`
+- L2 Contract: `bun run verify`
+
+## Stop Condition
+
+Stop when the accepted checklist is complete, generated skill output is in sync,
+the audit no longer finds the targeted meta-maintainer phrasing, and
+`bun run verify` passes.
+
+## Execution Log
+
+- 2026-05-15: Audited `BELIEFS.md`, `README.md`, `ARCHITECTURE.md`, `skills-src/`,
+  `skills/simplify`, and `skills/skill-runner` for brittle or overly meta skill
+  guidance.
+- 2026-05-15: Refactored affected skills toward durable intent, provenance,
+  evidence paths, and suggested tactics.

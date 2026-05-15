@@ -31,7 +31,7 @@ Start with a bounded migration gate, then run the smallest full loop that can
 prove improvement. Prefer aggressive cleanup inside the accepted scope, but do
 not turn "make the repo great" into an endless refactor.
 
-Use downstream skills for their specialties:
+Use focused workflows for their strengths:
 
 - `$intuitive-refactor` owns the migration scope gate, accepted severities,
   evidence ladder, parked ideas, and stop condition.
@@ -41,9 +41,10 @@ Use downstream skills for their specialties:
 - `$intuitive-layout` owns one bounded layout slice at a time.
 - `$intuitive-tests` owns one bounded test-suite cleanup slice at a time.
 
-When a downstream skill is available, load and follow it rather than
-re-implementing its details here. If a downstream skill is missing, report that
-and continue only with a clearly labeled fallback.
+When a focused workflow is available and useful, use it for its evidence and
+decision shape instead of duplicating every detail here. If it is unavailable or
+would add ceremony without evidence, continue only with a clearly labeled
+fallback that preserves the same source-of-truth and stop-condition rules.
 
 ## Default Route
 

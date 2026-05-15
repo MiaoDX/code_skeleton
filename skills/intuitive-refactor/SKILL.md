@@ -10,14 +10,11 @@ bounded refactor before code changes start. Once a target slice is accepted, the
 default posture is aggressive cleanup: move callers to the new intuitive API,
 layout, or module boundary and remove stale compatibility surfaces.
 
-This skill is standalone. If no other skill is invoked, it should gather enough
-repo context itself to produce a scope gate, write/update the persistent gate
-file when execution is requested, and stop or execute according to the accepted
-checklist.
-
-It can also be combined with other skills. In that case, this skill owns the
-scope gate and stop condition; the other skill provides candidate findings,
-proof, planning, or implementation.
+This workflow owns the scope gate and stop condition. Architecture scanners,
+TDD, diagnosis, or planning workflows are optional inputs: use them when they
+raise evidence quality, but keep the accepted checklist and stop condition here.
+When no specialist workflow is needed, gather repo context directly and proceed
+against the same gate.
 
 ## Operating rule
 
@@ -210,13 +207,13 @@ Look for an existing gate before proposing new work:
 If the target seam is unclear, stop after a report-only map. Do not wander
 through the whole repo looking for unrelated cleanup.
 
-### 2. Decide whether to stay standalone or hand off
+### 2. Decide the evidence path
 
-By default, stay standalone: produce the scope gate, write/update the persistent
-gate file when appropriate, and execute the accepted cleanup when the user has
-approved the target.
+Default to the smallest evidence path that can make the gate honest: produce the
+scope gate, write/update the persistent gate file when appropriate, and execute
+the accepted cleanup when the user has approved the target.
 
-Use another skill only when it materially improves the current pass:
+Use another workflow when it materially improves the current pass:
 
 - unclear architecture or seam quality -> use an architecture scanner in
   report-only mode
@@ -228,7 +225,8 @@ Use another skill only when it materially improves the current pass:
 - existing issue queue or TODO grooming -> triage
 
 Do not split into issues before the parent plan or PRD is shaped enough to split
-into vertical slices. Do not require any other skill just because it exists.
+into vertical slices. A capable agent may do the work inline when it can meet
+the same evidence, scope, and stop-condition requirements without extra process.
 
 ### 3. Produce the scope gate
 
