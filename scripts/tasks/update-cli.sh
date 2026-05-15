@@ -71,31 +71,8 @@ prune_gsd_hooks() {
     done < <(find "$hooks_dir" -maxdepth 1 -type f \( -name 'gsd-*.js' -o -name 'gsd-*.sh' \) -print0 2>/dev/null)
 
     if [ "$removed" -gt 0 ]; then
-        echo "  ! removed $removed $label GSD hook file(s) before retry"
+        echo "  ! removed $removed existing $label GSD hook file(s)"
     fi
-}
-
-run_gsd_installer() {
-    local label="$1"
-    local config_dir="$2"
-    shift 2
-
-    local out
-    if out=$(npx -y get-shit-done-cc "$@" 2>&1); then
-        echo "$out" | grep -E '^  [⚠✗!]' || true
-        return 0
-    fi
-
-    if echo "$out" | grep -q 'installer migration blocked pending user choice' &&
-        echo "$out" | grep -q 'hooks/gsd-'; then
-        prune_gsd_hooks "$config_dir" "$label"
-        out=$(npx -y get-shit-done-cc "$@" 2>&1) || { echo "$out"; return 1; }
-        echo "$out" | grep -E '^  [⚠✗!]' || true
-        return 0
-    fi
-
-    echo "$out"
-    return 1
 }
 
 run_claude_plugins() {
@@ -131,10 +108,15 @@ run_claude_plugins() {
 }
 
 run_gsd_workflow() {
+    local out
     # GSD #976: strip context-monitor hook from global settings.json (use auto-compact instead)
-    run_gsd_installer "Claude Code" "${CLAUDE_CONFIG_DIR:-$HOME/.claude}" --claude --global || return 1
+    prune_gsd_hooks "${CLAUDE_CONFIG_DIR:-$HOME/.claude}" "Claude Code"
+    out=$(npx -y get-shit-done-cc --claude --global 2>&1) || { echo "$out"; return 1; }
+    echo "$out" | grep -E '^  [⚠✗!]' || true
     prune_broken_codex_skill_symlinks
-    run_gsd_installer "Codex" "${CODEX_HOME:-$HOME/.codex}" --codex --global || return 1
+    prune_gsd_hooks "${CODEX_HOME:-$HOME/.codex}" "Codex"
+    out=$(npx -y get-shit-done-cc --codex --global 2>&1) || { echo "$out"; return 1; }
+    echo "$out" | grep -E '^  [⚠✗!]' || true
 
     local settings="$HOME/.claude/settings.json"
     if [ -f "$settings" ] && command -v jq >/dev/null 2>&1; then
