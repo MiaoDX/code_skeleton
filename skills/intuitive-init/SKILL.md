@@ -80,6 +80,18 @@ Root `AGENTS.md` and `CLAUDE.md` should contain only:
 - short skill routing
 - pointers to longer `docs/agents/**` runbooks when needed
 
+## Compatibility Posture
+
+Prefer live-at-HEAD behavior and forward migration over backward compatibility
+by default. Treat `legacy`, `compatibility`, old command aliases, stale
+transitional docs, and preserved historical surfaces as cleanup signals, not as
+things to keep automatically.
+
+When the change is scoped, remove or replace obsolete paths and update their
+tests/docs in the same pass. If removing compatibility would touch a broad
+command surface, install/update behavior, generated outputs, public docs, or
+many files, stop after a proposal and ask the user to confirm the removal plan.
+
 ## Core Rule
 
 Treat generated init output and Intuitive Flow defaults as reviewers, not
@@ -129,8 +141,8 @@ Use this workflow unless the user asks for report-only or a specific file.
      plus a pointer.
    - **Remove**: obsolete commands, absolute paths from another project,
      generic best practices, duplicated Claude/Codex sections, copied human
-     project state, or process notes that belong in skills instead of root
-     guidance.
+     project state, process notes that belong in skills instead of root
+     guidance, or compatibility shims that are no longer the live path.
 5. Add or refresh a short preferred-skills block when relevant:
    - `$intuitive-init` for agent guidance initialization and periodic refresh.
    - `$intuitive-doc` for human-facing docs and doc drift.
@@ -370,6 +382,8 @@ Stop after a proposal when:
 - existing root guidance contains high-risk project-specific constraints
 - the user asked for discussion only or report-only
 - updating scripts would change how other projects are bootstrapped
+- removing compatibility paths would touch a broad command, install,
+  generated-output, or user-facing surface
 
 Stop after edits when:
 

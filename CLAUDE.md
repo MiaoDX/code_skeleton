@@ -41,6 +41,10 @@
 - Fix root causes rather than papering over symptoms.
 - Prefer minimal, local changes over speculative abstraction.
 - Understand why existing code exists before changing it.
+- Prefer live-at-HEAD behavior and forward migration over backward compatibility
+  by default. Remove or replace obsolete paths when the change is scoped; ask
+  before compatibility removal touches a broad command, install, or user-facing
+  surface.
 - Fail fast with explicit errors rather than silent fallbacks.
 - Do not use `hasattr()` or `getattr()` for known types. Use direct attribute access.
 
