@@ -168,7 +168,8 @@ only produce suggestions to merge into the proposal. Build a context bundle
 with the host tools and pipe it into Codex so Codex does not need to run nested
 read commands through its own sandbox.
 
-Run from the repository root:
+Use this as an adaptable example from the repository root. Equivalent
+read-only evidence is acceptable when the host CLI, sandbox, or flags differ:
 
 ```bash
 {

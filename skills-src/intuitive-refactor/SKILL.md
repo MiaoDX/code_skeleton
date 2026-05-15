@@ -313,7 +313,8 @@ Write/update one persistent gate file in docs/plans/.
 Remove old APIs, wrappers, and compatibility shims unless explicitly protected.
 Record cross-seam/Parked items there instead of implementing them.
 Stop when the accepted cleanup checklist passes the required confidence ladder.
-Commit each coherent slice.
+Commit each coherent slice only when the user and repo policy authorize
+commits.
 ```
 
 If the user combines this with an architecture scanner, add:

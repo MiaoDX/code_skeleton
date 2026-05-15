@@ -43,8 +43,8 @@ Keep skills small, composable, and boring.
    unless the user explicitly names a different target repo. Do not switch to
    the custom skill source repo merely because a selected skill may be inspected
    or patched.
-3. Run `scripts/run_skill_runner.py` with the original prompt and that workspace
-   as `--cwd`.
+3. Run the skill-runner script from the Intuitive Flow checkout with the
+   original prompt and that workspace as `--cwd`.
 4. Wait for the tmux session by default, unless the user asks to detach.
 5. Read only the compact run artifacts first: `result.md`, `eval.md`, and the
    worker's final message.
@@ -186,13 +186,14 @@ After a custom skill change, keep the boundary clear:
 - Commit separately from product-task changes only when the user or repo
   workflow asks for a commit.
 
-Useful commands in this repo, when those side effects are intended:
+Useful local boundaries in this repo, when those side effects are intended:
 
-```bash
-scripts/tasks/sync-local-commands-skills.sh
-git add skills scripts/tasks
-git commit -m "docs: refine <skill-name> skill"
-```
+- `scripts/tasks/sync-local-commands-skills.sh` refreshes installed local skill
+  surfaces.
+- Stage only the changed skill source/generated files and supporting scripts or
+  docs that belong to the skill change.
+- Use a commit message that names the skill change and follows the repo's
+  commit policy.
 
 ## Stop Conditions
 

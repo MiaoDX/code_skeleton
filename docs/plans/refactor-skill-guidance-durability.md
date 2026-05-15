@@ -52,6 +52,10 @@ Repo-owned skill guidance under `skills-src/`, non-generated root skills under
       verification, sync, and commit boundaries rather than an unconditional
       command recipe.
 - [x] Regenerate flattened `skills/intuitive-*` outputs from `skills-src/`.
+- [x] Make remaining skill command and commit examples authorization-aware
+      instead of implying a universal recipe.
+- [x] Fix `$skill-runner` runner path wording so agents do not infer a stale
+      repo-relative command path.
 
 ## Parked Cross-Seam / Future Ideas
 
@@ -94,4 +98,10 @@ universal ceremony, and `bun run verify` passes.
   optional evidence path, `$intuitive-flow` commit rhythm into recoverability
   checkpoints, and `$skill-runner` skill-change commands into source,
   verification, sync, and commit boundaries. Regenerated intuitive skills and
+  verified with `bun run verify`.
+- 2026-05-15: Reopened narrowly for command/commit example wording and
+  `$skill-runner` runner path clarity after a current-skills re-audit.
+- 2026-05-15: Updated `$intuitive-refactor` suggested prompt commit language,
+  `$intuitive-init` Codex discovery example framing, and `$skill-runner` command
+  path / skill-change command boundaries. Regenerated intuitive skills and
   verified with `bun run verify`.
