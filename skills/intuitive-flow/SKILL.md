@@ -166,6 +166,10 @@ Stop only when a premise is new, contradicted by repo evidence, disputed by both
 review voices, or would materially change product direction, scope, contracts,
 security, privacy, cost, data shape, external services, or execution ownership.
 
+When this wrapper invokes gstack `autoplan`, keep the auto-choice behavior here:
+if gstack offers a recommended/default choice and the gate is a soft
+continuation, choose that option, record the rationale briefly, and continue.
+
 If a downstream skill asks a `Confirm`/`Revise` style question and the gate is a
 soft continuation, answer `Confirm` yourself with a one-line rationale instead
 of waiting for the user. If it is a hard stop, ask once with the concrete impact
