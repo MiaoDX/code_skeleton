@@ -36,6 +36,12 @@ have possible refactor points. The goal is "the accepted checklist inside the
 target is green, the new API/layout is canonical, and cross-seam ideas are
 parked instead of implemented by drift."
 
+Start refactors from pressure, not possibility. Good triggers are current
+breakage, repeated friction, an active task blocked by stale structure,
+source-of-truth drift, false-green verification, public-contract drift, or a
+user-named bounded cleanup target. "This could be cleaner" is a parked idea
+until it blocks work or the user explicitly scopes that cleanup.
+
 {{> intuitive-common/bounded-proposal.md}}
 
 {{> intuitive-common/canonical-cleanup.md}}
@@ -64,7 +70,8 @@ The gate file must mark its status explicitly. Use these exact status values:
 - `DONE` — accepted checklist is complete and evidence is still green.
 - `CONTINUE` — accepted P0/P1 item remains incomplete.
 - `REOPEN` — user explicitly expanded scope or new evidence shows a P0/P1
-  regression.
+  regression. A concrete repeated failure from real usage also counts as new
+  evidence.
 - `PARK` — no active target-local cleanup remains; only cross-seam or future
   ideas exist.
 
@@ -112,6 +119,8 @@ On a repeated run, read the existing gate file first. Check the frontmatter
 current state as:
 
 - **DONE** — accepted checklist is complete and evidence is still green; stop.
+  Park P2-only wording, taste, or "could be cleaner" findings unless the user
+  explicitly names that slice for cleanup.
 - **CONTINUE** — accepted cleanup item remains incomplete; continue that item.
 - **REOPEN** — the user explicitly expands scope or new evidence shows a P0/P1
   regression; update the same gate file.
@@ -135,6 +144,8 @@ canonical.
 After implementation starts, do not add newly discovered P2/Parked items to the
 active checklist unless they are inside the accepted target and directly support
 the canonical new shape. Park cross-seam cleanup and unrelated taste changes.
+After a gate is `DONE`, P2-only polish stays parked unless the user explicitly
+reopens that exact slice.
 
 ## Confidence ladder
 

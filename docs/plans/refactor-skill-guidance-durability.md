@@ -56,6 +56,10 @@ Repo-owned skill guidance under `skills-src/`, non-generated root skills under
       instead of implying a universal recipe.
 - [x] Fix `$skill-runner` runner path wording so agents do not infer a stale
       repo-relative command path.
+- [x] Encode refactor start/stop pressure so `DONE` gates do not reopen for
+      P2-only polish without explicit scope or real usage evidence.
+- [x] Update related refactor routing guidance so repeated runs park
+      "could be cleaner" findings instead of restarting the same seam.
 
 ## Parked Cross-Seam / Future Ideas
 
@@ -105,3 +109,9 @@ universal ceremony, and `bun run verify` passes.
   `$intuitive-init` Codex discovery example framing, and `$skill-runner` command
   path / skill-change command boundaries. Regenerated intuitive skills and
   verified with `bun run verify`.
+- 2026-05-15: Reopened after user approval to encode stricter "when to start /
+  when to stop" behavior for skill and refactor guidance.
+- 2026-05-15: Added start-from-pressure and sticky-`DONE` guidance to
+  `docs/agents/skill-guidance-durability-prompt.md`, `$intuitive-refactor`,
+  and `$intuitive-flow`; regenerated intuitive skills and verified with
+  `bun run verify`.

@@ -51,6 +51,18 @@ severities, accepted checklist, parked ideas, evidence ladder, and stop
 condition. Execute only the target-local checklist. Record cross-seam ideas
 instead of letting the cleanup drift.
 
+Start/stop pressure:
+- Start a skill refactor from pressure, not possibility. Valid pressure
+  includes a real task failure, repeated friction across runs, active task
+  blockage, source-of-truth drift, false-green verification, public-contract
+  drift, or a user-named bounded cleanup target.
+- On a repeated run, read the existing gate first. If it is `DONE` and evidence
+  remains green, stop instead of re-scanning.
+- Reopen a `DONE` gate only for a P0/P1 regression, explicit user scope
+  expansion, or concrete repeated failure from real usage.
+- Park P2-only wording, taste, or "could be cleaner" findings after `DONE`
+  unless the user explicitly names that slice for cleanup.
+
 Audit for:
 - meta-maintainer notes that do not help the runtime agent perform the skill
 - current-tool adapter mechanics embedded in the skill body
@@ -81,6 +93,10 @@ Refactor toward:
 - wording that a different coding agent can follow without knowing this chat
 
 Do not:
+- start a refactor from "this could be cleaner" without a bounded target and
+  pressure signal
+- reopen a green `DONE` gate for P2-only polish unless the user explicitly
+  scopes that cleanup
 - broaden the product scope of a skill during the cleanup
 - remove safety, provenance, or verification rules merely because they are
   written as "do not" rules
@@ -90,14 +106,16 @@ Do not:
 
 Suggested execution:
 1. Create or update one persistent refactor gate under docs/plans/ when needed.
-2. Search repo-owned skills for brittle/meta phrasing.
-3. Read surrounding context before editing; do not do blind keyword deletion.
-4. Apply one coherent cleanup slice.
-5. Regenerate generated skill outputs if the repo has a skill build step.
-6. Run the repo's verification command.
-7. Sync installed local skills only when deliberately refreshing installed
+2. If the gate is already `DONE`, stop unless the request has an explicit
+   reopen trigger.
+3. Search repo-owned skills for brittle/meta phrasing.
+4. Read surrounding context before editing; do not do blind keyword deletion.
+5. Apply one coherent cleanup slice.
+6. Regenerate generated skill outputs if the repo has a skill build step.
+7. Run the repo's verification command.
+8. Sync installed local skills only when deliberately refreshing installed
    surfaces.
-8. If committing, keep the skill-only cleanup separate from product work.
+9. If committing, keep the skill-only cleanup separate from product work.
 
 Evidence to report:
 - files changed

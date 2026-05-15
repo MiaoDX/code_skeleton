@@ -634,7 +634,9 @@ verifying the accepted checklist.
 On repeated runs of the same refactor prompt, read the persistent gate file
 first. Read the frontmatter `status` marker, falling back to the `## Status`
 section. If the status is `DONE` and evidence remains green, stop instead of
-re-scanning for fresh cleanup.
+re-scanning for fresh cleanup. Park P2-only wording, taste, or "could be
+cleaner" findings after `DONE` unless the user explicitly expands the scope or
+real usage shows a repeated failure in that seam.
 
 ### F. Changed Code Needs Cleanup
 
