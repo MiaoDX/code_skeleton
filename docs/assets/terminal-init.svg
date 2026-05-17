@@ -18,7 +18,7 @@
   <circle cx="32" cy="26" r="6" fill="#FF5F57"/>
   <circle cx="52" cy="26" r="6" fill="#FEBC2E"/>
   <circle cx="72" cy="26" r="6" fill="#28C840"/>
-  <text x="390" y="31" font-family="Menlo, Monaco, Consolas, 'Courier New', monospace" font-size="12" fill="#4B4B4B" text-anchor="middle">Claude Code - repo init</text>
+  <text x="390" y="31" font-family="Menlo, Monaco, Consolas, 'Courier New', monospace" font-size="12" fill="#4B4B4B" text-anchor="middle">Claude Code - reduce repo entropy</text>
 
   <rect x="10" y="44" width="760" height="356" fill="#1E1E2E"/>
   <rect x="10" y="390" width="760" height="10" rx="10" ry="10" fill="#1E1E2E"/>
@@ -30,19 +30,19 @@
     </text>
 
     <text x="22" y="104" fill="#F9E2AF">&gt; Read this skill:</text>
-    <text x="42" y="126" fill="#89DCEB">https://github.com/MiaoDX/intuitive-flow/blob/main/skills/intuitive-init/SKILL.md</text>
+    <text x="42" y="126" fill="#89DCEB">github.com/MiaoDX/.../skills/intuitive-reduce-entropy/SKILL.md</text>
 
-    <text x="22" y="164" fill="#F9E2AF">&gt; Use $intuitive-init to initialize this repo.</text>
-    <text x="42" y="188" fill="#CDD6F4">Run /init-style discovery if available.</text>
-    <text x="42" y="212" fill="#CDD6F4">Preserve project-specific instructions.</text>
-    <text x="42" y="236" fill="#CDD6F4">Propose a diff before applying.</text>
+    <text x="22" y="164" fill="#F9E2AF">&gt; Use $intuitive-reduce-entropy for this repo.</text>
+    <text x="42" y="188" fill="#CDD6F4">Inspect docs, agent guidance, tests, paths, and stale APIs.</text>
+    <text x="42" y="212" fill="#CDD6F4">Recommend the highest-value maintenance slice first.</text>
+    <text x="42" y="236" fill="#CDD6F4">Ask before applying broad moves or deletes.</text>
 
     <text x="22" y="276" fill="#A6E3A1">Agent:</text>
-    <text x="82" y="276" fill="#7F849C">Reading README.md, AGENTS.md, CLAUDE.md, commands, and tests...</text>
+    <text x="82" y="276" fill="#7F849C">Reading README.md, ARCHITECTURE.md, AGENTS.md, tests, and scripts...</text>
     <text x="22" y="300" fill="#A6E3A1">Agent:</text>
-    <text x="82" y="300" fill="#7F849C">Treating /init output as suggestions, not overwrite text.</text>
+    <text x="82" y="300" fill="#7F849C">Found candidates: agent guidance, docs drift, tests, stale paths.</text>
     <text x="22" y="324" fill="#A6E3A1">Agent:</text>
-    <text x="82" y="324" fill="#7F849C">Ready to show a merged AGENTS.md / CLAUDE.md diff.</text>
+    <text x="82" y="324" fill="#7F849C">Recommended: refresh agent guidance via $intuitive-init.</text>
 
     <text x="22" y="374">
       <tspan fill="#A6E3A1">user@macbook ~/my-robotics-project $</tspan>

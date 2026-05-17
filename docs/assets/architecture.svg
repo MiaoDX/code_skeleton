@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 340" width="800" height="340" role="img" aria-labelledby="title desc">
   <title id="title">Intuitive Flow architecture</title>
-  <desc id="desc">Human docs define repo truth, agent guidance stays local, reusable skills feed the update pipeline, and update scripts sync Claude Code, Codex, GSD, gstack, community skill sources, and repo-owned skills into user-level surfaces.</desc>
+  <desc id="desc">Human docs define repo truth, agent guidance stays local, primary and specialist skills feed the update pipeline, and update scripts sync Claude Code, Codex, GSD, gstack, community skill sources, and repo-owned skills into user-level surfaces.</desc>
   <defs>
     <style>
       .font { font-family: Aptos, "IBM Plex Sans", "Segoe UI", sans-serif; }
@@ -19,7 +19,7 @@
 
   <rect x="0.5" y="0.5" width="799" height="339" rx="12" fill="#fbfcfe" stroke="#d8e0ea"/>
   <text x="34" y="38" class="font title" fill="#0f172a">Architecture</text>
-  <text x="34" y="59" class="font subtitle" fill="#64748b">Small human truth, local agent guidance, portable workflows, real installer boundaries</text>
+  <text x="34" y="59" class="font subtitle" fill="#64748b">Small human truth, local agent guidance, focused skill surface, real installer boundaries</text>
 
   <g>
     <rect x="34" y="100" width="152" height="118" rx="8" class="panel"/>
@@ -50,8 +50,8 @@
     <circle cx="426" cy="124" r="10" fill="#f3e8ff" stroke="#d8b4fe"/>
     <text x="426" y="128" text-anchor="middle" class="font small" fill="#7e22ce">3</text>
     <text x="446" y="128" class="font section" fill="#581c87">Workflows</text>
-    <text x="422" y="158" class="mono small" fill="#0f172a">skills/*</text>
-    <text x="422" y="178" class="mono small" fill="#0f172a">SKILL.md</text>
+    <text x="422" y="158" class="mono small" fill="#0f172a">primary skills</text>
+    <text x="422" y="178" class="mono small" fill="#0f172a">specialists</text>
     <text x="422" y="198" class="mono small" fill="#0f172a">manifest.txt</text>
   </g>
 
@@ -79,5 +79,5 @@
   <text x="538" y="291" class="mono small" fill="#0f172a">vendor/gstack</text>
 
   <rect x="90" y="310" width="620" height="18" rx="6" fill="#f1f5f9" stroke="#d8e0ea"/>
-  <text x="400" y="323" text-anchor="middle" class="font small" fill="#475569">External skill sources: anthropics, skill-codex, mattpocock. Proof: bun run verify.</text>
+  <text x="400" y="323" text-anchor="middle" class="font small" fill="#475569">Primary: flow, refactor, reduce-entropy, squash. Proof: bun run verify.</text>
 </svg>

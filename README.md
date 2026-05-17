@@ -40,8 +40,8 @@ See [BELIEFS.md](BELIEFS.md) for the full doctrine.
 
 ## Start In A Repo
 
-In the target repo, give your AI agent the skill file and ask it to initialize
-local guidance:
+In the target repo, give your AI agent the maintenance entrypoint and ask it to
+find the highest-value entropy reduction slice:
 
 ```text
 Read this skill:
@@ -54,7 +54,7 @@ $intuitive-init. Start with a candidate list before applying changes.
 ```
 
 <p align="center">
-  <img src="docs/assets/terminal-init.svg" alt="AI-native intuitive-init flow" width="720">
+  <img src="docs/assets/terminal-init.svg" alt="AI-native reduce-entropy flow" width="720">
 </p>
 
 ## Optional Tool Install (For Humans)
