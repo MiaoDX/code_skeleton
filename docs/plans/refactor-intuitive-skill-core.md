@@ -39,10 +39,11 @@ flow, compatibility cleanup, evidence ladders, and human-vs-agent doc surfaces.
       command.
 - [x] Update human docs so future contributors know `skills-src/` is the
       authoring source and `skills/` is generated install output.
-- [x] Add a shared self-improvement contract that each intuitive-family skill
-      loads from `skills-src/intuitive-common/`.
-- [x] Make skill updates preserve a concise WHY / WHAT / HOW shape: why the
-      skill exists, what surfaces it owns, and how it executes and verifies.
+- [x] Evaluate a shared self-improvement contract for intuitive-family skills
+      and keep it as a human maintainer lens instead of runtime-loaded skill
+      text.
+- [x] Make future skill reviews preserve a concise WHY / WHAT / HOW shape: why
+      the skill exists, what surfaces it owns, and how it executes and verifies.
 - [x] Create a human-facing reference page that records official agent-harness
       sources and what each source teaches this repo.
 - [x] Link the new reference page from the human docs index and root docs where
@@ -57,6 +58,8 @@ flow, compatibility cleanup, evidence ladders, and human-vs-agent doc surfaces.
   runtime import mechanism compatible with Claude Code `@import`.
 - Add hook/plugin/LSP setup implementation after the repo has a concrete
   default pattern worth distributing.
+- Add fixture-based checks for WHY / WHAT / HOW clarity without requiring a
+  literal runtime section in every skill.
 
 ## Evidence Ladder
 
@@ -104,3 +107,7 @@ consumers still read standalone files from `skills/`.
   TypeScript check passed, and 10 Bun tests passed across 3 files.
 - 2026-05-17: Synced all regenerated intuitive skills into
   `/Users/fl/.codex/skills/` and confirmed they match the repo outputs.
+- 2026-05-17: Corrected the self-improvement design after review: the rule is a
+  maintainer lens, not runtime text. Removed the generated
+  `Skill Self-Improvement Rule` blocks from `intuitive-*` skills and moved the
+  durable guidance to human docs.

@@ -11,8 +11,6 @@ commits without changing the final tree.
 This is a history-rewrite workflow. Do not proceed past the proposed plan until
 the user explicitly confirms it.
 
-{{> intuitive-common/self-improvement.md}}
-
 ## Inputs
 
 - Optional base ref from the user.

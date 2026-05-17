@@ -16,8 +16,6 @@ files, reusable skills, hooks, MCP configuration, and local verification
 commands. `$intuitive-init` builds or refreshes that harness from repo evidence,
 official tool guidance, and init-style suggestions.
 
-{{> intuitive-common/self-improvement.md}}
-
 Default posture: keep root agent files aggressively small. Correct but lengthy
 procedures should usually move out of `AGENTS.md` and `CLAUDE.md` into
 `docs/agents/**`, reusable skills, or scripts, with the root files keeping only

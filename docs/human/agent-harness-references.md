@@ -27,6 +27,33 @@ operational rule; this page should preserve the source and rationale.
 - Review the harness on a cadence. Do a meaningful review after major
   model/tool releases and at least every three to six months.
 
+## Skill Self-Improvement Lens
+
+Use this as a maintainer review lens, not as text to paste into every skill's
+runtime instructions. Runtime skill text should help the agent perform the
+current task. Meta-guidance about maintaining the skill belongs here, in a
+planning gate, or in a targeted skill-maintenance run.
+
+When reviewing a skill, preserve a compact WHY / WHAT / HOW contract:
+
+- WHY: the user problem, failure mode, or workflow drift the skill prevents.
+- WHAT: the repo surfaces, artifacts, and decisions the skill owns, plus nearby
+  surfaces it deliberately does not own.
+- HOW: the default workflow, decision gates, evidence ladder, stop condition,
+  and handoff artifact that let a future agent improve the skill safely.
+
+Route new guidance to the smallest effective harness layer:
+
+- shared rule across generated intuitive-family skills -> `skills-src/intuitive-common/`
+- durable source or doctrine lesson -> this reference page
+- repo-specific operational runbook -> `docs/agents/**`
+- deterministic enforcement -> scripts, tests, CI, hooks, or MCP tools
+- reusable task workflow -> a skill, not a root agent file
+
+Do not add task-specific preferences, product-specific style rules, or one-off
+agent mistakes as permanent skill policy. Prefer deleting, shortening, or moving
+instructions before adding new runtime rules.
+
 ## Official References
 
 | Source | What It Teaches This Repo |
@@ -56,7 +83,8 @@ When this page gains a source that changes repo practice:
 1. Add the link and the lesson here first.
 2. Decide the right harness layer: root guidance, nested guidance, shared skill
    fragment, targeted skill, hook, script, MCP config, plugin, or human doc.
-3. Update `skills-src/**` when the lesson changes agent behavior.
+3. Update `skills-src/**` or `skills/**` only when the lesson changes runtime
+   agent behavior, not merely how maintainers should review the skill.
 4. Run `bun run build:skills` after intuitive-family skill source edits.
 5. Run `bun run verify`.
 6. Update `STATUS.md` or `ARCHITECTURE.md` only when the repo's supported
