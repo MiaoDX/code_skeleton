@@ -103,6 +103,13 @@ When the user asks to implement a specific plan, says "LGTM", or says "impl"
 while pointing at a plan, first check whether `autoplan` already ran and its
 accepted decisions were reconciled into the canonical plan file.
 
+Codex routing note: gstack skills are installed as `gstack-*` sibling skill
+directories. When routing to autoplan from this skill, prefer the installed
+`gstack-autoplan` skill or the surfaced `autoplan` alias if that is the only
+available name. Do not resolve review skills through nested paths like
+`$GSTACK_ROOT/plan-ceo-review/SKILL.md`; use the installed `gstack-*` skill
+surface instead.
+
 Treat as `autoplan` evidence:
 
 - the canonical `docs/plans/<slug>.md` contains accepted review decisions for
@@ -121,7 +128,7 @@ Do not treat as `autoplan` evidence:
 If evidence is missing, classify the request as `Draft Plan Exists` and run:
 
 ```text
-autoplan docs/plans/<slug>.md
+gstack-autoplan docs/plans/<slug>.md
 ```
 
 Then stop at the review, in-place update, and execution checkpoints as usual.
@@ -166,9 +173,10 @@ Stop only when a premise is new, contradicted by repo evidence, disputed by both
 review voices, or would materially change product direction, scope, contracts,
 security, privacy, cost, data shape, external services, or execution ownership.
 
-When `$intuitive-flow` invokes gstack `autoplan`, keep the auto-choice behavior:
-if gstack offers a recommended/default choice and the gate is a soft
-continuation, choose that option, record the rationale briefly, and continue.
+When `$intuitive-flow` invokes gstack `gstack-autoplan`/`autoplan`, keep the
+auto-choice behavior: if gstack offers a recommended/default choice and the gate
+is a soft continuation, choose that option, record the rationale briefly, and
+continue.
 
 If a downstream skill asks a `Confirm`/`Revise` style question and the gate is a
 soft continuation, answer `Confirm` yourself with a one-line rationale instead
@@ -450,11 +458,12 @@ find evidence that `autoplan` already ran and was reconciled into the plan.
 Default path:
 
 ```text
-autoplan docs/plans/<slug>.md
+gstack-autoplan docs/plans/<slug>.md
 ```
 
-`autoplan` is a review pipeline, not an implementation tool. It may refine the
-plan, surface scope changes, and produce review logs. It must not start coding.
+`gstack-autoplan`/`autoplan` is a review pipeline, not an implementation tool.
+It may refine the plan, surface scope changes, and produce review logs. It must
+not start coding.
 
 Apply Goal And Auto-Run Question Triage to `autoplan` gates. A `/goal` or
 explicit whole-flow request may auto-confirm soft premise, review, and
@@ -493,10 +502,11 @@ Use when the plan is accepted, already passed the autoplan precheck, and is not
 yet under GSD. A user's implementation approval alone is not enough to enter
 this stage.
 
-Before treating any plan as reviewed, run the autoplan precheck. If `autoplan`
-has not run or its accepted decisions were not reconciled into the canonical
-plan, reclassify the request as `Draft Plan Exists` and run `autoplan` before
-`to-issues`, `gsd-ingest-docs`, `gsd-plan-phase`, or implementation.
+Before treating any plan as reviewed, run the autoplan precheck. If
+`gstack-autoplan`/`autoplan` has not run or its accepted decisions were not
+reconciled into the canonical plan, reclassify the request as `Draft Plan
+Exists` and run `gstack-autoplan` before `to-issues`, `gsd-ingest-docs`,
+`gsd-plan-phase`, or implementation.
 
 Before `to-issues`, `gsd-ingest-docs`, or `gsd-plan-phase`, confirm that the
 accepted plan lives in `docs/plans/<slug>.md`. Do not use a generated
@@ -673,7 +683,7 @@ When the user asks for the whole durable pipeline, propose this compact sequence
    - direct -> grill-me, plus office-hours when product/wedge/demand is unclear
    - auto-guided -> intuitive-flow auto-decisions with user-owned stops
 3. docs/plans/<feature>.md
-4. autoplan
+4. gstack-autoplan
 5. update docs/plans/<feature>.md in place after approval or soft-continuation triage
 6. to-issues (optional)
 7. choose the GSD handoff:
