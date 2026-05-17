@@ -25,17 +25,18 @@ local `CLAUDE.md` / `AGENTS.md` guidance instead of a copied process manual.
 AI agents write all my code, so the repo needs two surfaces.
 
 The human surface should **stay tiny**: `README.md`, `ARCHITECTURE.md`,
-`STATUS.md`, `docs/human/**`, the layout, and the tests. This is where I decide
-what the project is, what good means, and what must not break.
+`STATUS.md`, and `docs/human/**`. This is where I decide what the project is,
+what good means, and what must not break.
 
 **Everything else** is agent territory: source code, plans, logs, generated
 evidence, retrospectives, scratch work, and low-level churn. Humans can inspect
 it when something is risky or broken. They should not have to live there.
 
-The workflow makes **big questions expensive and small questions cheap**: use
-`office-hours` or `grill-me` for what to build, `$intuitive-flow` for normal
-development, and `$intuitive-refactor` to clean a system without drifting
-forever. See [BELIEFS.md](BELIEFS.md) for the full doctrine.
+The workflow keeps the user-facing choices small: use `office-hours` or
+`grill-me` for what to build, `$intuitive-flow` to build it,
+`$intuitive-refactor` to clean a known target, and
+`$intuitive-reduce-entropy` to find what repo maintenance would pay off most.
+See [BELIEFS.md](BELIEFS.md) for the full doctrine.
 
 ## Start In A Repo
 
@@ -44,13 +45,12 @@ local guidance:
 
 ```text
 Read this skill:
-https://github.com/MiaoDX/intuitive-flow/blob/main/skills/intuitive-init/SKILL.md
+https://github.com/MiaoDX/intuitive-flow/blob/main/skills/intuitive-reduce-entropy/SKILL.md
 
 Then run:
-Use $intuitive-init to initialize this repo's AGENTS.md and CLAUDE.md.
-Run /init-style discovery if available.
-Preserve project-specific instructions.
-Propose a diff before applying.
+Use $intuitive-reduce-entropy to make this repo easier for humans and AI agents
+to work in. If agent guidance is the first entropy source, route to
+$intuitive-init. Start with a candidate list before applying changes.
 ```
 
 <p align="center">
@@ -66,22 +66,19 @@ git clone --depth=1 https://github.com/MiaoDX/intuitive-flow.git ~/intuitive-flo
 ~/intuitive-flow/scripts/update.sh
 ```
 
-## Preferred Skills
+## Primary Skills
 
-`intuitive-flow` is both the project and the default development skill: this
-repo defines the operating model, and `$intuitive-flow` runs it inside a target
-repo.
+Keep the public choice small:
 
 | Skill | Use it for |
 | --- | --- |
-| **intuitive-init** | Merge `/init` suggestions, Intuitive Flow defaults, and repo evidence into local `AGENTS.md` / `CLAUDE.md` |
-| **intuitive-doc** | Keep human-facing docs small, current, and separated from agent evidence/history |
-| **intuitive-layout** | Improve repo/folder organization before deeper architecture work |
-| **intuitive-tests** | Organize, prune, mark, and refactor tests around behavior |
 | **intuitive-flow** | Move a fuzzy idea through plan review, GSD handoff, execution, cleanup, and verification |
-| **intuitive-migrate** | Run a bounded legacy-repo migration loop across agent guidance, docs, layout, tests, and cleanup gates |
-| **intuitive-refactor** | Bound broad refactors with accepted severities, evidence, and a stop condition |
+| **intuitive-refactor** | Clean a known module, seam, stale API, compatibility surface, or architecture target |
+| **intuitive-reduce-entropy** | Periodically inspect repo mess and recommend the highest-value maintenance slice |
 | **intuitive-squash** | Compress noisy local agent history into a clean reviewable commit story |
+
+Specialist skills still exist for direct or routed use: `$intuitive-doc`,
+`$intuitive-init`, and `$intuitive-tests`.
 
 ## Human Docs
 
@@ -91,7 +88,8 @@ repo.
 - [docs/human/](docs/human/): human-facing detail that should not bloat root docs
 - [Agent harness references](docs/human/agent-harness-references.md): official
   and field-practice sources that guide agent guidance, skills, hooks, and MCP setup
-- [Legacy repo migration](docs/human/legacy-repo-migration.md): copy/paste prompt for full agent-friendly cleanup loops
+- [Reduce repo entropy](docs/human/reduce-repo-entropy.md): copy/paste prompt
+  for periodic repo maintenance
 
 Generated diagrams, release-note analysis, vendored tools, planning scratchpads,
 and implementation evidence are context, not current truth unless a human doc

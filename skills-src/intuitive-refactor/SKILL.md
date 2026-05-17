@@ -211,6 +211,10 @@ Use another workflow when it materially improves the current pass:
   a reproducible feedback loop first
 - large feature or harness program -> create a PRD, then issues
 - existing issue queue or TODO grooming -> triage
+- layout-shaped cleanup -> keep it here only when the object is code, package,
+  module, API, imports, wrappers, or compatibility surfaces; route docs layout
+  to `$intuitive-doc`, test layout to `$intuitive-tests`, and mixed repo-surface
+  diagnosis to `$intuitive-reduce-entropy`
 
 Do not split into issues before the parent plan or PRD is shaped enough to split
 into vertical slices. A capable agent may do the work inline when it can meet

@@ -1,6 +1,6 @@
 ---
 name: intuitive-init
-description: Initialize, audit, aggressively slim, merge, and refresh project-local AGENTS.md and CLAUDE.md files from existing repo guidance, agent /init suggestions, stdin-bundled Codex init-style discovery, and intuitive workflow defaults. Use when setting up a repo for Claude Code/Codex, replacing symlinked agent files with local guidance, rerunning agent init after weeks of drift, cleaning overgrown root agent files, or aligning a repo to intuitive-doc, intuitive-layout, intuitive-tests, intuitive-flow, and intuitive-refactor without overwriting project-specific hints.
+description: Initialize, audit, aggressively slim, merge, and refresh project-local AGENTS.md and CLAUDE.md files from existing repo guidance, agent /init suggestions, stdin-bundled Codex init-style discovery, and intuitive workflow defaults. Use when setting up a repo for Claude Code/Codex, replacing symlinked agent files with local guidance, rerunning agent init after weeks of drift, cleaning overgrown root agent files, or aligning a repo to intuitive-doc, intuitive-tests, intuitive-flow, intuitive-refactor, and intuitive-reduce-entropy without overwriting project-specific hints.
 ---
 
 # Intuitive Init
@@ -203,10 +203,11 @@ Use this workflow unless the user asks for report-only or a specific file.
 5. Add or refresh a short preferred-skills block when relevant:
    - `$intuitive-init` for agent guidance initialization and periodic refresh.
    - `$intuitive-doc` for human-facing docs and doc drift.
-   - `$intuitive-layout` for repo/folder organization.
    - `$intuitive-tests` for test-suite structure and behavior-focused cleanup.
    - `$intuitive-flow` for fuzzy idea to planned execution.
    - `$intuitive-refactor` before broad architecture or refactor work.
+   - `$intuitive-reduce-entropy` for periodic repo maintenance when the user
+     does not already know which surface needs cleanup.
    - `$intuitive-squash` for cleaning local agent commit history before handoff.
    Keep this block as routing guidance only. Do not use it to define the human
    documentation surface; `$intuitive-doc` owns that split.
@@ -444,7 +445,7 @@ duplicate the current milestone, non-goals, review gates, or documentation
 taxonomy.
 
 Move reusable procedures into skills instead of expanding root guidance.
-Examples: documentation audits, layout refactors, test suite cleanup, phase
+Examples: documentation audits, test suite cleanup, repo entropy scans, phase
 pipelines, and bounded refactor gates.
 
 Move repo-specific long procedures into `docs/agents/**` instead of expanding

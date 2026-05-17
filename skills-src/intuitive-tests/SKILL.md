@@ -182,7 +182,10 @@ tests into a layer-based structure.
    scripts, docs, hooks, `pytest` config, and imports.
 4. Keep `tests/support/` for shared factories and fixtures; avoid making it a
    dumping ground for one-off helpers.
-5. Run collection and relevant layer tests. If a check is skipped, cite the user
+5. Delete stale test path wrappers, aliases, or documented old commands after
+   known consumers are updated unless the user explicitly protects an external
+   contract.
+6. Run collection and relevant layer tests. If a check is skipped, cite the user
    prompt or repo instruction that made it out of scope.
 
 ### 4. PRUNE / CONSOLIDATE mode

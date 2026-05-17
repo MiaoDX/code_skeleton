@@ -14,8 +14,8 @@ Start here:
   references and lessons that guide agent harness upgrades
 - [skill-self-improvement-audit.md](skill-self-improvement-audit.md) for the
   current review of repo-owned skills through the self-improvement lens
-- [legacy-repo-migration.md](legacy-repo-migration.md) for the copy/paste
-  `$intuitive-migrate` prompt
+- [reduce-repo-entropy.md](reduce-repo-entropy.md) for the copy/paste
+  `$intuitive-reduce-entropy` maintenance prompt
 
 ## Doc Tiers
 

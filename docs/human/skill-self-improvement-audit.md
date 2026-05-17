@@ -26,12 +26,11 @@ Immediate correction:
 | --- | --- | --- | --- | --- |
 | `intuitive-doc` | Strong: keep human docs current and small. | Strong: owns human-facing docs and boundary drift, skips agent files by default. | Strong: audit/update/guard modes and claim verification are clear. | No runtime self-improvement block. Later slim examples if the doc keeps growing. |
 | `intuitive-flow` | Strong but broad: routes fuzzy ideas to verified work. | Medium: owns staging and handoffs, but the file is long because it encodes many downstream gates. | Strong: checkpoints and routing are explicit. | Candidate for future extraction into smaller references or subflow docs, but do not add meta text. |
-| `intuitive-init` | Strong after harness refresh: builds repo-local agent harness. | Strong: owns `AGENTS.md`, `CLAUDE.md`, `docs/agents/**`, init discovery, hooks, skills, and MCP routing. | Strong: modes and stop conditions are explicit. | Keep current runtime harness guidance; avoid adding maintainer meta. |
-| `intuitive-layout` | Strong: make repo layout easier to navigate. | Strong: owns bounded layout slices and path consumers. | Strong: proposal shape and verification are concrete. | No immediate change. |
-| `intuitive-migrate` | Strong: one legacy-repo cleanup loop. | Strong: orchestrates downstream skills rather than duplicating them. | Strong: route and stop condition are concise. | No immediate change. |
+| `intuitive-init` | Strong after harness refresh: builds repo-local agent harness. | Strong: owns `AGENTS.md`, `CLAUDE.md`, `docs/agents/**`, init discovery, hooks, skills, and MCP routing. | Strong: modes and stop conditions are explicit. | Specialist skill; route from reduce-entropy when agent guidance is the issue. |
+| `intuitive-reduce-entropy` | Strong: periodic repo maintenance when the user does not know the target. | Strong: owns entropy diagnosis and routes to doc/init/tests/refactor instead of forcing the user to choose first. | Strong: candidate list, gate, route, verify, and park. | Primary maintenance entrypoint. |
 | `intuitive-refactor` | Strong: bound aggressive cleanup. | Strong: owns scope gates, severities, evidence, parked ideas. | Strong: persistent gate and ladder are clear. | No immediate change. |
 | `intuitive-squash` | Strong: rewrite noisy agent history safely. | Strong: owns commit grouping and safety protocol only. | Strong: explicit confirmation and verify commands. | No immediate change. |
-| `intuitive-tests` | Strong: improve test suite signal. | Strong: owns test taxonomy, pruning, fixture/layout cleanup. | Strong but long: many examples are useful runtime guidance. | Candidate for later slimming if examples start crowding task execution. |
+| `intuitive-tests` | Strong: improve test suite signal. | Strong: owns test taxonomy, pruning, fixture/layout cleanup. | Strong but long: many examples are useful runtime guidance. | Specialist skill; route from reduce-entropy when tests are the issue. |
 | `simplify` | Strong: review changed code for reuse, quality, efficiency. | Medium: owns diff-scoped review; adapter block is large and mechanical. | Medium: process is clear, but the codex adapter and reviewer prompts dominate the file. | Do not add meta text. Future candidate: move adapter/mechanics to shared adapter docs or generator if more skills use it. |
 | `skill-runner` | Strong: supervise real skill-driven development runs. | Strong: owns runner orchestration and reusable-skill defect detection. | Strong: verdicts, policy, and stop conditions are explicit. | Already has skill-change policy. Do not add another meta block. |
 
@@ -40,8 +39,10 @@ Immediate correction:
 - It makes `docs/human/agent-harness-references.md` the durable place for
   external lessons and skill-maintenance doctrine.
 - It argues against adding self-maintenance sections to runtime skill text.
-- It exposes two future cleanup candidates: `intuitive-flow` because it is
-  necessarily broad, and `simplify` because its adapter/mechanics are large.
+- It exposed `intuitive-layout` as a boundary-smell after user review; layout is
+  now treated as a symptom routed by object instead of a root skill.
+- It exposes two remaining future cleanup candidates: `intuitive-flow` because
+  it is necessarily broad, and `simplify` because its adapter/mechanics are large.
 - It does not justify broad rewrites today. Most skills already have clear
   execution contracts and stop conditions.
 

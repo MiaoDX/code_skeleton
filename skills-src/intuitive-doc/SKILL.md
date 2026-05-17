@@ -161,7 +161,11 @@ Update a specific doc that has drifted.
    c. **Preserve the doc tier** — if it's a design doc, keep it design-level (contracts, not code). If it's an implementation reference, include specifics.
    d. **Preserve extension framing** — current implementations are instances, not absolutes
    e. **Update diagrams** if the data flow or structure changed
-8. If the user has not already asked you to implement the update, show the diff before applying. If they explicitly approved the cleanup, apply the scoped doc changes and summarize the diff afterward.
+8. When moving or splitting docs, update known path consumers: README links,
+   doc indexes, agent guidance pointers, scripts, CI references, and copied
+   prompts. Do not leave old doc paths documented unless the user explicitly
+   protects them.
+9. If the user has not already asked you to implement the update, show the diff before applying. If they explicitly approved the cleanup, apply the scoped doc changes and summarize the diff afterward.
 
 **Rules for updates:**
 - Do NOT downgrade a design doc to implementation detail
