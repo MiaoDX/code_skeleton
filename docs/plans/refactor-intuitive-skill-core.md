@@ -4,7 +4,7 @@ status: DONE
 accepted_severities:
   - P1
   - P2
-last_verified: 2026-05-14
+last_verified: 2026-05-17
 ---
 
 # Refactor Scope: Intuitive Skill Core
@@ -39,6 +39,14 @@ flow, compatibility cleanup, evidence ladders, and human-vs-agent doc surfaces.
       command.
 - [x] Update human docs so future contributors know `skills-src/` is the
       authoring source and `skills/` is generated install output.
+- [x] Add a shared self-improvement contract that each intuitive-family skill
+      loads from `skills-src/intuitive-common/`.
+- [x] Make skill updates preserve a concise WHY / WHAT / HOW shape: why the
+      skill exists, what surfaces it owns, and how it executes and verifies.
+- [x] Create a human-facing reference page that records official agent-harness
+      sources and what each source teaches this repo.
+- [x] Link the new reference page from the human docs index and root docs where
+      humans look for repo doctrine.
 
 ## Parked Cross-Seam / Future Ideas
 
@@ -47,6 +55,8 @@ flow, compatibility cleanup, evidence ladders, and human-vs-agent doc surfaces.
   pipeline is stable.
 - Replace the custom lightweight include syntax if Codex later gains a native
   runtime import mechanism compatible with Claude Code `@import`.
+- Add hook/plugin/LSP setup implementation after the repo has a concrete
+  default pattern worth distributing.
 
 ## Evidence Ladder
 
@@ -77,3 +87,20 @@ consumers still read standalone files from `skills/`.
   `bun test scripts/lib/build-intuitive-skills.test.ts`, `bun run verify`, and
   `bun scripts/lib/local-skill-manifest.ts check-root-skills
   scripts/local-skill-manifest.txt skills`.
+- 2026-05-17: Reopened after the user expanded the generated-skill core scope
+  from `$intuitive-init` harness guidance to all intuitive-family skills. New
+  accepted cleanup adds a shared self-improvement rule and a human-facing
+  harness reference page.
+- 2026-05-17: Added `skills-src/intuitive-common/self-improvement.md` and loaded
+  it from all 8 intuitive-family source skills.
+- 2026-05-17: Created
+  `docs/human/agent-harness-references.md` with official and field-practice
+  sources, including the May 14, 2026 Claude Code large-codebase post.
+- 2026-05-17: Linked the reference page from `README.md`,
+  `ARCHITECTURE.md`, `STATUS.md`, and `docs/human/README.md`.
+- 2026-05-17: Regenerated all 8 intuitive skill outputs with
+  `bun run build:skills`.
+- 2026-05-17: Verified L2 with `bun run verify`: generated skills up to date,
+  TypeScript check passed, and 10 Bun tests passed across 3 files.
+- 2026-05-17: Synced all regenerated intuitive skills into
+  `/Users/fl/.codex/skills/` and confirmed they match the repo outputs.

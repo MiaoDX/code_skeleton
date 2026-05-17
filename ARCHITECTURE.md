@@ -47,6 +47,9 @@ The current human-facing source of truth is intentionally small:
 - `STATUS.md` records current state, supported commands, and active maintenance
   focus.
 - `docs/human/**` holds human-facing detail that should not bloat the root docs.
+  `docs/human/agent-harness-references.md` is the durable reference ledger for
+  external Claude Code, Codex, AGENTS.md, and field-practice lessons that shape
+  this repo's harness.
 
 Everything else is lower tier by default. `docs/assets/**` supports root docs,
 `docs/release-notes/**` is generated or historical analysis, `vendor/**` is
@@ -95,7 +98,9 @@ the manifest, update `README.md` if it belongs in the preferred skill list, and
 run `bun run verify`. To change an intuitive-family skill, edit
 `skills-src/<name>/SKILL.md` or `skills-src/intuitive-common/*.md`, run
 `bun run build:skills`, and commit both the source and flattened `skills/`
-output.
+output. If the change is based on external agent-harness guidance, record the
+source and distilled lesson in `docs/human/agent-harness-references.md` before
+spreading the rule into skills.
 
 ## Update Pipeline Contract
 

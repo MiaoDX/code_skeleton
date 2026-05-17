@@ -7,6 +7,8 @@ description: Create and maintain an intuitive human documentation surface for AI
 
 Maintain a small human-facing documentation surface and keep it aligned with code.
 
+{{> intuitive-common/self-improvement.md}}
+
 {{> intuitive-common/human-agent-surface.md}}
 
 When any default human surface is missing, `$intuitive-doc` should make the

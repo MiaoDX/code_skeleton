@@ -89,6 +89,8 @@ repo.
 - [ARCHITECTURE.md](ARCHITECTURE.md): subsystem contracts, extension points, and proof boundaries
 - [STATUS.md](STATUS.md): current state, supported commands, and next maintenance focus
 - [docs/human/](docs/human/): human-facing detail that should not bloat root docs
+- [Agent harness references](docs/human/agent-harness-references.md): official
+  and field-practice sources that guide agent guidance, skills, hooks, and MCP setup
 - [Legacy repo migration](docs/human/legacy-repo-migration.md): copy/paste prompt for full agent-friendly cleanup loops
 
 Generated diagrams, release-note analysis, vendored tools, planning scratchpads,

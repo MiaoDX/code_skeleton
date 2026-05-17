@@ -22,6 +22,8 @@ It can produce pre-plans, scope gates, and routing recommendations inline.
 When another workflow would add useful evidence or structure, use it as an
 input while keeping one source of truth per stage.
 
+{{> intuitive-common/self-improvement.md}}
+
 {{> intuitive-common/stage-source-of-truth.md}}
 
 ## Scope Defaults

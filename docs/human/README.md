@@ -10,6 +10,8 @@ Start here:
   points
 - [STATUS.md](../../STATUS.md) for current state and maintenance focus
 - [BELIEFS.md](../../BELIEFS.md) for the doctrine behind the workflow
+- [agent-harness-references.md](agent-harness-references.md) for the external
+  references and lessons that guide agent harness upgrades
 - [legacy-repo-migration.md](legacy-repo-migration.md) for the copy/paste
   `$intuitive-migrate` prompt
 

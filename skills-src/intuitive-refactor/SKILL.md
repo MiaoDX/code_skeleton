@@ -16,6 +16,8 @@ raise evidence quality, but keep the accepted checklist and stop condition here.
 When no specialist workflow is needed, gather repo context directly and proceed
 against the same gate.
 
+{{> intuitive-common/self-improvement.md}}
+
 ## Operating rule
 
 Start with a scope gate. For broad or ambiguous requests, make the first pass

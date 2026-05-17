@@ -17,6 +17,8 @@ implementation-shape tests as deletion candidates by default.
 
 The workflow is framework-agnostic, but the examples assume Python/pytest.
 
+{{> intuitive-common/self-improvement.md}}
+
 {{> intuitive-common/bounded-proposal.md}}
 
 For test-suite cleanup, a good proposal lets the user choose between

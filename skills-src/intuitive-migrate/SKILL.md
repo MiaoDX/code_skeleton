@@ -19,6 +19,8 @@ The default goal is a repo where future agents can start quickly, humans can
 review current truth from a small doc surface, and the next meaningful task does
 not require rediscovering stale paths, bloated agent files, or unclear tests.
 
+{{> intuitive-common/self-improvement.md}}
+
 {{> intuitive-common/human-agent-surface.md}}
 
 {{> intuitive-common/bounded-proposal.md}}

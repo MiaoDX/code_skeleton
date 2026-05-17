@@ -11,6 +11,8 @@ layout slice that makes the new intuitive layout canonical. Once a slice is
 approved, migrate callers to the new paths/APIs and remove stale entrypoints by
 default.
 
+{{> intuitive-common/self-improvement.md}}
+
 {{> intuitive-common/human-agent-surface.md}}
 
 {{> intuitive-common/bounded-proposal.md}}

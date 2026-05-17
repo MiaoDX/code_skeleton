@@ -10,6 +10,14 @@ symlinked source of truth. Shared skills should travel across projects;
 `AGENTS.md` and `CLAUDE.md` should preserve the local repo's commands,
 constraints, workflow choices, and hard-won mistakes.
 
+In Claude Code and Codex work, a repo harness is the infrastructure that lets an
+agent enter an existing project without guessing: root and nested instruction
+files, reusable skills, hooks, MCP configuration, and local verification
+commands. `$intuitive-init` builds or refreshes that harness from repo evidence,
+official tool guidance, and init-style suggestions.
+
+{{> intuitive-common/self-improvement.md}}
+
 Default posture: keep root agent files aggressively small. Correct but lengthy
 procedures should usually move out of `AGENTS.md` and `CLAUDE.md` into
 `docs/agents/**`, reusable skills, or scripts, with the root files keeping only
@@ -26,6 +34,30 @@ Use these size signals:
 
 These are signals, not hard limits. Keep a longer root file only when the
 content is a critical safety rule that agents must see before any other read.
+
+## Official Reference Sources
+
+Prefer current official docs when refreshing a repo harness:
+
+- Claude Code best practices:
+  `https://code.claude.com/docs/en/best-practices`
+- Claude Code memory and `CLAUDE.md` loading:
+  `https://code.claude.com/docs/en/memory`
+- Claude Code docs map:
+  `https://code.claude.com/docs/en/claude_code_docs_map`
+- Claude blog guide for `CLAUDE.md`:
+  `https://claude.com/blog/using-claude-md-files`
+- Codex best practices:
+  `https://developers.openai.com/codex/learn/best-practices`
+- Codex `AGENTS.md` guide:
+  `https://developers.openai.com/codex/guides/agents-md`
+- Codex advanced configuration:
+  `https://developers.openai.com/codex/config-advanced`
+- Open `AGENTS.md` format:
+  `https://agents.md/`
+
+Use those sources as references, not as replacement text. Local repo evidence
+still wins when the docs and the actual project disagree.
 
 {{> intuitive-common/human-agent-surface.md}}
 
@@ -76,6 +108,26 @@ tests/docs in the same pass. If removing compatibility would touch a broad
 command surface, install/update behavior, generated outputs, public docs, or
 many files, stop after a proposal and ask the user to confirm the removal plan.
 
+Use a practical WHY / WHAT / HOW shape for the root files:
+
+- WHY: the project purpose and why the main modules exist
+- WHAT: the tech stack, package layout, and important directory map
+- HOW: install, build, test, verification, and safe change workflow
+
+Keep lint and format policy out of root guidance unless there is a local hazard
+agents cannot infer. Put deterministic enforcement in formatter/linter config,
+scripts, CI, or hooks, and point agents to the command or hook instead.
+
+For large repos, prefer nested `CLAUDE.md` and `AGENTS.md` files near specialized
+areas such as `src/api/`, `services/payments/`, or individual packages. The
+root file should explain the layering rule and the local override convention,
+not carry every package's full procedure.
+
+When MCP servers are part of the team workflow, prefer a checked-in `.mcp.json`
+or equivalent project-scoped config so new clones get the same tool wiring.
+Never put secrets in committed MCP config; point to environment variables or
+local setup docs for credentials.
+
 ## Core Rule
 
 Treat generated init output and Intuitive Flow defaults as reviewers, not
@@ -88,9 +140,15 @@ Authoritative inputs, in order:
 3. Root orientation docs such as `README.md`, `ARCHITECTURE.md`, `STATUS.md`,
    `docs/agents/**`, and command docs.
 4. Actual repo commands, scripts, package metadata, CI config, and tests.
-5. Agent `/init` suggestions or stdin-bundled init-style discovery from a
-   read-only Codex run.
+5. Agent `/init`, `codex init` when available, or stdin-bundled init-style
+   discovery from a read-only Codex run.
 6. Intuitive Flow defaults and skill-routing conventions.
+
+`/init`, `codex init` when the installed Codex interface exposes it, and
+similar generated discovery are starting points, not finished harnesses. Expect
+them to find package manifests, build systems, tests, and obvious directory
+structure; then prune generic output, add local hazards, and move repeated or
+lengthy work into the right harness surface.
 
 ## Default Workflow
 
@@ -106,7 +164,8 @@ Use this workflow unless the user asks for report-only or a specific file.
    - `justfile`, `Makefile`, scripts, CI workflows, test config
    - skill folders or command folders
 3. Use init-style discovery when it is available and worth the extra evidence:
-   - Prefer `/init` or the tool's equivalent in suggestion/refactor mode.
+   - Prefer `/init`, `codex init` when available, or the tool's equivalent in
+     suggestion/refactor mode.
    - If `/init` refuses because `AGENTS.md` or `CLAUDE.md` already exists,
      prompt it to "help refactor the current file" rather than overwrite.
    - Capture useful suggestions only. Do not treat init output as final text.
@@ -137,15 +196,24 @@ Use this workflow unless the user asks for report-only or a specific file.
    - `$intuitive-squash` for cleaning local agent commit history before handoff.
    Keep this block as routing guidance only. Do not use it to define the human
    documentation surface; `$intuitive-doc` owns that split.
-6. Produce a merged proposal first:
+6. Check harness-specific surfaces:
+   - nested `CLAUDE.md` / `AGENTS.md` files for monorepos or package-local rules
+   - `.claude/skills/**`, `.codex/skills/**`, `.agents/skills/**`, or
+     project-owned `skills/**` for repeated workflows
+   - `.claude/settings.json`, `.codex/hooks/**`, or equivalent hook config for
+     deterministic checks that must run after edits
+   - checked-in `.mcp.json` or project-scoped MCP docs for shared external tools
+7. Produce a merged proposal first:
    - Summarize the source inputs used.
    - Report root file sizes and whether cleanup pressure is low, medium, or
      high.
    - Explain what was preserved, collapsed, extracted, replaced, and removed.
    - Name any new `docs/agents/**`, skill, script, or human-doc destination for
      extracted content.
+   - Call out any nested instruction files, hooks, skills, or MCP config that
+     should be created, left alone, or moved out of the root files.
    - Show the diff or proposed file contents.
-7. Apply changes only when the user has asked for direct implementation or
+8. Apply changes only when the user has asked for direct implementation or
    approves the proposal. When applying, update both `AGENTS.md` and
    `CLAUDE.md` if both exist and the rule applies to both agents.
 
@@ -158,10 +226,16 @@ reliably.
 
 ### Native slash command
 
-Use this when the host exposes `/init` or an equivalent tool:
+Use this when the host exposes `/init`, `codex init`, or an equivalent tool.
+Some Codex CLI builds may not expose `codex init`; in that case, skip directly
+to the stdin-bundled Codex CLI discovery fallback.
 
 ```text
 /init
+```
+
+```text
+codex init
 ```
 
 If root agent files already exist, ask for suggestion/refactor mode rather than
@@ -238,6 +312,7 @@ Project-specific guidance to preserve:
 Correct but lengthy guidance to extract:
 Shared boilerplate to remove:
 Missing preferred-skill routing:
+Harness surfaces to add or leave alone:
 Suggested edits:
 Apply now? <yes/no needed unless already authorized>
 ```
@@ -260,7 +335,9 @@ Steps:
 4. Create or update `docs/agents/**` only for extracted agent runbooks that are
    too long for the root files and are not human-facing project truth.
 5. Preserve differences between Claude and Codex when they matter.
-6. Search for stale setup/init claims after editing.
+6. Keep hooks, MCP config, skills, and nested instruction files as separate
+   harness surfaces instead of pasting their full procedures into root guidance.
+7. Search for stale setup/init claims after editing.
 
 ### Refresh
 
@@ -302,12 +379,15 @@ Steps:
 1. Build a preserve list from actual repo evidence.
 2. Mark each current root section as Preserve, Collapse, Extract, Remove, or
    Human-doc drift.
-3. Draft the thin root files first.
-4. Draft extracted `docs/agents/**` runbooks only for procedures that remain
+3. Draft the thin root files first using the WHY / WHAT / HOW shape when it
+   helps agents orient quickly.
+4. Move lint/format details, long command recipes, and repeatable operational
+   loops to hooks, scripts, skills, or `docs/agents/**` as appropriate.
+5. Draft extracted `docs/agents/**` runbooks only for procedures that remain
    useful.
-5. Verify root files contain pointers to extracted runbooks and no long copied
+6. Verify root files contain pointers to extracted runbooks and no long copied
    procedures.
-6. Show the deletion/extraction diff unless the user already approved applying.
+7. Show the deletion/extraction diff unless the user already approved applying.
 
 ### Symlink Migration
 

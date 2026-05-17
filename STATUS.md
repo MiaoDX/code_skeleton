@@ -1,6 +1,6 @@
 # Status
 
-Last reviewed: 2026-05-14
+Last reviewed: 2026-05-17
 
 ## Current State
 
@@ -8,6 +8,8 @@ Last reviewed: 2026-05-14
 currently provides:
 
 - root human docs and starter agent guidance
+- a human-facing agent harness reference ledger in
+  `docs/human/agent-harness-references.md`
 - reusable installed skills under `skills/`
 - generated intuitive skill sources and shared fragments under `skills-src/`
 - update and sync automation under `scripts/`
@@ -44,6 +46,9 @@ gstack setup.
 The current maintenance focus is keeping the repo dogfoodable:
 
 - keep the human docs small and accurate
+- keep `docs/human/agent-harness-references.md` as the source ledger for
+  external Claude Code, Codex, AGENTS.md, and field-practice lessons before
+  turning those lessons into skill rules
 - keep root skills listed in `scripts/local-skill-manifest.txt`
 - edit intuitive-family skills in `skills-src/`, then regenerate `skills/`
 - keep CI and local `bun run verify` aligned
