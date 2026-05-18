@@ -73,8 +73,8 @@ Keep the public choice small:
 | Skill | Use it for |
 | --- | --- |
 | **intuitive-flow** | Move a fuzzy idea through plan review, GSD handoff, execution, cleanup, and verification |
-| **intuitive-refactor** | Clean a known module, seam, stale API, compatibility surface, or architecture target |
-| **intuitive-reduce-entropy** | Periodically inspect repo mess and recommend the highest-value maintenance slice |
+| **intuitive-refactor** | Directly clean a known module, seam, stale API, compatibility surface, code/package/module layout issue, or architecture target |
+| **intuitive-reduce-entropy** | Periodically inspect repo mess and recommend the highest-value maintenance slice; routes to `$intuitive-doc` for human docs, `$intuitive-init` for agent guidance, and `$intuitive-tests` for tests |
 | **intuitive-squash** | Compress noisy local agent history into a clean reviewable commit story |
 
 Specialist skills still exist for direct or routed use: `$intuitive-doc`,

@@ -33,7 +33,9 @@
 
 - Use `$intuitive-init` when creating or refreshing project-local `AGENTS.md` / `CLAUDE.md`. Treat `/init` output as suggestions to merge, not as an overwrite source.
 - Use `$intuitive-doc` for human-facing docs, especially `README.md`, `ARCHITECTURE.md`, `STATUS.md`, and `docs/human/**`.
-- Use `$intuitive-layout` for repo/folder organization and human-vs-agent surface separation.
+- For repo/folder organization, route by object: `$intuitive-doc` for human
+  docs, `$intuitive-tests` for tests, `$intuitive-refactor` for code/package
+  layout, and `$intuitive-reduce-entropy` when the owner is unclear.
 - Use `$intuitive-tests` for test suite organization, markers, pruning, fixtures, and behavior-focused unit tests.
 - Use `$intuitive-flow` for large development work that moves from idea shaping to plan review, GSD handoff, execution, cleanup, and verification.
 - Use `$intuitive-refactor` before broad refactors or architecture cleanup so the target, accepted severities, evidence ladder, and stop condition are explicit.
