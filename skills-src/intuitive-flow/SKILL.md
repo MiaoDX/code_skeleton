@@ -2,12 +2,13 @@
 name: intuitive-flow
 description: |
   Orchestrate the intuitive idea-to-execution workflow: grill-me or office-hours
-  for direct or auto-guided idea shaping, docs/plans as the pre-execution source
-  of truth, autoplan for hard review, optional to-issues for vertical slices,
-  GSD ingest/plan for committed execution, GSD execute/verify for
-  implementation, simplify for changed-code cleanup, doc-status cleanup after
-  big refactors, bounded scoping for architecture/refactor work, and tdd inside
-  risky slices. Use when the user asks
+  for direct or auto-guided idea shaping, human-confirmed goal/success criteria
+  before whole auto-runs, docs/plans as the pre-execution source of truth,
+  autoplan for hard review, optional to-issues for vertical slices, GSD
+  ingest/plan for committed execution, GSD execute/verify for implementation,
+  simplify for changed-code cleanup, doc-status cleanup after big refactors,
+  bounded scoping for architecture/refactor work, and tdd inside risky slices.
+  Use when the user asks
   for normal development flow,
   durable planning, fuzzy idea to implementation, Matt Pocock skills + gstack +
   GSD together, improve-codebase-architecture via a pipeline, or one coherent
@@ -132,6 +133,49 @@ the plan.
 Then stop at the review, in-place update, and execution checkpoints as usual.
 Do not say `autoplan` was bypassed because the user approved implementation;
 say `autoplan` is selected because pipeline review evidence is missing.
+
+## Whole-Run Goal Preflight
+
+Before starting any whole-flow, durable, auto-guided, or `/goal` run that may
+cross review, GSD handoff, execution, cleanup, and verification, chat with the
+human until the run contract is explicit. Do this before `autoplan`,
+`to-issues`, GSD ingest/plan, `skill-runner`, autonomous execution, or
+auto-confirming downstream gates.
+
+This preflight is a user-owned checkpoint, not a soft continuation. Do not
+answer it yourself just because the later pipeline can auto-confirm routine
+steps. If a canonical plan already exists, inspect it first and summarize the
+inferred contract instead of asking the user to restate everything from scratch.
+
+The run contract needs:
+
+- **Goal** - the concrete outcome the whole run is trying to achieve.
+- **Success criteria** - observable done signals, including acceptance behavior,
+  required verification commands or manual checks when known, and any quality bar
+  that would make the user say the run succeeded.
+- **Stop condition** - where this run should end: reviewed plan, GSD plan,
+  implemented and verified code, PR-ready branch, or another explicit boundary.
+- **Non-goals or boundaries** - only when needed to prevent scope drift,
+  accidental compatibility promises, cost/security changes, or extra phases.
+
+Use this compact prompt shape:
+
+```text
+Before I start the whole run, I want to lock the run contract.
+
+Goal: <inferred or missing>
+Success criteria: <inferred or missing>
+Stop condition: <inferred or missing>
+Boundaries/non-goals: <inferred or "none stated">
+
+Is this the goal and success criteria you want me to execute against? If not,
+what should change?
+```
+
+Start the auto-run only after the user confirms or corrects the goal and success
+criteria, or when the user's latest message explicitly supplied the full run
+contract and told you to use it as-is. Once this preflight is satisfied, apply
+Goal And Auto-Run Question Triage for later gates.
 
 ## Goal And Auto-Run Question Triage
 
@@ -766,6 +810,9 @@ against code already changed in this slice.
 When the user asks for the whole durable pipeline, propose this compact sequence:
 
 ```text
+0. whole-run goal preflight:
+   - chat with the human to confirm Goal, success criteria, stop condition, and
+     boundaries before any auto-run work begins
 1. choose idea-shaping mode:
    - direct route (preferred)
    - auto-guided route (experimental)
@@ -828,38 +875,44 @@ stale human docs when the implementation surface changed.
 Apply Goal And Auto-Run Question Triage before crossing these boundaries. Stop
 and ask only for hard-stop decisions. For soft continuations, auto-answer the
 recommended option, record the rationale in the relevant artifact or progress
-summary, and continue.
+summary, and continue. The whole-run goal preflight is earlier than this triage
+and remains a hard human checkpoint.
 
-1. **Idea-shaping route:** for fuzzy ideas, ask whether to use the direct route
+1. **Whole-run goal preflight:** before any durable whole-flow, auto-guided, or
+   `/goal` pipeline starts, confirm the Goal, success criteria, stop condition,
+   and needed boundaries with the human. Do not auto-answer this checkpoint
+   unless the user's latest message explicitly supplied the full run contract and
+   told you to use it as-is.
+2. **Idea-shaping route:** for fuzzy ideas, ask whether to use the direct route
    (preferred) or auto-guided route (experimental), unless the user already made
    the choice clear.
-2. **Auto-guided user-owned decision:** in auto-guided mode, ask before deciding
+3. **Auto-guided user-owned decision:** in auto-guided mode, ask before deciding
    target user, demand premise, narrowest wedge, scope boundary, public contract,
    external-service dependency, paid infrastructure, phase split, or any override
    of stated user intent.
-3. **Pre-plan -> Review:** "Is this the plan file you want reviewed?"
-4. **Review -> In-place update:** "Do you approve these review decisions, and
+4. **Pre-plan -> Review:** "Is this the plan file you want reviewed?"
+5. **Review -> In-place update:** "Do you approve these review decisions, and
    should I update the plan file in place?"
-5. **Review -> Issues/GSD:** "Do you approve this updated plan for execution?"
-6. **GSD handoff choice:** Auto-select the route when repo evidence gives one
+6. **Review -> Issues/GSD:** "Do you approve this updated plan for execution?"
+7. **GSD handoff choice:** Auto-select the route when repo evidence gives one
    clear answer: existing phase -> `gsd-plan-phase --prd`; missing planning ->
    manifest + `gsd-ingest-docs --mode new`; existing planning with no matching
    phase -> manifest + `gsd-ingest-docs --mode merge`. Ask only when multiple
    phases match, more than one new phase would be created, locked docs conflict,
    or the route changes roadmap ownership beyond the accepted plan.
-7. **Issues -> GSD:** "Do you want GitHub issue tracking, or go straight to GSD?"
-8. **GSD plan -> Execute:** "Execute now, or stop after plan generation?"
-9. **Many phases:** before creating more than three phases from one prompt, ask
+8. **Issues -> GSD:** "Do you want GitHub issue tracking, or go straight to GSD?"
+9. **GSD plan -> Execute:** "Execute now, or stop after plan generation?"
+10. **Many phases:** before creating more than three phases from one prompt, ask
    "Should this be grouped into a smaller set of coherent phases instead?"
-10. **Simplify -> Verify:** "Review and clean the changed code with `simplify`
+11. **Simplify -> Verify:** "Review and clean the changed code with `simplify`
    before final verification, or skip because the change is docs-only/trivial?"
-11. **Refactor scope -> Execute:** "Do you approve this P0/P1 checklist and stop
+12. **Refactor scope -> Execute:** "Do you approve this P0/P1 checklist and stop
    condition for implementation?"
-12. **Refactor doc cleanup:** after a big refactor, auto-run the focused doc
+13. **Refactor doc cleanup:** after a big refactor, auto-run the focused doc
    status check and apply in-scope `$intuitive-doc` cleanup when docs drift.
    Ask only before broad moves/deletions, ambiguous external consumers, or
    protected docs outside the accepted refactor scope.
-13. **Local-dev gate:** if proof depends on real simulator, real Gateway, real VLM,
+14. **Local-dev gate:** if proof depends on real simulator, real Gateway, real VLM,
    Docker, GPU, or API keys, stop unless the current session is local and equipped.
 
 ## Output Shapes
@@ -896,7 +949,7 @@ Include:
 - non-goals
 - smallest demo
 - fuller demo
-- acceptance criteria
+- success criteria and acceptance criteria
 - proposed vertical slices
 - GSD handoff trigger:
   - existing phase -> `gsd-plan-phase <phase> --prd docs/plans/<slug>.md`
@@ -940,6 +993,10 @@ README or architecture docs unless the user asks.
 ## Anti-Patterns
 
 - Do not run every skill just because it exists.
+- Do not start a whole auto-run or durable `/goal` pipeline by silently
+  inferring the Goal or success criteria. Confirm the run contract with the
+  human first unless the user explicitly supplied it and told you to use it
+  as-is.
 - Do not silently bypass idea shaping. If `grill-me` or `office-hours` would
   have been plausible, say whether they are selected or skipped and why.
 - Do not bypass `autoplan` for plan-backed implementation because the user said
