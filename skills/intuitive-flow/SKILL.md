@@ -5,8 +5,9 @@ description: |
   for direct or auto-guided idea shaping, docs/plans as the pre-execution source
   of truth, autoplan for hard review, optional to-issues for vertical slices,
   GSD ingest/plan for committed execution, GSD execute/verify for
-  implementation, simplify for changed-code cleanup, bounded scoping for
-  architecture/refactor work, and tdd inside risky slices. Use when the user asks
+  implementation, simplify for changed-code cleanup, doc-status cleanup after
+  big refactors, bounded scoping for architecture/refactor work, and tdd inside
+  risky slices. Use when the user asks
   for normal development flow,
   durable planning, fuzzy idea to implementation, Matt Pocock skills + gstack +
   GSD together, improve-codebase-architecture via a pipeline, or one coherent
@@ -278,6 +279,8 @@ Useful checkpoint moments:
 - after each coherent implementation slice
 - after `simplify` changes code outside the immediately preceding slice
 - after verification or closeout updates docs/status/retrospectives materially
+- after a big refactor completes its documentation status check and any needed
+  `$intuitive-doc` cleanup
 
 When committing is appropriate, prefer one commit per completed unit. Split into
 multiple commits only when the diff contains separate concerns that a reviewer
@@ -703,7 +706,7 @@ features, expand refactor scope, or replace `gsd-verify-work`. After `simplify`
 changes code, rerun the relevant tests or verification gates before declaring
 the phase done.
 
-### Implementation Closeout And Parked Todos
+### Implementation Closeout, Doc Status, And Parked Todos
 
 After every `intuitive-flow` implementation, inspect the canonical artifact
 before the final answer: `docs/plans/<slug>.md`, a refactor scope gate,
@@ -711,6 +714,15 @@ before the final answer: `docs/plans/<slug>.md`, a refactor scope gate,
 parked, deferred, out of scope, future-only, or left for a focused follow-up.
 Also include newly discovered but intentionally unimplemented work from the
 execution notes, simplify/review output, and verification gaps.
+
+For significant code changes and every big refactor, run a documentation status
+check before closeout. Use `$intuitive-doc guard` for a focused changed-file
+check, or `$intuitive-doc cleanup <scope>` when the refactor changed public
+contracts, commands, package/module layout, examples, proof artifacts, or human
+docs. If human-surface docs are drifted, update them to match the current
+implementation. If human-surface docs are now outdated implementation detail or
+agent-only procedure, move them to `docs/agents/**`, another AI/process folder,
+or remove them according to `$intuitive-doc` cleanup rules.
 
 Always show parked work in the final implementation closeout. If there is
 nothing parked, say `Parked todos: none found in the canonical artifact or
@@ -742,6 +754,7 @@ create or read refactor scope gate
 architecture scan               # report-only unless the scope gate accepts P0/P1 items
 TDD or diagnosis                 # only when the accepted checklist needs proof first
 execute accepted P0/P1 slices
+check doc status and run intuitive-doc cleanup when human docs drift
 record P2/Parked ideas instead of implementing them
 ```
 
@@ -755,6 +768,7 @@ is the source of truth for the refactor pass. It must name:
 - accepted issue checklist
 - parked issues
 - required evidence level
+- affected human docs or an explicit "no doc impact expected" note
 - persistent gate file, usually `docs/plans/refactor-<target>.md`
 - stop condition
 
@@ -767,6 +781,14 @@ bounded, disjoint ownership scopes.
 Once implementation starts, do not keep discovering and implementing new P2
 cleanup. Only add newly discovered work if it is a P0/P1 regression found while
 verifying the accepted checklist.
+
+For one big refactor, treat documentation status as part of the refactor
+closeout, not optional polish. Before marking the refactor `DONE`, compare the
+changed implementation surface to `README.md`, `ARCHITECTURE.md`, `STATUS.md`,
+and `docs/human/**`. Update current human docs through `$intuitive-doc`, and
+move/remove outdated human docs when they are now AI coding guidance, process
+history, or obsolete implementation detail. Record the doc check result in the
+refactor gate or closeout.
 
 On repeated runs of the same refactor prompt, read the persistent gate file
 first. Read the frontmatter `status` marker, falling back to the `## Status`
@@ -821,7 +843,8 @@ When the user asks for the whole durable pipeline, propose this compact sequence
 9. tdd inside risky slices
 10. simplify changed code
 11. gsd-verify-work
-12. update STATUS.md if the current focus, latest phase, next action, or blocker changed
+12. intuitive-doc guard/cleanup when code or refactor changes human-facing truth
+13. update STATUS.md if the current focus, latest phase, next action, or blocker changed
 ```
 
 For parallel standalone tasks, write progress to
@@ -856,7 +879,8 @@ path.
 For architecture/refactor work, do not run `improve-codebase-architecture` as
 the execution driver. First produce or load an accepted refactor scope gate,
 then use architecture findings as report-only input to the accepted P0/P1
-checklist.
+checklist. Before closeout, run the doc-status check and update or relocate
+stale human docs when the implementation surface changed.
 
 ## Required Checkpoints
 
@@ -890,7 +914,11 @@ summary, and continue.
    before final verification, or skip because the change is docs-only/trivial?"
 11. **Refactor scope -> Execute:** "Do you approve this P0/P1 checklist and stop
    condition for implementation?"
-12. **Local-dev gate:** if proof depends on real simulator, real Gateway, real VLM,
+12. **Refactor doc cleanup:** after a big refactor, auto-run the focused doc
+   status check and apply in-scope `$intuitive-doc` cleanup when docs drift.
+   Ask only before broad moves/deletions, ambiguous external consumers, or
+   protected docs outside the accepted refactor scope.
+13. **Local-dev gate:** if proof depends on real simulator, real Gateway, real VLM,
    Docker, GPU, or API keys, stop unless the current session is local and equipped.
 
 ## Output Shapes
@@ -952,6 +980,8 @@ Return a compact closeout that includes:
 
 - what changed
 - verification run and result
+- documentation status check and any doc updates/moves/removals, when code or
+  refactor work changed human-facing truth
 - commit id, if committed
 - autoplan scope changes, if `autoplan` ran or was checked
 - parked todos, always, including `none found` when empty
@@ -997,6 +1027,8 @@ README or architecture docs unless the user asks.
 - Do not manually copy `docs/plans/<slug>.md` into a phase `CONTEXT.md`; use
   `gsd-plan-phase <phase> --prd docs/plans/<slug>.md`.
 - Do not use `autoplan` as a code refactor tool.
+- Do not close a big refactor without checking whether human docs still match
+  the current implementation.
 - Do not use `simplify` as a broad refactor scanner. It reviews changed code
   for reuse, quality, and efficiency after implementation.
 - Do not use `improve-codebase-architecture` as an unbounded refactor executor;

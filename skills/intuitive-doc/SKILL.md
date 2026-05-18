@@ -25,6 +25,13 @@ explicit agent/process surfaces such as `.planning/**`, `docs/plans/**`,
 `docs/retrospectives/**`, `docs/status/active/**`, and `output/**` unless a
 human doc intentionally promotes a specific artifact into current truth.
 
+AI coding docs are agent/process-facing docs that help future coding agents but
+do not need to be human project truth. Prefer `docs/agents/**` for durable
+agent runbooks, repo-specific coding procedures, tool quirks, and long harness
+notes. Prefer `.planning/**`, `docs/plans/**`, `docs/retrospectives/**`,
+`docs/status/active/**`, and `output/**` for execution state, plans,
+retrospectives, generated evidence, and proof artifacts.
+
 When any default human surface is missing, `$intuitive-doc` should make the
 next action obvious. In audit/guard output, report the missing file or folder
 and give the smallest generation hint that would restore the default surface.
@@ -70,6 +77,7 @@ Use this skill when:
 - The repo's human doc surface needs to be created, simplified, or reorganized
 - After completing a significant code change (new subsystem, changed interface, new planning mode, etc.)
 - When the user asks about documentation freshness or staleness
+- When the user asks to clean up, refactor, remove, or move stale docs
 - When a phase/milestone completes that may have changed documented behavior
 
 ## Modes
@@ -138,6 +146,16 @@ Identify the human-facing doc surface, then verify its testable claims against t
    | Doc | Claims | Verified | Drifted | Unverifiable |
    ```
 10. For each DRIFTED claim, show: what the doc says or omits vs what the code shows
+11. For stale or misplaced docs, show a cleanup recommendation:
+   - **Rewrite in place** when the doc is still part of the human truth but its
+     claims no longer match the implementation
+   - **Move to AI coding docs** when the material is useful mainly to coding
+     agents, such as long procedures, tool quirks, migration notes, or harness
+     operating detail
+   - **Move to planning/history/evidence** when the material is stage state,
+     retrospective analysis, old proof output, or generated reports
+   - **Remove** when it is obsolete, duplicated elsewhere, and has no unique
+     current value after links and consumers are updated
 
 **What counts as a testable claim:**
 - "The solver returns a GraspPlan" → grep for the return type
@@ -181,7 +199,11 @@ Update a specific doc that has drifted.
    doc indexes, agent guidance pointers, scripts, CI references, and copied
    prompts. Do not leave old doc paths documented unless the user explicitly
    protects them.
-9. If the user has not already asked you to implement the update, show the diff before applying. If they explicitly approved the cleanup, apply the scoped doc changes and summarize the diff afterward.
+9. Before closeout, run the cleanup check from CLEANUP mode on the target doc and
+   nearby human surface. If sibling docs now duplicate stale content, point to
+   the updated source of truth or move/remove the stale sibling when it is inside
+   the requested scope.
+10. If the user has not already asked you to implement the update, show the diff before applying. If they explicitly approved the cleanup, apply the scoped doc changes and summarize the diff afterward.
 
 **Rules for updates:**
 - Do NOT downgrade a design doc to implementation detail
@@ -194,8 +216,75 @@ Update a specific doc that has drifted.
 - DO add new extension points if new swappable components emerged
 - DO update README, architecture, and technical design when the codebase gains a major subsystem, public contract, runnable mode, or proof boundary, even if the old wording is not strictly false
 - DO keep high-level docs human-oriented: name subsystems and contracts, not every helper function
+- DO remove or relocate stale human-surface docs when they are no longer current
+  human truth and the requested scope includes cleanup
 
-### 3. GUARD mode (`/intuitive-doc guard`)
+### 3. CLEANUP mode (`/intuitive-doc cleanup [scope]`)
+
+Refactor the documentation surface so current human docs match the current
+implementation, and stale docs leave the human surface.
+
+Use this mode when the user asks to clean up docs, align docs to implementation,
+remove outdated docs, move docs to AI coding folders, or run documentation
+cleanup after a code refactor.
+
+**Steps:**
+1. Run the AUDIT selection and freshness-map steps for the requested scope. If
+   no scope is provided, use the default human surface plus docs it links as
+   current truth.
+2. For every human-authoritative doc in scope, classify its current role:
+   - **Keep and rewrite**: still belongs in `README.md`, `ARCHITECTURE.md`,
+     `STATUS.md`, or `docs/human/**`, but must be rewritten to match the
+     current implementation
+   - **Move to AI coding docs**: useful to coding agents but not human truth;
+     move to `docs/agents/**` or route agent-root updates to
+     `$intuitive-init refresh`
+   - **Move to process/history/evidence**: stage state, old plans,
+     retrospectives, generated analysis, reports, proof bundles, or logs; move
+     to `.planning/**`, `docs/plans/**`, `docs/retrospectives/**`,
+     `docs/status/active/**`, or `output/**` according to the repo convention
+   - **Remove**: obsolete, duplicated, or misleading after the current human
+     truth has been rewritten and path consumers are updated
+3. Rewrite every kept human doc against live implementation facts. Prefer
+   current code behavior over backward-compatibility narratives unless the repo
+   has a protected external contract.
+4. If a default human-surface doc is stale as a whole, replace it with the
+   smallest current version before moving or removing old detail. Do not leave
+   the default surface missing unless the user explicitly asked to shrink it.
+5. Move agent-only material out of `docs/human/**` into `docs/agents/**` when it
+   describes coding-agent procedures, prompt routing, hooks, MCP/harness setup,
+   local hazards, or long operational recipes.
+6. Remove stale human-surface docs only after:
+   - current truth exists elsewhere in the human surface or the content is
+     intentionally obsolete
+   - README/doc indexes/agent pointers/scripts/CI/copied prompts no longer point
+     at the old path
+   - `rg` finds no remaining current references to removed paths or stale claims
+7. For moves, preserve git history by moving the file path when possible, then
+   editing content at the destination. For generated docs, prefer regenerating
+   or deleting the generated copy instead of hand-editing it.
+8. Verify cleanup with the repo's available checks:
+   - `rg` for old paths, old command names, and corrected drift claims
+   - doc-generation/build checks when the repo has them
+   - targeted command/test validation for runbook claims that changed
+9. Report the cleanup as a concise table:
+   ```
+   | Doc | Action | Destination | Reason | Verification |
+   ```
+
+**Cleanup safety rules:**
+- A user request for doc cleanup/alignment counts as approval for scoped doc
+  rewrites, moves, and removals after you inspect consumers.
+- Stop and ask before deleting or moving public docs with ambiguous external
+  consumers, legal/compliance docs, release notes the repo treats as canonical,
+  or broad doc trees outside the requested scope.
+- Do not move implementation truth into `AGENTS.md` or `CLAUDE.md`; those files
+  may point to the human surface or `docs/agents/**`, but project truth belongs
+  in human docs.
+- Do not keep outdated human-facing prose merely by labeling it historical. If
+  it is history, move it to a history/process surface or delete it.
+
+### 4. GUARD mode (`/intuitive-doc guard`)
 
 Check which human-facing docs a recent code change might affect.
 
@@ -212,7 +301,9 @@ Check which human-facing docs a recent code change might affect.
 4. Prefer human-facing indexes, architecture docs, dashboards, and runbooks over generated phase/planning docs
 5. For each potentially affected doc, run a focused audit on the relevant sections
 6. For L0/L1 docs, check whether the diff introduces or removes a major subsystem, command surface, public contract, or report artifact that should change the zoomed-out repo map
-7. Report: which docs need attention, which sections, severity, and which generated/detail docs were intentionally skipped
+7. Include cleanup recommendations for docs that should be rewritten, moved to
+   AI coding docs, moved to process/history/evidence, or removed
+8. Report: which docs need attention, which sections, severity, and which generated/detail docs were intentionally skipped
 
 ## Documentation Standards Awareness
 
@@ -239,10 +330,11 @@ Always end audit/guard output with an actionable summary:
 - Missing default surface: [list missing files/folders, or none]
 - Generation hints: [commands to create missing human-facing docs/folders]
 - Skipped as generated/detail/history: [list buckets]
+- Cleanup recommendations: [rewrite/move/remove actions, or none]
 - N docs checked, M have drift
 - Critical: [list docs with broken interface claims]
 - Minor: [list docs with stale details]
-- Suggested: /intuitive-doc update <most-critical-doc>
+- Suggested: /intuitive-doc update <most-critical-doc> or /intuitive-doc cleanup <scope>
 ```
 
 ## What This Skill Does NOT Do
@@ -254,7 +346,8 @@ Always end audit/guard output with an actionable summary:
 - Does not sweep every markdown file in the repo
 - Does not validate generated planning/history/detail docs by default
 - Does not treat implementation references as human-review authoritative just because they exist
-- Does not auto-apply broad documentation sweeps without explicit user approval
+- Does not auto-apply unbounded documentation sweeps; cleanup mode may apply
+  scoped rewrites, moves, and removals when the user asks for cleanup/alignment
 - Does not own `AGENTS.md` or `CLAUDE.md`; it may report agent-guidance drift
   and route cleanup to `$intuitive-init refresh`
 - Does not touch code — only reads code, writes docs

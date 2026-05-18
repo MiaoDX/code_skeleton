@@ -40,6 +40,13 @@ explicit agent/process surfaces such as `.planning/**`, `docs/plans/**`,
 `docs/retrospectives/**`, `docs/status/active/**`, and `output/**` unless a
 human doc intentionally promotes a specific artifact into current truth.
 
+AI coding docs are agent/process-facing docs that help future coding agents but
+do not need to be human project truth. Prefer `docs/agents/**` for durable
+agent runbooks, repo-specific coding procedures, tool quirks, and long harness
+notes. Prefer `.planning/**`, `docs/plans/**`, `docs/retrospectives/**`,
+`docs/status/active/**`, and `output/**` for execution state, plans,
+retrospectives, generated evidence, and proof artifacts.
+
 ## Bounded Proposal Rule
 
 For broad or ambiguous cleanup, audit first and stop after a decision-complete
