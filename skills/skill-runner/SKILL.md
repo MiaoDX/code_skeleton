@@ -128,6 +128,9 @@ Useful options:
 - Known Codex `bwrap` loopback sandbox failures are retried once automatically
   without sandboxing when the worktree status is unchanged. Disable with
   `--no-auto-retry-sandbox-failure`.
+  The retry detector checks compact worker artifacts, including
+  `last-message.md`, because some Codex runs report the sandbox failure there
+  even when `stderr.log` only contains transport noise.
 - `--dry-run` writes the rewritten prompt and artifacts without starting tmux.
 
 The script writes run artifacts under `~/.cache/skill-runner/runs/` by default.

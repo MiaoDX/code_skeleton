@@ -25,6 +25,13 @@ RESULT_STATUS_PATTERN = re.compile(
     r"^\s*RESULT_STATUS:\s*(SUCCESS|PARTIAL|BLOCKED_NEEDS_DECISION|FAILED)\b",
     re.I | re.M,
 )
+SANDBOX_DETECTION_LOGS = (
+    "stderr.log",
+    "last-message.md",
+    "terminal.log",
+    "events.jsonl",
+    "pane-before-stop.log",
+)
 
 
 RISK_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
@@ -361,14 +368,14 @@ def classify_worker_exit(run_dir: Path, code: int) -> tuple[str, int, str]:
         return "SUCCESS", 0, f"worker reported RESULT_STATUS: SUCCESS; cli exit code {code}"
     if worker_status == "PARTIAL":
         return "PARTIAL", 0, f"worker reported RESULT_STATUS: PARTIAL; cli exit code {code}"
+    if detect_sandbox_loopback_failure(run_dir):
+        return "BLOCKED", 125, f"sandbox-loopback-denied; cli exit code {code}"
     if worker_status == "BLOCKED_NEEDS_DECISION":
         return "BLOCKED", 125, (
             f"worker reported RESULT_STATUS: BLOCKED_NEEDS_DECISION; cli exit code {code}"
         )
     if worker_status == "FAILED":
         return "FAILED", 1, f"worker reported RESULT_STATUS: FAILED; cli exit code {code}"
-    if detect_sandbox_loopback_failure(run_dir):
-        return "BLOCKED", 125, f"sandbox-loopback-denied; cli exit code {code}"
     status = "SUCCESS" if code == 0 else "FAILED"
     return status, code, f"worker exited with code {code}"
 
@@ -384,7 +391,10 @@ def read_worker_result_status(run_dir: Path) -> str | None:
 
 
 def detect_sandbox_loopback_failure(run_dir: Path) -> bool:
-    return SANDBOX_LOOPBACK_PATTERN.search(read_log_tail(run_dir / "stderr.log")) is not None
+    return any(
+        SANDBOX_LOOPBACK_PATTERN.search(read_log_tail(run_dir / log_name)) is not None
+        for log_name in SANDBOX_DETECTION_LOGS
+    )
 
 
 def should_retry_sandbox_failure(
