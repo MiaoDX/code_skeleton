@@ -41,6 +41,8 @@ Default to:
 If the simple path is enough, use it. Split only when the split makes execution
 or verification clearer.
 
+{{> intuitive-common/delegation-model.md}}
+
 ## Upfront Route Brief
 
 Before executing a non-trivial request or producing artifacts, show the proposed
@@ -56,6 +58,10 @@ Why: <one sentence>
 Bypassed/left behind: <stage - reason; stage - reason>
 Stop/continue point: <where work pauses or what will run now>
 ```
+
+For non-trivial delegated work, include the execution boundary in the selected
+path, such as "native probes -> main decision" or
+"skill-runner/tmux -> main inspection."
 
 Give this brief before edits when the request could reasonably have gone
 through `grill-me`, `office-hours`, `docs/plans`, `autoplan`, `to-issues`,
@@ -116,6 +122,11 @@ If evidence is missing, classify the request as `Draft Plan Exists` and run:
 ```text
 gstack-autoplan docs/plans/<slug>.md
 ```
+
+For whole-flow, implementation, or long-running review runs, prefer launching
+that autoplan step through `skill-runner` so the main session can monitor the
+review behavior and inspect compact artifacts before reconciling decisions into
+the plan.
 
 Then stop at the review, in-place update, and execution checkpoints as usual.
 Do not say `autoplan` was bypassed because the user approved implementation;
@@ -186,6 +197,10 @@ would require more than one new phase, conflicts with locked docs/ADRs, changes
 roadmap ownership beyond the accepted plan, or crosses a local-dev/destructive
 gate. For a single reviewed plan that already names GSD handoff, "create/merge
 one roadmap phase first" is a soft continuation, not a human decision.
+
+Gather GSD route evidence with parallel native probes when it is independent:
+roadmap phase match, locked-doc/ADR conflicts, manifest inputs, and verification
+commands. Keep the final handoff decision in the main session.
 
 ## Recoverability Checkpoints For Durable Runs
 
@@ -451,6 +466,11 @@ gstack-autoplan docs/plans/<slug>.md
 It may refine the plan, surface scope changes, and produce review logs. It must
 not start coding.
 
+For non-trivial or whole-flow runs, run the review pipeline through
+`skill-runner`/tmux. The main session owns review decision classification,
+canonical plan reconciliation, and the next route decision after inspecting the
+worker artifacts and diff.
+
 Apply Goal And Auto-Run Question Triage to `autoplan` gates. A `/goal` or
 explicit whole-flow request may auto-confirm soft premise, review, and
 reconciliation gates when they preserve the canonical plan and add only
@@ -533,6 +553,11 @@ one roadmap phase for the reviewed plan; that is the normal handoff path. Stop
 only for competing phase matches, multiple new phases, conflicting locked docs,
 or a local-dev/destructive gate.
 
+Use native read-only probes to find the route, then run stateful GSD ingest or
+plan generation through `skill-runner`/tmux when the run is long or the main
+session should remain clean for supervision. The main session inspects the
+created or updated `.planning/` artifacts before continuing.
+
 This is a real handoff only if the named GSD skill is invoked and its workflow
 is followed. If you only recommend this step, say no GSD artifact has been
 generated yet. Do not approximate `.planning/` files inline as a substitute for
@@ -555,6 +580,11 @@ gsd-execute-phase <phase>
 simplify <changed-scope>
 gsd-verify-work <phase>
 ```
+
+For committed phase execution, prefer `skill-runner`/tmux around the
+stateful GSD execution and verification steps. Use native worker subagents for
+bounded disjoint implementation or diagnosis slices inside a phase only when
+file ownership is explicit and integration remains in the main session.
 
 At GSD closeout/verify/ship, update `STATUS.md` when the current focus, latest
 phase, next action, or blocker changed. Keep it as a short dashboard; do not
@@ -623,6 +653,12 @@ is the source of truth for the refactor pass. It must name:
 - persistent gate file, usually `docs/plans/refactor-<target>.md`
 - stop condition
 
+Use native subagents for report-only architecture scans, stale-path searches,
+test discovery, and independent verification probes. Use `skill-runner`/tmux
+for a broad or long-running `$intuitive-refactor` execution. Use native worker
+subagents for direct edits only when the accepted checklist can be split into
+bounded, disjoint ownership scopes.
+
 Once implementation starts, do not keep discovering and implementing new P2
 cleanup. Only add newly discovered work if it is a P0/P1 regression found while
 verifying the accepted checklist.
@@ -685,6 +721,9 @@ When the user asks for the whole durable pipeline, propose this compact sequence
 
 For parallel standalone tasks, write progress to
 `docs/status/active/<task-slug>.md` and keep `STATUS.md` repo-level only.
+Create that progress file only for detached or long-running runs that the main
+session may monitor or steer; for short waited runs, rely on `skill-runner`
+artifacts and the final synthesis.
 
 The agent may choose a shortened path when the user's request is already scoped,
 trivial, or already under an authoritative source of truth. When shortening,

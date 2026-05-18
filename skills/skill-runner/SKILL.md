@@ -55,6 +55,50 @@ Keep skills small, composable, and boring.
 Do not paste the whole worker transcript into the main context. Use the run
 artifacts and targeted searches through logs.
 
+## Umbrella Skill Usage
+
+Umbrella skills such as `$intuitive-flow` and `$intuitive-reduce-entropy` may
+use this runner as the isolation backend for stateful, interactive, or
+long-running skill work. The main session should stay responsible for route
+decisions, source-of-truth edits, integration, and final verification.
+
+Default split:
+
+| Work type | Preferred path |
+| --- | --- |
+| Read-heavy independent probes | native subagents, not tmux |
+| Bounded disjoint edits | native worker subagents or one runner worker |
+| Autoplan, GSD, broad refactor, or specialist pipelines | this runner |
+| Multiple mutating streams in one worktree | avoid unless ownership is disjoint |
+
+Do not assume a separate git worktree for runner jobs. Many target repos have
+large dependencies or heavyweight setup, so organize work to be safe in the
+current worktree by default.
+
+Use the current CLI/model defaults for normal runner jobs. Prefer smaller or
+quicker models only for clearly easy native subagent probes; the runner script
+does not currently orchestrate model selection. Leave multi-run fan-out/fan-in
+for a later runner feature after real tasks prove the need.
+
+For detached or long-running umbrella runs, the parent skill may create a
+repo-local progress file at `docs/status/active/<task-slug>.md`. For waited
+runs, runner artifacts are usually enough.
+
+Worker handoff shape for umbrella consumption:
+
+```text
+Scope:
+Changed files:
+Decisions made:
+Verification:
+Open risks:
+Suggested next action:
+```
+
+The script's `RESULT_STATUS` final response is still the machine-readable
+status contract. The main session should inspect the compact artifacts and the
+actual diff before trusting that status.
+
 ## Command
 
 From the repo where the task should run:

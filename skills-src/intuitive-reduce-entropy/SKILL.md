@@ -26,6 +26,8 @@ agent files, mixed doc tiers, or unclear cleanup targets.
 
 {{> intuitive-common/bounded-proposal.md}}
 
+{{> intuitive-common/delegation-model.md}}
+
 {{> intuitive-common/canonical-cleanup.md}}
 
 ## Public Entry Model
@@ -93,8 +95,10 @@ For any layout-shaped slice, preserve the old safety rules:
 
 Use this route unless the user already names a specific entropy source.
 
-1. **Orient**: read root guidance, human docs, package/test config, automation,
-   top-level layout, and the current verification command.
+1. **Orient**: launch parallel native probes for root guidance, human docs,
+   package/test config, automation, top-level layout, and the current
+   verification command when two or more surfaces need inspection. For tiny
+   repos or precise prompts, inspect the relevant surface directly.
 2. **Classify**: map observed friction to the entropy sources above.
 3. **Recommend**: present 2-4 candidate slices when the best path is not
    obvious. Include one recommended slice first.
@@ -106,6 +110,24 @@ Use this route unless the user already names a specific entropy source.
    here only when it spans mixed repo surfaces without a narrower owner.
 6. **Verify and close**: run the repo's relevant checks, update the gate status,
    and park remaining cross-seam ideas.
+
+Before routing to a specialist, produce a compact handoff packet so the next
+stage does not repeat the whole audit:
+
+```text
+Selected slice:
+Entropy source:
+Evidence:
+Affected paths:
+Owner skill:
+Proof commands:
+Parked items:
+Stop condition:
+```
+
+For long or stateful specialist execution, pass that packet through
+`skill-runner`/tmux and have the main session inspect `result.md`, `eval.md`,
+worker output, the actual diff, and verification before closeout.
 
 Run another slice only when the gate still has a concrete P0/P1/P2 item inside
 scope. Do not repeat just because more possible cleanup exists.
