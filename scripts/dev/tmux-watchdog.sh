@@ -24,6 +24,7 @@
 # WATCHDOG_READY_PROMPT_PATTERN='^[[:space:]]*[›>]([[:space:]].*)?$'
 #                                               只有出现可输入 prompt 才会发送 keep going
 # WATCHDOG_READY_WINDOW_LINES=12                 只在 pane 底部这些可见行里识别 prompt
+# WATCHDOG_STUCK_WINDOW_LINES=20                 只在 pane 底部这些行里识别可续跑错误，避免任务完成后的旧日志误触发
 # WATCHDOG_BUSY_TITLE_PATTERN='^[⠁-⣿][[:space:]]'
 #                                               pane 标题命中这个模式时认为 agent 正在工作
 # WATCHDOG_COOLDOWN=60                           同一 pane 两次发送间隔（秒）
@@ -43,6 +44,7 @@ AGENT_PROCESS_PATTERN="${WATCHDOG_AGENT_PROCESS_PATTERN:-(^|/)(codex|claude|clau
 AGENT_OUTPUT_PATTERN="${WATCHDOG_AGENT_OUTPUT_PATTERN:-OpenAI Codex|azure_openai/|Claude Code|claude-code|tab to queue message|context left}"
 READY_PROMPT_PATTERN="${WATCHDOG_READY_PROMPT_PATTERN:-^[[:space:]]*[›>]([[:space:]].*)?$}"
 READY_WINDOW_LINES="${WATCHDOG_READY_WINDOW_LINES:-12}"
+STUCK_WINDOW_LINES="${WATCHDOG_STUCK_WINDOW_LINES:-20}"
 BUSY_TITLE_PATTERN="${WATCHDOG_BUSY_TITLE_PATTERN:-^[⠁-⣿][[:space:]]}"
 COOLDOWN_SECONDS="${WATCHDOG_COOLDOWN:-60}"
 STATE_DIR="${WATCHDOG_STATE_DIR:-$HOME/.tmux-watchdog-state}"
@@ -57,14 +59,11 @@ STUCK_PATTERNS=(
   "529"
   "too many requests"
   "quota exceeded"
-  "server error"
-  "timed out"
   "Connection timed out"
   "connection reset"
   "failed: Connection reset by peer"
   "ECONNRESET"
   "socket hang up"
-  "API error"
   "Request Error"
   "stream disconnected before completion"
   "prematurely closed"
@@ -206,7 +205,7 @@ prompt_has_manual_input() {
 
 has_stuck_pattern() {
   local output="$1"
-  printf '%s\n' "$output" | grep -qiE -- "$PATTERN"
+  printf '%s\n' "$output" | tail -n "$STUCK_WINDOW_LINES" | grep -qiE -- "$PATTERN"
 }
 
 pane_is_busy() {
@@ -328,6 +327,11 @@ scan_all_panes() {
       continue
     fi
 
+    if prompt_has_manual_input "$visible_output"; then
+      log "SKIP: $pane - 输入框已有未提交内容，不注入 watchdog prompt"
+      continue
+    fi
+
     if has_stuck_pattern "$output"; then
       if pane_is_busy "$pane"; then
         log "SKIP: $pane - 命中错误，但 agent 仍忙"
@@ -350,11 +354,6 @@ scan_all_panes() {
       fi
       continue
     fi
-
-    if prompt_has_manual_input "$visible_output"; then
-      log "SKIP: $pane - 输入框已有未提交内容，不注入 watchdog prompt"
-      continue
-    fi
   done <<< "$pane_list"
 }
 
@@ -373,6 +372,7 @@ main() {
   log "    agent 输出特征: ${AGENT_OUTPUT_PATTERN}"
   log "    ready prompt 特征: ${READY_PROMPT_PATTERN}"
   log "    ready prompt 可见窗口: 底部 ${READY_WINDOW_LINES} 行"
+  log "    stuck pattern 可见窗口: 底部 ${STUCK_WINDOW_LINES} 行"
   log "    busy title 特征: ${BUSY_TITLE_PATTERN}"
   log "    冷却时间: ${COOLDOWN_SECONDS}s | 状态目录: ${STATE_DIR}"
   log "    发送后等待: ${SEND_SETTLE_SECONDS}s"
@@ -384,4 +384,6 @@ main() {
   done
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi
