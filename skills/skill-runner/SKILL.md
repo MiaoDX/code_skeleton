@@ -125,6 +125,15 @@ Useful options:
 - `--idle-timeout-min N` stops when logs are quiet too long.
 - `--dangerous` lets Codex run without sandbox/approval checks. Use only when
   the surrounding environment is already trusted.
+- Codex runs preflight `--sandbox workspace-write` once per host/toolchain
+  fingerprint and caches the result under
+  `~/.cache/skill-runner/sandbox-capability.json`. When the cache records the
+  known `bwrap` loopback failure, the runner starts the worker bypassed by
+  default instead of spending a doomed sandbox attempt.
+- `--require-sandbox` blocks the run if the Codex sandbox is unavailable or
+  cannot be proven available.
+- `--refresh-sandbox-preflight` forces a fresh capability check when the host
+  has changed or the cache looks stale.
 - Known Codex `bwrap` loopback sandbox failures are retried once automatically
   without sandboxing when the worktree status is unchanged. Disable with
   `--no-auto-retry-sandbox-failure`.
@@ -149,6 +158,11 @@ Automatic blocker detection is intentionally narrow. It scans `stderr.log`, not
 the whole terminal transcript, so normal repo documentation mentioning auth,
 API keys, or setup instructions does not look like a live authentication
 failure. Inspect `terminal.log` manually when debugging a run.
+
+Codex sandbox selection is recorded in `sandbox-preflight.md` and `run.json`.
+Cache hits, preflight results, bypass decisions, and strict sandbox blocks must
+leave enough audit trail for the main session to understand why the worker ran
+sandboxed or bypassed.
 
 ## Prompt Rewrite Rules
 

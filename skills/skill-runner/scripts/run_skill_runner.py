@@ -8,6 +8,7 @@ import datetime as dt
 import json
 import os
 import re
+import shutil
 import shlex
 import subprocess
 import sys
@@ -16,7 +17,11 @@ from pathlib import Path
 
 
 DEFAULT_SKILL_REPO = Path(__file__).resolve().parents[3]
-DEFAULT_RUN_ROOT = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "skill-runner" / "runs"
+DEFAULT_CACHE_ROOT = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "skill-runner"
+DEFAULT_RUN_ROOT = DEFAULT_CACHE_ROOT / "runs"
+SANDBOX_CAPABILITY_CACHE = DEFAULT_CACHE_ROOT / "sandbox-capability.json"
+SANDBOX_CACHE_SCHEMA_VERSION = 1
+COMMAND_PROBE_TIMEOUT_SECONDS = 5
 SANDBOX_LOOPBACK_PATTERN = re.compile(
     r"bwrap:\s+loopback:\s+Failed RTM_NEWADDR:\s+Operation not permitted",
     re.I,
@@ -32,6 +37,12 @@ SANDBOX_DETECTION_LOGS = (
     "events.jsonl",
     "pane-before-stop.log",
 )
+SANDBOX_SYSCTL_PATHS = {
+    "kernel.unprivileged_userns_clone": "/proc/sys/kernel/unprivileged_userns_clone",
+    "user.max_user_namespaces": "/proc/sys/user/max_user_namespaces",
+    "kernel.apparmor_restrict_unprivileged_userns": "/proc/sys/kernel/apparmor_restrict_unprivileged_userns",
+}
+SANDBOX_CACHEABLE_STATUSES = {"available", "loopback_unavailable"}
 
 
 RISK_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
@@ -70,20 +81,31 @@ def main() -> int:
     write_text(run_dir / "input.md", prompt + "\n")
     write_text(run_dir / "rewritten-prompt.md", rewritten)
     workspace_status_before = git_status(cwd)
+    session = args.session or default_session_name(run_dir)
+    sandbox_decision = resolve_sandbox_decision(args=args, cwd=cwd, run_dir=run_dir)
     write_json(
         run_dir / "run.json",
         {
             "agent": args.agent,
             "cwd": str(cwd),
             "skills": skills,
-            "session": args.session or default_session_name(run_dir),
+            "session": session,
             "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
             "auto_retry_sandbox_failure": args.auto_retry_sandbox_failure,
+            "sandbox": sandbox_decision,
         },
     )
+    write_sandbox_report(run_dir, sandbox_decision)
 
-    session = args.session or default_session_name(run_dir)
-    write_run_script(run_dir, args, cwd, dangerous=args.dangerous)
+    if sandbox_decision.get("blocked"):
+        reason = str(sandbox_decision["reason"])
+        write_result(run_dir, session, "BLOCKED", reason)
+        write_eval(run_dir, cwd, skill_repo, "BLOCKED", 125, reason)
+        print(run_dir)
+        return 125
+
+    initial_dangerous = bool(sandbox_decision["dangerous"])
+    write_run_script(run_dir, args, cwd, dangerous=initial_dangerous)
 
     if args.dry_run:
         write_result(run_dir, session, "DRY_RUN", "Prompt rewritten; tmux session not started.")
@@ -100,7 +122,13 @@ def main() -> int:
         return 0
 
     status, exit_code, reason = wait_for_worker(session=session, run_dir=run_dir, args=args)
-    if should_retry_sandbox_failure(args, run_dir, cwd, workspace_status_before):
+    if should_retry_sandbox_failure(
+        args,
+        run_dir,
+        cwd,
+        workspace_status_before,
+        initial_dangerous=initial_dangerous,
+    ):
         retry_session = retry_session_name(session)
         archive_attempt_logs(run_dir, "attempt-1")
         write_text(
@@ -108,6 +136,13 @@ def main() -> int:
             "Initial Codex run hit the known bwrap loopback sandbox failure. "
             "The workspace git status was unchanged, so skill-runner retried "
             "once with --dangerously-bypass-approvals-and-sandbox.\n",
+        )
+        cache_sandbox_result(
+            cache_path=Path(args.sandbox_capability_cache).expanduser().resolve(),
+            key=sandbox_cache_key(),
+            status="loopback_unavailable",
+            reason="main worker hit the known Codex bwrap loopback sandbox failure",
+            source_run_dir=run_dir,
         )
         write_run_script(run_dir, args, cwd, dangerous=True)
         start_tmux(session=retry_session, run_dir=run_dir, cwd=cwd)
@@ -142,6 +177,27 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--detach", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--dangerous", action="store_true")
+    parser.add_argument(
+        "--require-sandbox",
+        action="store_true",
+        help="Fail instead of bypassing when the Codex workspace-write sandbox is unavailable.",
+    )
+    parser.add_argument(
+        "--refresh-sandbox-preflight",
+        action="store_true",
+        help="Ignore the cached Codex sandbox capability and run a fresh preflight.",
+    )
+    parser.add_argument(
+        "--sandbox-capability-cache",
+        default=str(SANDBOX_CAPABILITY_CACHE),
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--sandbox-preflight-timeout-sec",
+        type=float,
+        default=30.0,
+        help=argparse.SUPPRESS,
+    )
     parser.add_argument(
         "--auto-retry-sandbox-failure",
         dest="auto_retry_sandbox_failure",
@@ -238,6 +294,401 @@ VERIFICATION: <commands and results>
 OPEN_DECISIONS: <remaining decisions or "none">
 SKILL_BEHAVIOR_NOTES: <reusable skill issue candidates or "none">
 """
+
+
+def resolve_sandbox_decision(
+    *,
+    args: argparse.Namespace,
+    cwd: Path,
+    run_dir: Path,
+) -> dict[str, object]:
+    if args.dry_run:
+        return {
+            "agent": args.agent,
+            "blocked": False,
+            "cacheable": False,
+            "dangerous": bool(args.dangerous),
+            "mode": "bypass" if args.dangerous else "sandboxed",
+            "reason": "dry run: skipped sandbox capability preflight",
+            "source": "dry_run",
+        }
+
+    if args.agent != "codex":
+        if args.require_sandbox:
+            return {
+                "agent": args.agent,
+                "blocked": True,
+                "cacheable": False,
+                "dangerous": False,
+                "mode": "blocked",
+                "reason": "--require-sandbox is only supported for Codex workspace-write runs",
+                "source": "not_applicable",
+            }
+        return {
+            "agent": args.agent,
+            "blocked": False,
+            "cacheable": False,
+            "dangerous": bool(args.dangerous),
+            "mode": "bypass" if args.dangerous else "permissions-auto",
+            "reason": "sandbox capability preflight applies only to Codex",
+            "source": "not_applicable",
+        }
+
+    if args.dangerous:
+        return {
+            "agent": args.agent,
+            "blocked": False,
+            "cacheable": False,
+            "dangerous": True,
+            "mode": "bypass",
+            "reason": "--dangerous was requested explicitly",
+            "source": "explicit_dangerous",
+        }
+
+    cache_path = Path(args.sandbox_capability_cache).expanduser().resolve()
+    key = sandbox_cache_key()
+    if not args.refresh_sandbox_preflight:
+        cached = sandbox_decision_from_cache(
+            load_sandbox_cache(cache_path),
+            key,
+            require_sandbox=args.require_sandbox,
+            cache_path=cache_path,
+        )
+        if cached is not None:
+            return cached
+
+    preflight = run_sandbox_preflight(args=args, cwd=cwd, run_dir=run_dir, key=key)
+    status = str(preflight["status"])
+    if status in SANDBOX_CACHEABLE_STATUSES:
+        cache_sandbox_result(
+            cache_path=cache_path,
+            key=key,
+            status=status,
+            reason=str(preflight["reason"]),
+            source_run_dir=run_dir,
+        )
+
+    base: dict[str, object] = {
+        "agent": "codex",
+        "blocked": False,
+        "cache_path": str(cache_path),
+        "cache_key": key,
+        "cacheable": status in SANDBOX_CACHEABLE_STATUSES,
+        "dangerous": False,
+        "preflight": preflight,
+        "source": "preflight",
+    }
+    if status == "available":
+        return {
+            **base,
+            "mode": "sandboxed",
+            "reason": "Codex workspace-write sandbox preflight succeeded",
+        }
+    if status == "loopback_unavailable":
+        if args.require_sandbox:
+            return {
+                **base,
+                "blocked": True,
+                "mode": "blocked",
+                "reason": "Codex workspace-write sandbox is unavailable and --require-sandbox was set",
+            }
+        return {
+            **base,
+            "dangerous": True,
+            "mode": "bypass",
+            "reason": "Codex workspace-write sandbox has the known bwrap loopback failure; running bypassed by default",
+        }
+
+    if args.require_sandbox:
+        return {
+            **base,
+            "blocked": True,
+            "mode": "blocked",
+            "reason": f"Codex sandbox preflight did not prove sandbox availability: {preflight['reason']}",
+        }
+    return {
+        **base,
+        "mode": "sandboxed",
+        "reason": f"Codex sandbox preflight failed in an unknown way; preserving sandboxed run path: {preflight['reason']}",
+    }
+
+
+def sandbox_decision_from_cache(
+    cache: dict[str, object] | None,
+    key: dict[str, object],
+    *,
+    require_sandbox: bool,
+    cache_path: Path,
+) -> dict[str, object] | None:
+    if not sandbox_cache_matches(cache, key):
+        return None
+    assert cache is not None
+    status = str(cache["status"])
+    reason = str(cache.get("reason") or "cached sandbox capability")
+    base: dict[str, object] = {
+        "agent": "codex",
+        "blocked": False,
+        "cache_path": str(cache_path),
+        "cache_key": key,
+        "cache_status": status,
+        "cache_updated_at": cache.get("updated_at"),
+        "cacheable": True,
+        "dangerous": False,
+        "source": "cache",
+    }
+    if status == "available":
+        return {
+            **base,
+            "mode": "sandboxed",
+            "reason": f"cached Codex sandbox capability is available: {reason}",
+        }
+    if status == "loopback_unavailable":
+        if require_sandbox:
+            return {
+                **base,
+                "blocked": True,
+                "mode": "blocked",
+                "reason": "cached Codex sandbox capability is unavailable and --require-sandbox was set",
+            }
+        return {
+            **base,
+            "dangerous": True,
+            "mode": "bypass",
+            "reason": f"cached Codex sandbox capability is unavailable: {reason}",
+        }
+    return None
+
+
+def sandbox_cache_matches(cache: dict[str, object] | None, key: dict[str, object]) -> bool:
+    if not isinstance(cache, dict):
+        return False
+    if cache.get("schema_version") != SANDBOX_CACHE_SCHEMA_VERSION:
+        return False
+    if cache.get("status") not in SANDBOX_CACHEABLE_STATUSES:
+        return False
+    return cache.get("key") == key
+
+
+def sandbox_cache_key() -> dict[str, object]:
+    codex_path = shutil.which("codex") or "missing"
+    bwrap_path = shutil.which("bwrap") or "missing"
+    return build_sandbox_cache_key(
+        codex_path=codex_path,
+        codex_version=command_output(["codex", "--version"]) if codex_path != "missing" else "missing",
+        bwrap_path=bwrap_path,
+        bwrap_version=command_output(["bwrap", "--version"]) if bwrap_path != "missing" else "missing",
+        kernel=kernel_fingerprint(),
+        sysctls={name: read_sysctl(path) for name, path in SANDBOX_SYSCTL_PATHS.items()},
+    )
+
+
+def build_sandbox_cache_key(
+    *,
+    codex_path: str,
+    codex_version: str,
+    bwrap_path: str,
+    bwrap_version: str,
+    kernel: str,
+    sysctls: dict[str, str],
+) -> dict[str, object]:
+    return {
+        "bwrap_path": bwrap_path,
+        "bwrap_version": bwrap_version,
+        "codex_path": codex_path,
+        "codex_version": codex_version,
+        "kernel": kernel,
+        "sysctls": dict(sorted(sysctls.items())),
+    }
+
+
+def command_output(command: list[str]) -> str:
+    try:
+        result = subprocess.run(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            timeout=COMMAND_PROBE_TIMEOUT_SECONDS,
+        )
+    except FileNotFoundError:
+        return "missing"
+    except subprocess.TimeoutExpired:
+        return "timeout"
+    output = result.stdout.strip()
+    if output:
+        return output
+    return f"exit {result.returncode}"
+
+
+def kernel_fingerprint() -> str:
+    uname = os.uname()
+    return " ".join((uname.sysname, uname.nodename, uname.release, uname.version, uname.machine))
+
+
+def read_sysctl(path: str) -> str:
+    try:
+        return Path(path).read_text(encoding="utf-8").strip()
+    except OSError:
+        return "missing"
+
+
+def load_sandbox_cache(cache_path: Path) -> dict[str, object] | None:
+    try:
+        data = json.loads(cache_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def cache_sandbox_result(
+    *,
+    cache_path: Path,
+    key: dict[str, object],
+    status: str,
+    reason: str,
+    source_run_dir: Path,
+) -> dict[str, object]:
+    data: dict[str, object] = {
+        "key": key,
+        "reason": reason,
+        "schema_version": SANDBOX_CACHE_SCHEMA_VERSION,
+        "source_run_dir": str(source_run_dir),
+        "status": status,
+        "updated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+    }
+    write_json(cache_path, data)
+    return data
+
+
+def run_sandbox_preflight(
+    *,
+    args: argparse.Namespace,
+    cwd: Path,
+    run_dir: Path,
+    key: dict[str, object],
+) -> dict[str, object]:
+    preflight_dir = run_dir / "sandbox-preflight"
+    preflight_dir.mkdir(parents=True, exist_ok=False)
+    command = [
+        "codex",
+        "exec",
+        "--cd",
+        str(cwd),
+        "--json",
+        "--output-last-message",
+        str(preflight_dir / "last-message.md"),
+        "--sandbox",
+        "workspace-write",
+        "-",
+    ]
+    prompt = "Return exactly this single line and do not inspect files:\nRESULT_STATUS: SUCCESS\n"
+    write_text(preflight_dir / "command.txt", " ".join(shlex.quote(part) for part in command) + "\n")
+    write_text(preflight_dir / "prompt.md", prompt)
+    exit_code: int | None = None
+    timed_out = False
+    error: str | None = None
+    try:
+        result = subprocess.run(
+            command,
+            input=prompt,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=args.sandbox_preflight_timeout_sec,
+        )
+        exit_code = result.returncode
+        write_text(preflight_dir / "events.jsonl", result.stdout)
+        write_text(preflight_dir / "stderr.log", result.stderr)
+    except subprocess.TimeoutExpired as exc:
+        timed_out = True
+        exit_code = 124
+        write_text(preflight_dir / "events.jsonl", subprocess_text(exc.stdout))
+        write_text(preflight_dir / "stderr.log", subprocess_text(exc.stderr))
+        error = f"timeout after {args.sandbox_preflight_timeout_sec:g} seconds"
+    except FileNotFoundError as exc:
+        exit_code = 127
+        error = str(exc)
+        write_text(preflight_dir / "events.jsonl", "")
+        write_text(preflight_dir / "stderr.log", error + "\n")
+
+    write_text(preflight_dir / "exit_code", f"{exit_code}\n")
+    classification = classify_sandbox_preflight(
+        preflight_dir,
+        exit_code=exit_code,
+        timed_out=timed_out,
+        error=error,
+    )
+    result_data: dict[str, object] = {
+        **classification,
+        "cache_key": key,
+        "exit_code": exit_code,
+        "preflight_dir": str(preflight_dir),
+        "schema_version": SANDBOX_CACHE_SCHEMA_VERSION,
+    }
+    write_json(preflight_dir / "result.json", result_data)
+    return result_data
+
+
+def classify_sandbox_preflight(
+    preflight_dir: Path,
+    *,
+    exit_code: int | None,
+    timed_out: bool = False,
+    error: str | None = None,
+) -> dict[str, object]:
+    if detect_sandbox_loopback_failure(preflight_dir):
+        return {
+            "reason": "Codex workspace-write preflight hit the known bwrap loopback failure",
+            "status": "loopback_unavailable",
+        }
+    if timed_out:
+        return {
+            "reason": error or "Codex workspace-write preflight timed out",
+            "status": "unknown_error",
+        }
+    if error:
+        return {
+            "reason": f"Codex workspace-write preflight failed before completion: {error}",
+            "status": "unknown_error",
+        }
+    if exit_code == 0:
+        return {
+            "reason": "Codex workspace-write preflight completed successfully",
+            "status": "available",
+        }
+    return {
+        "reason": f"Codex workspace-write preflight exited with code {exit_code}",
+        "status": "unknown_error",
+    }
+
+
+def subprocess_text(value: str | bytes | None) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return value
+
+
+def write_sandbox_report(run_dir: Path, decision: dict[str, object]) -> None:
+    lines = [
+        "# Sandbox Preflight",
+        "",
+        f"- Agent: {decision.get('agent')}",
+        f"- Source: {decision.get('source')}",
+        f"- Mode: {decision.get('mode')}",
+        f"- Dangerous bypass: {decision.get('dangerous')}",
+        f"- Blocked: {decision.get('blocked')}",
+        f"- Reason: {decision.get('reason')}",
+    ]
+    if decision.get("cache_path"):
+        lines.append(f"- Cache: `{decision['cache_path']}`")
+    preflight = decision.get("preflight")
+    if isinstance(preflight, dict) and preflight.get("preflight_dir"):
+        lines.append(f"- Preflight artifacts: `{preflight['preflight_dir']}`")
+    lines.append("")
+    lines.append("Full cache-key inputs are recorded in `run.json`.")
+    write_text(run_dir / "sandbox-preflight.md", "\n".join(lines) + "\n")
 
 
 def write_run_script(
@@ -402,8 +853,15 @@ def should_retry_sandbox_failure(
     run_dir: Path,
     cwd: Path,
     workspace_status_before: str,
+    *,
+    initial_dangerous: bool,
 ) -> bool:
-    if args.agent != "codex" or args.dangerous or not args.auto_retry_sandbox_failure:
+    if (
+        args.agent != "codex"
+        or initial_dangerous
+        or args.require_sandbox
+        or not args.auto_retry_sandbox_failure
+    ):
         return False
     if not detect_sandbox_loopback_failure(run_dir):
         return False
