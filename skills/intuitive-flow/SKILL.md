@@ -550,10 +550,30 @@ Approval means:
 - keep or link any external `~/.gstack` artifacts only as evidence
 - verify the plan file itself contains the approved acceptance criteria and GSD
   handoff trigger
+- surface scope changes before execution: new requirements, removed or deferred
+  requirements, non-goals, phase split changes, validation gates, and assumptions
+  that changed since the original plan
 
 If the only in-repo change after `autoplan` is a restore comment or appended
 review report, do not hand off yet. First edit the body of the plan so the next
 stage ingests the approved plan, not the review artifact.
+
+Before moving from `autoplan` reconciliation to implementation, show a compact
+scope-change hint block. Use this even when the change is "none" so the user can
+see that scope drift was checked:
+
+```text
+Autoplan scope changes: <none | accepted changes | hard-stop changes>
+Accepted into plan: <short bullets or "none">
+Parked/deferred from autoplan: <short bullets or "none">
+Hard-stop decisions still needing user input: <short bullets or "none">
+```
+
+Treat new or disputed product scope, public contracts, security/privacy posture,
+paid services, data model changes, phase ownership changes, or incompatible
+requirements as hard stops. Treat clarified tests, implementation sequencing,
+DX cleanup, and risk notes that preserve the original intent as accepted plan
+updates once reconciled into the plan body.
 
 After the approval gate and in-place reconciliation, continue when the user
 asked for execution, the active `/goal` objective covers the handoff or
@@ -682,6 +702,32 @@ Scope `simplify` to the actual changed code:
 features, expand refactor scope, or replace `gsd-verify-work`. After `simplify`
 changes code, rerun the relevant tests or verification gates before declaring
 the phase done.
+
+### Implementation Closeout And Parked Todos
+
+After every `intuitive-flow` implementation, inspect the canonical artifact
+before the final answer: `docs/plans/<slug>.md`, a refactor scope gate,
+`.planning/STATE.md`, or the active phase plan. Extract anything explicitly
+parked, deferred, out of scope, future-only, or left for a focused follow-up.
+Also include newly discovered but intentionally unimplemented work from the
+execution notes, simplify/review output, and verification gaps.
+
+Always show parked work in the final implementation closeout. If there is
+nothing parked, say `Parked todos: none found in the canonical artifact or
+implementation notes.` Do not let parked work disappear inside plan files or
+review logs.
+
+Use this compact shape:
+
+```text
+Parked todos:
+- <item> - parked because <reason>; source: <plan/review/doc>; unpark when <trigger>
+```
+
+If `autoplan` ran in the flow, include the autoplan scope-change hint in the
+same closeout. Keep accepted scope changes separate from parked/deferred work:
+accepted changes are now part of the implemented plan, while parked items are
+not done and should not be implied complete.
 
 ### E. Architecture Or Refactor Goal
 
@@ -899,6 +945,21 @@ Recommended next step: <skill/stage>
 Why: <one sentence>
 Stop condition: <what should be true before the next stage>
 ```
+
+### If Completing A Flow Implementation
+
+Return a compact closeout that includes:
+
+- what changed
+- verification run and result
+- commit id, if committed
+- autoplan scope changes, if `autoplan` ran or was checked
+- parked todos, always, including `none found` when empty
+- any verification explicitly not run
+
+For parked todos, name the source and the reason it stayed out of scope. Do not
+bury parked work behind "follow-ups available"; make it visible as its own
+section or sentence.
 
 ### If Updating Repo Guidance
 
