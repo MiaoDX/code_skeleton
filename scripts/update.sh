@@ -49,6 +49,7 @@ source "$SCRIPT_DIR/lib/ensure-no-running-codex.sh"
 source "$SCRIPT_DIR/lib/ensure-clean-env.sh"
 source "$SCRIPT_DIR/lib/task-runner.sh"
 source "$SCRIPT_DIR/tasks/update-cli.sh"
+source "$SCRIPT_DIR/tasks/update-agent-deck.sh"
 source "$SCRIPT_DIR/tasks/update-skills.sh"
 source "$SCRIPT_DIR/tasks/update-gstack.sh"
 source "$SCRIPT_DIR/tasks/sync-local-commands-skills.sh"
@@ -93,6 +94,10 @@ task_await "GSD workflow"
 
 task_run "Codex config" run_codex_config
 task_await "Codex config"
+
+# Agent Deck installs Codex notify hooks, so run it after Codex hooks are enabled.
+task_run "Agent Deck" run_agent_deck
+task_await "Agent Deck"
 
 task_run "GStack State" run_gstack_state
 task_await "GStack State"
