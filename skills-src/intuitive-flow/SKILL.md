@@ -91,6 +91,25 @@ run the autoplan precheck below before GSD handoff or execution.
 This brief does not override Required Checkpoints. If the selected path crosses
 a checkpoint below, stop there and ask.
 
+## STATUS.md Cadence
+
+For every non-trivial or durable `$intuitive-flow` run, check `STATUS.md` at
+both ends of the flow.
+
+At the start, read `STATUS.md` before creating the first workflow artifact or
+launching downstream skills. If the requested flow changes the repo's current
+focus, next action, active phase, known blocker, or verification expectation,
+update `STATUS.md` before continuing so the dashboard matches the work that is
+about to happen. Keep it short; do not duplicate the plan, GSD ledger, or
+execution notes.
+
+At closeout, read `STATUS.md` again and update it when the flow changed the
+current focus, latest phase/status, next action, blocker, verification state, or
+handoff expectation. If no update is needed, say that `STATUS.md` was checked
+and left unchanged. For parallel standalone terminal work, use one task-owned
+file under `docs/status/active/` instead of editing `STATUS.md` for routine
+progress.
+
 ## Autoplan Precheck Before Plan Implementation
 
 When the user asks to implement a specific plan, says "LGTM", or says "impl"
@@ -653,11 +672,10 @@ stateful GSD execution and verification steps. Use native worker subagents for
 bounded disjoint implementation or diagnosis slices inside a phase only when
 file ownership is explicit and integration remains in the main session.
 
-At GSD closeout/verify/ship, update `STATUS.md` when the current focus, latest
-phase, next action, or blocker changed. Keep it as a short dashboard; do not
-mirror the GSD ledger. For parallel standalone terminal work, use one task-owned
-file under `docs/status/active/` instead of editing `STATUS.md` for routine
-progress.
+At GSD closeout/verify/ship, check and update `STATUS.md` when the current
+focus, latest phase, next action, blocker, verification state, or handoff
+expectation changed. Keep it as a short dashboard; do not mirror the GSD
+ledger.
 
 When implementation hits a blocker, stay inside the current phase by default.
 Record the blocker and either fix it, narrow the phase, or mark the phase
@@ -813,6 +831,10 @@ When the user asks for the whole durable pipeline, propose this compact sequence
 0. whole-run goal preflight:
    - chat with the human to confirm Goal, success criteria, stop condition, and
      boundaries before any auto-run work begins
+0a. status preflight:
+   - read STATUS.md and update it when the current focus, next action, blocker,
+     active phase, or verification expectation changed because this flow is
+     starting
 1. choose idea-shaping mode:
    - direct route (preferred)
    - auto-guided route (experimental)
@@ -832,7 +854,7 @@ When the user asks for the whole durable pipeline, propose this compact sequence
 10. simplify changed code
 11. gsd-verify-work
 12. intuitive-doc guard/cleanup when code or refactor changes human-facing truth
-13. update STATUS.md if the current focus, latest phase, next action, or blocker changed
+13. check/update STATUS.md after the flow; report when it was checked and left unchanged
 ```
 
 For parallel standalone tasks, write progress to
@@ -978,6 +1000,7 @@ Return a compact closeout that includes:
   refactor work changed human-facing truth
 - commit id, if committed
 - autoplan scope changes, if `autoplan` ran or was checked
+- `STATUS.md` check/update result
 - parked todos, always, including `none found` when empty
 - any verification explicitly not run
 
