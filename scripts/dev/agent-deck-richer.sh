@@ -84,6 +84,9 @@ bun "$REPO_SCRIPTS_DIR/lib/ensure-agent-deck-config.ts" "$AGENT_DECK_CONFIG"
 if [ "$AGENT_DECK_AVAILABLE" = true ]; then
     echo "==> Agent Deck version:"
     "$AGENT_DECK_CMD" --version 2>/dev/null || "$AGENT_DECK_CMD" version 2>/dev/null || true
+
+    echo "==> Checking Agent Deck Codex notify hook..."
+    "$AGENT_DECK_CMD" codex-hooks install
 fi
 
 echo ""
@@ -96,6 +99,7 @@ echo "  - Agent Deck status line is enabled only inside that isolated tmux serve
 echo "  - Auto-update and startup update checks are disabled."
 echo "  - Global search is enabled with bounded indexing: balanced, 100MB, 90 days, rate 10."
 echo "  - MCP pooling, Docker-by-default, and worktree-by-default are disabled."
+echo "  - Codex turn notifications are installed with agent-deck codex-hooks install."
 echo ""
 echo "Try:"
 echo "  $AGENT_DECK_CMD"
