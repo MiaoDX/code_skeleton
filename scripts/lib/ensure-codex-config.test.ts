@@ -1,0 +1,49 @@
+import { describe, expect, test } from "bun:test";
+import { ensureCodexConfigText } from "./ensure-codex-config";
+
+const defaultStatusLine =
+  'status_line = ["model-with-reasoning", "current-dir", "git-branch", "context-used", "fast-mode", "thread-title"]';
+
+describe("codex config helper", () => {
+  test("creates a default status line with git branch from an empty file", () => {
+    expect(ensureCodexConfigText("")).toBe(["[tui]", defaultStatusLine, ""].join("\n"));
+  });
+
+  test("updates the previous managed default to include git branch in the managed position", () => {
+    const output = ensureCodexConfigText(
+      [
+        "[tui]",
+        'status_line = ["model-with-reasoning", "current-dir", "context-used", "fast-mode", "thread-title"]',
+        "",
+      ].join("\n"),
+    );
+
+    expect(output).toBe(["[tui]", defaultStatusLine, ""].join("\n"));
+  });
+
+  test("preserves custom status line order while appending managed items", () => {
+    const output = ensureCodexConfigText(
+      [
+        'model = "gpt-5.2-codex"',
+        "",
+        "[tui]",
+        'status_line = ["model", "current-dir", "custom-item"]',
+        "show_tooltips = true",
+        "",
+      ].join("\n"),
+    );
+
+    expect(output).toContain(
+      [
+        "[tui]",
+        'status_line = ["model", "current-dir", "custom-item", "git-branch", "context-used", "fast-mode", "thread-title"]',
+        "show_tooltips = true",
+      ].join("\n"),
+    );
+  });
+
+  test("is idempotent", () => {
+    const once = ensureCodexConfigText("[tui]\n");
+    expect(ensureCodexConfigText(once)).toBe(once);
+  });
+});

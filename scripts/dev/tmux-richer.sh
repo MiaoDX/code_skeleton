@@ -83,7 +83,7 @@ CODEX_CONFIG="$HOME/.codex/config.toml"
 CODEX_HOOKS="$HOME/.codex/hooks.json"
 bun "$REPO_SCRIPTS_DIR/lib/ensure-codex-config.ts" "$CODEX_CONFIG"
 echo "    Codex config ensured in ~/.codex/config.toml"
-echo "    Codex status line includes current-dir, context-used, fast-mode, and thread-title"
+echo "    Codex status line includes current-dir, git-branch, context-used, fast-mode, and thread-title"
 
 cat > "$CODEX_HOOKS" <<EOF
 {
