@@ -76,7 +76,10 @@ The primary user-facing skills are `$intuitive-flow`, `$intuitive-refactor`,
 and `$intuitive-reduce-entropy`, with `$intuitive-squash` as a handoff utility.
 Specialist skills such as `$intuitive-doc`, `$intuitive-init`, and
 `$intuitive-tests` remain available for direct or routed use, but are not the
-default choice a user must make up front.
+default choice a user must make up front. Open-ended architecture discovery may
+route to the external `improve-codebase-architecture` skill when it is
+installed; accepted cleanup still returns to `$intuitive-refactor` for the
+scope gate and execution.
 
 The intuitive-family skills are authored under `skills-src/<name>/SKILL.md` and
 may include shared fragments from `skills-src/intuitive-common/*.md` with this

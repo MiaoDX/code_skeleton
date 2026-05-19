@@ -50,7 +50,7 @@ The current maintenance focus is keeping the repo dogfoodable:
   external Claude Code, Codex, AGENTS.md, and field-practice lessons before
   turning those lessons into skill rules
 - keep the user-facing skill surface small: flow, refactor, reduce-entropy, and
-  squash; route doc/init/tests as specialist skills
+  squash; route doc/init/tests and architecture discovery as specialist skills
 - keep root skills listed in `scripts/local-skill-manifest.txt`
 - edit intuitive-family skills in `skills-src/`, then regenerate `skills/`
 - keep CI and local `bun run verify` aligned

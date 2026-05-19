@@ -74,11 +74,12 @@ Keep the public choice small:
 | --- | --- |
 | **intuitive-flow** | Move a fuzzy idea through plan review, GSD handoff, execution, cleanup, and verification |
 | **intuitive-refactor** | Directly clean a known module, seam, stale API, compatibility surface, code/package/module layout issue, or architecture target |
-| **intuitive-reduce-entropy** | Periodically inspect repo mess and recommend the highest-value maintenance slice; routes to `$intuitive-doc` for human docs, `$intuitive-init` for agent guidance, and `$intuitive-tests` for tests |
+| **intuitive-reduce-entropy** | Periodically inspect repo mess and recommend the highest-value maintenance slice; routes docs, agent guidance, tests, architecture discovery, and known code cleanup to the right specialist |
 | **intuitive-squash** | Compress noisy local agent history into a clean reviewable commit story |
 
 Specialist skills still exist for direct or routed use: `$intuitive-doc`,
-`$intuitive-init`, and `$intuitive-tests`.
+`$intuitive-init`, `$intuitive-tests`, and architecture discovery via
+`improve-codebase-architecture` when that external skill is installed.
 
 ## Human Docs
 

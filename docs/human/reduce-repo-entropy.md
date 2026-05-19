@@ -19,6 +19,7 @@ Start by classifying entropy sources:
 - human docs and source-of-truth drift
 - tests, fixtures, markers, or low-signal coverage
 - mixed repo surfaces, scripts, examples, or stale paths
+- open-ended architecture/deepening opportunities, shallow modules, or hard-to-test seams
 - known stale APIs, wrappers, compatibility shims, or module seams
 
 If one source is clearly highest-value, recommend that slice first.
@@ -28,7 +29,8 @@ Route to the specialist owner after selection:
 - $intuitive-init for AGENTS.md, CLAUDE.md, docs/agents, hooks, MCP, or skills setup
 - $intuitive-doc for README, ARCHITECTURE, STATUS, docs/human, or doc-tier drift
 - $intuitive-tests for test taxonomy, markers, pruning, fixtures, or test layout
-- $intuitive-refactor for known code/module/API cleanup targets
+- improve-codebase-architecture for report-only architecture discovery when no target seam is accepted yet
+- $intuitive-refactor for known code/module/API cleanup targets or executing an accepted architecture candidate
 
 Prefer aggressive cleanup inside accepted scope:
 - remove stale compatibility wrappers after in-repo consumers are migrated

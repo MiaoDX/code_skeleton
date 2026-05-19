@@ -2,12 +2,13 @@
 name: intuitive-reduce-entropy
 description: |
   Periodically inspect a repository and recommend the highest-value entropy
-  reduction slice across agent guidance, human docs, tests, repo layout, stale
-  APIs, and cleanup gates. Use when the user says the repo feels messy, asks
-  what to clean next, wants to make an old repo easier for humans and AI agents
-  to work in, or wants maintenance suggestions without already knowing the
-  target seam. This is the small public entrypoint for repo maintenance; it
-  routes to specialist skills instead of making the user choose them upfront.
+  reduction slice across agent guidance, human docs, tests, repo layout,
+  architecture depth, stale APIs, and cleanup gates. Use when the user says the
+  repo feels messy, asks what to clean next, wants to make an old repo easier
+  for humans and AI agents to work in, or wants maintenance suggestions without
+  already knowing the target seam. This is the small public entrypoint for repo
+  maintenance; it routes to specialist skills instead of making the user choose
+  them upfront.
 ---
 
 # Intuitive Reduce Entropy
@@ -140,8 +141,12 @@ the repo has been diagnosed:
   discovery, hooks, skills, and MCP guidance.
 - `$intuitive-tests` owns test taxonomy, behavior quality, markers, pruning,
   fixture/factory extraction, and test folder layout.
+- `$improve-codebase-architecture` owns report-only architecture/deepening
+  discovery when the repo has code architecture friction but no accepted target
+  seam yet.
 - `$intuitive-refactor` owns known code/module/API cleanup targets and
-  persistent refactor gates.
+  persistent refactor gates, including execution of an accepted architecture
+  candidate.
 
 ## Entropy Sources
 
@@ -153,7 +158,8 @@ Classify the user's prompt and repo evidence into one or more entropy sources:
 | Human docs | stale README/architecture/status, missing current truth, generated evidence in human docs | `$intuitive-doc` |
 | Tests | low-signal tests, unclear markers, brittle fixtures, flat or confusing test layout, flaky or slow defaults | `$intuitive-tests` |
 | Repo surface layout | mixed human/agent/runtime/test/script surfaces, flat scripts/examples, misplaced files, stale path consumers | route by object; see Layout Routing |
-| Known code cleanup | named module, seam, stale API, compatibility shim, architecture depth problem | `$intuitive-refactor` |
+| Architecture discovery | open-ended architecture improvement, shallow modules, hard-to-test or hard-to-navigate code, unclear module depth or seams, request to find refactoring opportunities | `$improve-codebase-architecture` in report-only mode, then `$intuitive-refactor` after a candidate is accepted |
+| Known code cleanup | named module, accepted seam, stale API, compatibility shim, or target-local architecture cleanup | `$intuitive-refactor` |
 | Workflow drift | unclear source of truth between plans, GSD, issues, docs, and commits | `$intuitive-flow` or `$intuitive-refactor`, depending on whether work is planned or cleanup-shaped |
 
 ## Layout Routing
@@ -167,6 +173,8 @@ organized:
   `$intuitive-tests`.
 - Code/package/module/API layout, stale imports, wrappers, or compatibility
   surfaces -> `$intuitive-refactor`.
+- Unclear module depth, shallow seams, or broad "find architecture cleanup"
+  requests -> `$improve-codebase-architecture` first in report-only mode.
 - Mixed top-level surfaces, flat scripts/examples, agent-vs-human workspace
   separation, or unclear repo navigation -> keep the slice here and route
   subparts to the relevant specialist.
@@ -193,13 +201,18 @@ Use this route unless the user already names a specific entropy source.
 2. **Classify**: map observed friction to the entropy sources above.
 3. **Recommend**: present 2-4 candidate slices when the best path is not
    obvious. Include one recommended slice first.
-4. **Gate**: if execution is requested, use `$intuitive-refactor` to create or
+4. **Discover architecture**: when the best slice is architecture/deepening but
+   no target seam has been accepted, route to `$improve-codebase-architecture`
+   in report-only mode. Treat its output as candidate evidence, not execution
+   approval, and stop for candidate selection unless the user already accepted a
+   candidate.
+5. **Gate**: if execution is requested, use `$intuitive-refactor` to create or
    update one persistent maintenance gate, normally
    `docs/plans/refactor-reduce-entropy-<target>.md` unless a better existing
    plan owns the scope.
-5. **Route**: run the specialist owner for the accepted slice, or keep the slice
+6. **Route**: run the specialist owner for the accepted slice, or keep the slice
    here only when it spans mixed repo surfaces without a narrower owner.
-6. **Verify and close**: run the repo's relevant checks, update the gate status,
+7. **Verify and close**: run the repo's relevant checks, update the gate status,
    and park remaining cross-seam ideas.
 
 Before routing to a specialist, produce a compact handoff packet so the next
@@ -210,6 +223,7 @@ Selected slice:
 Entropy source:
 Evidence:
 Affected paths:
+Discovery skill:
 Owner skill:
 Proof commands:
 Parked items:
@@ -227,13 +241,19 @@ scope. Do not repeat just because more possible cleanup exists.
 
 If the user names a likely area, route directly:
 
-- "docs", "README", "architecture", "status", "human docs" ->
+- "docs", "README", "ARCHITECTURE.md", "architecture docs", "status",
+  "human docs" ->
   `$intuitive-doc`.
 - "AGENTS", "CLAUDE", "harness", "init", "MCP", "hooks", "skills setup" ->
   `$intuitive-init`.
 - "tests", "pytest", "coverage", "fixtures", "flaky", "markers" ->
   `$intuitive-tests`.
-- "module", "API", "compatibility", "architecture", "seam", "stale wrapper" ->
+- "improve architecture", "architecture cleanup", "deepening", "shallow
+  module", "hard to test", "hard to navigate", "find refactoring
+  opportunities" -> `$improve-codebase-architecture` when the user wants
+  discovery or no target seam is accepted yet.
+- "module", "API", "compatibility", "seam", "stale wrapper", "known
+  architecture target" ->
   `$intuitive-refactor`.
 - "layout", "folders", "scripts", "examples", "repo structure" -> inspect the
   object first, then route through Layout Routing.
