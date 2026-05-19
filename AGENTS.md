@@ -24,6 +24,8 @@
 ## Development And Testing
 
 - Read files before editing. Keep commits atomic. Do not amend unless asked.
+- If a push is rejected because the origin branch moved, fetch and rebase onto
+  origin instead of creating a merge commit. Do not force-push unless asked.
 - After each significant change, run the related UTs to avoid regressions.
 - Prefer real dependencies and realistic data flows over excessive stubs or mocks. Stub only truly external or expensive boundaries.
 - Add visualization-oriented validation when the project supports it and numeric or log checks can miss geometry or rendering errors.
