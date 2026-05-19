@@ -23,6 +23,27 @@ review current truth from a small doc surface, tests show real behavior, and
 the next meaningful task does not require rediscovering stale paths, bloated
 agent files, mixed doc tiers, or unclear cleanup targets.
 
+## Zen Of Python Bias
+
+Rank cleanup candidates with an explicit Zen of Python-style bias. Prefer
+maintenance slices that make the repo more obvious, readable, flat, explicit,
+and unsurprising for the next human or agent.
+
+- Prefer explicit current truth over implicit tribal knowledge.
+- Prefer one obvious canonical path, command, API, or doc home over parallel
+  near-equivalents.
+- Prefer simple, direct structure over clever indirection, deep nesting, or
+  special-case wrappers.
+- Make exceptional compatibility, migration, or verification constraints
+  explicit instead of hiding them behind silent fallbacks.
+- Let practicality beat purity, but choose the practical slice that most reduces
+  future rediscovery and surprise.
+- If the best slice is not obvious after inspection, say so and show the
+  tradeoff instead of forcing artificial certainty.
+
+When presenting candidates, include a brief `Zen hint:` for the recommended
+slice that states which clarity principle the slice advances.
+
 ## Human/Agent Surface Rule
 
 The default human-facing source of truth is intentionally small:
@@ -200,7 +221,9 @@ Use this route unless the user already names a specific entropy source.
    repos or precise prompts, inspect the relevant surface directly.
 2. **Classify**: map observed friction to the entropy sources above.
 3. **Recommend**: present 2-4 candidate slices when the best path is not
-   obvious. Include one recommended slice first.
+   obvious. Include one recommended slice first and attach a `Zen hint:` that
+   explains how it makes the repo more explicit, simple, canonical, or
+   unsurprising.
 4. **Discover architecture**: when the best slice is architecture/deepening but
    no target seam has been accepted, route to `$improve-codebase-architecture`
    in report-only mode. Treat its output as candidate evidence, not execution
@@ -221,6 +244,7 @@ stage does not repeat the whole audit:
 ```text
 Selected slice:
 Entropy source:
+Zen hint:
 Evidence:
 Affected paths:
 Discovery skill:
