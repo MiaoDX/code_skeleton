@@ -1,6 +1,6 @@
 ---
 name: intuitive-refactor
-description: Set a bounded aggressive refactor goal before architecture or cleanup work starts. Use whenever the user wants to improve architecture, clean up aggressively, "fix all big issues", avoid endless refactors, decide what is in/out of scope, classify P0/P1/P2/Parked findings, remove stale APIs or compatibility shims, or define the tests and stop condition before changing code. This skill works standalone and can also be combined with architecture scanners, intuitive-flow, TDD, or diagnosis skills.
+description: Set a bounded aggressive refactor goal before architecture or cleanup work starts, including checking target-repo LSP setup before risky symbol-level edits. Use whenever the user wants to improve architecture, clean up aggressively, "fix all big issues", avoid endless refactors, decide what is in/out of scope, classify P0/P1/P2/Parked findings, remove stale APIs or compatibility shims, or define the tests and stop condition before changing code. This skill works standalone and can also be combined with architecture scanners, intuitive-flow, TDD, or diagnosis skills.
 ---
 
 # Intuitive Refactor
@@ -133,7 +133,7 @@ Classify every finding before implementation:
 | Severity | Meaning | Default action |
 | --- | --- | --- |
 | P0 | Current breakage, data loss, security exposure, deploy failure, or a verifier that gives false green on real failure | Fix now |
-| P1 | A real correctness, source-of-truth, or testability gap that can hide failure in the named seam | Fix now |
+| P1 | A real correctness, source-of-truth, testability, or required code-intelligence gap that can hide failure in the named seam | Fix now |
 | P2 | Maintainability, duplication, naming, drift risk, stale API surface, compatibility shim, or "this could be cleaner" inside the accepted target | Fix by default when it simplifies the target |
 | Parked | Speculative, cross-seam, broad cleanup, taste preference, or future-proofing outside the accepted target | Record only |
 
@@ -175,6 +175,8 @@ Read the user's goal and identify:
 - what "done" would prove from a caller's perspective
 - old APIs, paths, wrappers, or compatibility shims that should be removed
 - minimum required confidence level
+- whether the target repo's LSP is configured and healthy for the affected
+  language stack
 - whether any evidence is local-only, paid, slow, or environment-sensitive
 
 If repo-local docs exist, read the agent config first:
@@ -194,6 +196,16 @@ Look for an existing gate before proposing new work:
 
 If the target seam is unclear, stop after a report-only map. Do not wander
 through the whole repo looking for unrelated cleanup.
+
+Check LSP before risky symbol-level edits. Use repo evidence such as manifests,
+lockfiles, compiler config, `.claude/settings.json`, `.vscode/settings.json`,
+`docs/agents/**`, and language-server config to determine whether definition,
+reference, rename, diagnostics, and hover signals should work for the target
+language. If LSP setup is missing or stale and the fix is repo-local, route the
+setup through `$intuitive-init` or include the minimal setup change before
+production refactor edits. If setup is unsafe, global-only, or unclear, record
+it as missing evidence and either stop or proceed only at the lower confidence
+level the user accepted.
 
 ### 2. Decide the evidence path
 
@@ -238,6 +250,7 @@ Before implementation, present this compact gate:
 - Minimum confidence level:
 - Existing evidence:
 - Missing evidence:
+- LSP status:
 - Local-only gates:
 - Recommended next skill:
 - Persistent gate file:
@@ -264,10 +277,12 @@ editing production code. If there are accepted cleanup items, mark it
 When the user approves action, work in one tracer bullet:
 
 1. Add or identify the proof first.
-2. Watch the proof fail if adding new coverage.
-3. Apply the smallest coherent aggressive cleanup/refactor.
-4. Run the required ladder levels.
-5. Summarize evidence and residual risk.
+2. Verify target-repo LSP setup for the affected language, or record why that
+   evidence is unavailable.
+3. Watch the proof fail if adding new coverage.
+4. Apply the smallest coherent aggressive cleanup/refactor.
+5. Run the required ladder levels.
+6. Summarize evidence and residual risk.
 
 Never batch unrelated refactors. If a proposed architecture cleanup touches
 multiple seams, split it with `/to-issues` or park the extra seams.
@@ -279,6 +294,8 @@ Before declaring completion, audit the accepted checklist against real evidence:
 - every accepted cleanup item has a concrete change or a documented "no change
   needed" reason
 - every required evidence level has command output or a stated skipped gate
+- target-repo LSP setup was checked, refreshed, or explicitly recorded as
+  unavailable with its impact on confidence
 - target-local P2 cleanup is either completed or explicitly deferred
 - every cross-seam/Parked item is recorded and not silently implemented
 - every old API/path/compatibility surface is removed or explicitly protected

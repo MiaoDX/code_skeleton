@@ -1,6 +1,6 @@
 ---
 name: intuitive-init
-description: Initialize, audit, aggressively slim, merge, and refresh project-local AGENTS.md and CLAUDE.md files from existing repo guidance, agent /init suggestions, stdin-bundled Codex init-style discovery, and intuitive workflow defaults. Use when setting up a repo for Claude Code/Codex, replacing symlinked agent files with local guidance, rerunning agent init after weeks of drift, cleaning overgrown root agent files, or aligning a repo to intuitive-doc, intuitive-tests, intuitive-flow, intuitive-refactor, and intuitive-reduce-entropy without overwriting project-specific hints.
+description: Initialize, audit, aggressively slim, merge, and refresh project-local AGENTS.md and CLAUDE.md files from existing repo guidance, agent /init suggestions, stdin-bundled Codex init-style discovery, and intuitive workflow defaults, including target-repo LSP setup. Use when setting up a repo for Claude Code/Codex, replacing symlinked agent files with local guidance, rerunning agent init after weeks of drift, cleaning overgrown root agent files, or aligning a repo to intuitive-doc, intuitive-tests, intuitive-flow, intuitive-refactor, and intuitive-reduce-entropy without overwriting project-specific hints.
 ---
 
 # Intuitive Init
@@ -12,9 +12,9 @@ constraints, workflow choices, and hard-won mistakes.
 
 In Claude Code and Codex work, a repo harness is the infrastructure that lets an
 agent enter an existing project without guessing: root and nested instruction
-files, reusable skills, hooks, MCP configuration, and local verification
-commands. `$intuitive-init` builds or refreshes that harness from repo evidence,
-official tool guidance, and init-style suggestions.
+files, reusable skills, hooks, MCP configuration, target-repo LSP setup, and
+local verification commands. `$intuitive-init` builds or refreshes that harness
+from repo evidence, official tool guidance, and init-style suggestions.
 
 Default posture: keep root agent files aggressively small. Correct but lengthy
 procedures should usually move out of `AGENTS.md` and `CLAUDE.md` into
@@ -149,6 +149,51 @@ or equivalent project-scoped config so new clones get the same tool wiring.
 Never put secrets in committed MCP config; point to environment variables or
 local setup docs for credentials.
 
+## Target-Repo LSP Setup
+
+Set up language server support as part of repo harness initialization, not as a
+separate optional cleanup. Agents refactor and navigate more safely when
+definition, reference, rename, diagnostics, and hover signals work for the
+project's real language stack.
+
+Default action in Apply, Refresh, and Symlink Migration modes: detect the
+target repo's primary languages and configure LSP automatically when the setup
+is recognized, repo-local, and safe to apply.
+
+Use repo evidence before choosing an LSP path:
+
+- JavaScript/TypeScript: `package.json`, lockfiles, `tsconfig*.json`, framework
+  config, existing `typescript` or language-server dev dependencies.
+- Python: `pyproject.toml`, `uv.lock`, `.python-version`, `.venv`, `pyright` or
+  `basedpyright` config, and the repo's `uv` conventions.
+- Rust, Go, Java, Ruby, PHP, C/C++, and other stacks: their canonical manifests,
+  lockfiles, toolchain files, and existing editor or agent config.
+- Existing agent/editor surfaces: `.claude/settings.json`, `.mcp.json`,
+  `.vscode/settings.json`, `docs/agents/**`, setup scripts, CI checks, and any
+  checked-in language-server config.
+
+Prefer checked-in repo-local setup over relying on a global tool that only one
+machine has. Good LSP setup usually means one or more of:
+
+- the language server or required compiler package is declared as a dev
+  dependency in the repo's normal package manager
+- the project has the config file the server needs to find source roots,
+  virtualenvs, workspaces, generated types, or strictness settings
+- the setup command is included in the repo's install/bootstrap path
+- agent guidance points to the setup only as a short command, not a long manual
+
+For Python repos, prefer `uv` and the project's `.venv` conventions. Do not add
+Python dependencies through the system interpreter.
+
+If the project already gets LSP through a team updater, plugin, devcontainer,
+Nix shell, or toolchain manager, verify that path and record it instead of
+adding a competing local setup.
+
+Stop and report instead of editing when LSP setup would require a paid service,
+local-only hardware, broad package-manager migration, heavy toolchain install,
+or uncertain global state. In that case, add the missing setup to the proposal
+or `docs/agents/**` runbook with the exact command the user should approve.
+
 ## Core Rule
 
 Treat generated init output and Intuitive Flow defaults as reviewers, not
@@ -183,6 +228,8 @@ Use this workflow unless the user asks for report-only or a specific file.
 2. Inspect the files, commands, and config that make guidance testable:
    - package metadata
    - `justfile`, `Makefile`, scripts, CI workflows, test config
+   - language manifests, lockfiles, compiler config, virtualenv/toolchain files,
+     and existing language-server config
    - skill folders or command folders
 3. Use init-style discovery when it is available and worth the extra evidence:
    - Prefer `/init`, `codex init` when available, or the tool's equivalent in
@@ -225,7 +272,16 @@ Use this workflow unless the user asks for report-only or a specific file.
    - `.claude/settings.json`, `.codex/hooks/**`, or equivalent hook config for
      deterministic checks that must run after edits
    - checked-in `.mcp.json` or project-scoped MCP docs for shared external tools
-7. Produce a merged proposal first:
+7. Set up or verify target-repo LSP:
+   - Detect the repo's primary language stack from manifests and lockfiles.
+   - Prefer repo-local dev dependencies and checked-in config over global-only
+     tools.
+   - Apply the setup automatically when it is recognized and scoped to the
+     target repo.
+   - If LSP is already configured, verify and summarize the existing path.
+   - If setup is unsafe or ambiguous, stop with a concrete proposal and command
+     instead of guessing.
+8. Produce a merged proposal first:
    - Summarize the source inputs used.
    - Report root file sizes and whether cleanup pressure is low, medium, or
      high.
@@ -234,10 +290,14 @@ Use this workflow unless the user asks for report-only or a specific file.
      extracted content.
    - Call out any nested instruction files, hooks, skills, or MCP config that
      should be created, left alone, or moved out of the root files.
+   - Call out the target-repo LSP status: configured, refreshed, already
+     covered, skipped with reason, or needs user approval.
    - Show the diff or proposed file contents.
-8. Apply changes only when the user has asked for direct implementation or
+9. Apply changes only when the user has asked for direct implementation or
    approves the proposal. When applying, update both `AGENTS.md` and
-   `CLAUDE.md` if both exist and the rule applies to both agents.
+   `CLAUDE.md` if both exist and the rule applies to both agents. Also apply
+   recognized repo-local LSP setup changes in the same pass when they are safe
+   and scoped to the target repo.
 
 ## Agent-Init Discovery
 
@@ -350,8 +410,8 @@ Use when the user explicitly asks to update the repo guidance.
 Steps:
 
 1. Run the default workflow.
-2. Edit only `AGENTS.md`, `CLAUDE.md`, and directly related init docs/scripts
-   the user named.
+2. Edit only `AGENTS.md`, `CLAUDE.md`, recognized target-repo LSP config or
+   dev-dependency files, and directly related init docs/scripts the user named.
 3. Keep the files self-contained for critical startup rules, but allow pointers
    to `docs/agents/**` for long operational procedures.
 4. Create or update `docs/agents/**` only for extracted agent runbooks that are
@@ -359,7 +419,8 @@ Steps:
 5. Preserve differences between Claude and Codex when they matter.
 6. Keep hooks, MCP config, skills, and nested instruction files as separate
    harness surfaces instead of pasting their full procedures into root guidance.
-7. Search for stale setup/init claims after editing.
+7. Verify or document target-repo LSP setup for the primary language stack.
+8. Search for stale setup/init claims after editing.
 
 ### Refresh
 
@@ -474,6 +535,8 @@ Stop after a proposal when:
 Stop after edits when:
 
 - `AGENTS.md` and `CLAUDE.md` are project-local and aligned
+- target-repo LSP is configured, refreshed, already covered by existing repo
+  tooling, or explicitly skipped with a concrete reason
 - root files are slim enough to scan, or remaining length is justified by
   critical first-read safety rules
 - stale symlink-first guidance has been removed or explicitly narrowed to
