@@ -10,6 +10,7 @@ describe("agent-deck config helper", () => {
         "[tmux]",
         'socket_name = "agent-deck"',
         "inject_status_line = true",
+        "mouse = true",
         "",
         "[updates]",
         "auto_update = false",
@@ -36,7 +37,7 @@ describe("agent-deck config helper", () => {
     );
   });
 
-  test("preserves unrelated settings while replacing managed keys in existing sections", () => {
+  test("preserves existing settings while adding missing defaults", () => {
     const output = ensureAgentDeckConfigText(
       [
         "# existing agent-deck config",
@@ -44,7 +45,7 @@ describe("agent-deck config helper", () => {
         "custom_top = true",
         "",
         "[tmux]",
-        "mouse = false",
+        "mouse = true",
         'socket_name = "default"',
         "inject_status_line = false",
         "",
@@ -58,17 +59,30 @@ describe("agent-deck config helper", () => {
       ].join("\n"),
     );
 
-    expect(output).toContain('default_tool = "codex"\ncustom_top = true');
-    expect(output).toContain("[tmux]\n" + 'socket_name = "agent-deck"\n' + "inject_status_line = true\nmouse = false");
-    expect(output).toContain("[global_search]\n" + "enabled = true\n" + 'tier = "balanced"\n');
+    expect(output).toContain('default_tool = "claude"\ncustom_top = true');
+    expect(output).toContain("[tmux]\n" + "mouse = true\n" + 'socket_name = "default"\n' + "inject_status_line = false");
+    expect(output).toContain("[global_search]\n" + 'tier = "balanced"\n' + "memory_limit_mb = 100\n");
+    expect(output).toContain("enabled = false");
+    expect(output).toContain("recent_days = 365");
     expect(output).toContain("[tools.multica]\n" + 'command = "multica"');
-    expect(output).not.toContain('default_tool = "claude"');
-    expect(output).not.toContain('socket_name = "default"');
-    expect(output).not.toContain("recent_days = 365");
+    expect(output).not.toContain('default_tool = "codex"');
+    expect(output).not.toContain('socket_name = "agent-deck"');
   });
 
   test("is idempotent", () => {
     const once = ensureAgentDeckConfigText("[tmux]\nmouse = true\n");
     expect(ensureAgentDeckConfigText(once)).toBe(once);
+  });
+
+  test("preserves user path-like config sections", () => {
+    const output = ensureAgentDeckConfigText(
+      [
+        "[paths]",
+        'available = ["/home/mi/ws/gogo/roboclaws", "/home/mi/ws/gogo/roboharness"]',
+        "",
+      ].join("\n"),
+    );
+
+    expect(output).toContain('available = ["/home/mi/ws/gogo/roboclaws", "/home/mi/ws/gogo/roboharness"]');
   });
 });

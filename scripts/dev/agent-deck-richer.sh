@@ -8,13 +8,13 @@ REPO_SCRIPTS_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 # https://github.com/asheshgoplani/agent-deck
 #
 # Defaults can be overridden by environment variables:
-#   AGENT_DECK_VERSION=v1.9.17|latest
+#   AGENT_DECK_VERSION=v1.9.20|latest
 #   AGENT_DECK_INSTALL_DIR=~/.local/bin
 #   AGENT_DECK_BIN_NAME=agent-deck
 #   AGENT_DECK_CONFIG=~/.agent-deck/config.toml
 #   AGENT_DECK_SKIP_INSTALL=1
 
-AGENT_DECK_VERSION="${AGENT_DECK_VERSION:-v1.9.17}"
+AGENT_DECK_VERSION="${AGENT_DECK_VERSION:-v1.9.20}"
 AGENT_DECK_INSTALL_DIR="${AGENT_DECK_INSTALL_DIR:-$HOME/.local/bin}"
 AGENT_DECK_BIN_NAME="${AGENT_DECK_BIN_NAME:-agent-deck}"
 AGENT_DECK_CONFIG="${AGENT_DECK_CONFIG:-$HOME/.agent-deck/config.toml}"

@@ -13,6 +13,7 @@ const settings: Setting[] = [
   { section: "", key: "default_tool", value: '"codex"' },
   { section: "tmux", key: "socket_name", value: '"agent-deck"' },
   { section: "tmux", key: "inject_status_line", value: "true" },
+  { section: "tmux", key: "mouse", value: "true" },
   { section: "updates", key: "auto_update", value: "false" },
   { section: "updates", key: "check_enabled", value: "false" },
   { section: "global_search", key: "enabled", value: "true" },
@@ -60,24 +61,26 @@ const firstSectionIndex = (lines: string[]) => {
   return index === -1 ? lines.length : index;
 };
 
-const removeManagedAssignments = (lines: string[]) => {
-  const grouped = groupSettings();
-  let currentSection = "";
+const sectionRange = (lines: string[], name: string) => {
+  const start = name === "" ? 0 : findSectionStart(lines, name);
+  if (start === -1) {
+    return null;
+  }
 
-  return lines.filter((line) => {
-    const nextSection = sectionName(line);
-    if (nextSection !== null) {
-      currentSection = nextSection;
-      return true;
-    }
+  const valueStart = name === "" ? 0 : start + 1;
+  const valueEnd =
+    name === "" ? firstSectionIndex(lines) : lines.findIndex((line, index) => index > start && isSectionHeader(line));
 
-    const sectionSettings = grouped.get(currentSection);
-    if (!sectionSettings) {
-      return true;
-    }
+  return { start, valueStart, valueEnd: valueEnd === -1 ? lines.length : valueEnd };
+};
 
-    return !sectionSettings.some((setting) => keyPattern(setting.key).test(line));
-  });
+const hasAssignment = (lines: string[], section: string, key: string) => {
+  const range = sectionRange(lines, section);
+  if (!range) {
+    return false;
+  }
+
+  return lines.slice(range.valueStart, range.valueEnd).some((line) => keyPattern(key).test(line));
 };
 
 const insertTopLevelSettings = (lines: string[], items: Setting[]) => {
@@ -126,11 +129,18 @@ export const ensureAgentDeckConfigText = (original: string) => {
   const normalized = original.replace(/\r\n/g, "\n").replace(/\n+$/, "");
   const lines = normalized === "" ? [] : normalized.split("\n");
   const grouped = groupSettings();
-  const nextLines = removeManagedAssignments(lines);
+  const nextLines = [...lines];
 
-  insertTopLevelSettings(nextLines, grouped.get("") ?? []);
+  insertTopLevelSettings(
+    nextLines,
+    (grouped.get("") ?? []).filter((setting) => !hasAssignment(nextLines, "", setting.key)),
+  );
   for (const section of sectionOrder.filter((name) => name !== "")) {
-    insertSectionSettings(nextLines, section, grouped.get(section) ?? []);
+    insertSectionSettings(
+      nextLines,
+      section,
+      (grouped.get(section) ?? []).filter((setting) => !hasAssignment(nextLines, section, setting.key)),
+    );
   }
 
   return `${nextLines.join("\n").replace(/\n+$/, "")}\n`;
