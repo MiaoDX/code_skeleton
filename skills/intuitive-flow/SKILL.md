@@ -6,8 +6,9 @@ description: |
   before whole auto-runs, docs/plans as the pre-execution source of truth,
   autoplan for hard review, optional to-issues for vertical slices, GSD
   ingest/plan for committed execution, GSD execute/verify for implementation,
-  simplify for changed-code cleanup, doc-status cleanup after big refactors,
-  bounded scoping for architecture/refactor work, and tdd inside risky slices.
+  semantic commits after reviewable units, simplify for changed-code cleanup,
+  doc-status cleanup after big refactors, bounded scoping for
+  architecture/refactor work, and tdd inside risky slices.
   Use when the user asks
   for normal development flow,
   durable planning, fuzzy idea to implementation, Matt Pocock skills + gstack +
@@ -117,6 +118,7 @@ Current state: <fuzzy idea | draft plan | reviewed plan | GSD phase | changed co
 Selected path: <stage or skill sequence>
 Why: <one sentence>
 Bypassed/left behind: <stage - reason; stage - reason>
+Commit rhythm: <semantic commits enabled | disabled because ...>
 Stop/continue point: <where work pauses or what will run now>
 ```
 
@@ -140,7 +142,8 @@ exists yet."
 When the user says "impl", asks to execute a specific doc directly, or gives a
 small concrete code change, a direct implementation path is allowed. Still say
 which planning or GSD stages are being left behind and why. For tiny direct
-questions, compress the brief to one sentence.
+questions, compress the brief to one sentence. For durable implementation or
+refactor work, say whether semantic commits are enabled before the first edit.
 
 This direct path does not apply to plan-backed implementation when the
 `autoplan` gate has not already run. If the request points at a
@@ -325,34 +328,67 @@ Gather GSD route evidence with parallel native probes when it is independent:
 roadmap phase match, locked-doc/ADR conflicts, manifest inputs, and verification
 commands. Keep the final handoff decision in the main session.
 
-## Recoverability Checkpoints For Durable Runs
+## Semantic Change Commits For Durable Runs
 
-When a durable `$intuitive-flow` run continues across subprocesses, leave a
-recoverable boundary after each completed unit. A commit is a good boundary only
-when the user authorized commits, the repo policy allows it, and the changed
-files form a clean review unit. Otherwise, update the canonical artifact or
-progress summary and keep the next handoff explicit.
+When a durable `$intuitive-flow` implementation or refactor run may produce more
+than one reviewable unit, create semantic commits along the way instead of
+waiting for one end-of-flow commit. Treat intermediate commits as the default
+recoverability boundary for long runs so failures, reversions, and reviews can
+map back to a concrete intent.
 
-Useful checkpoint moments:
+Commit automation is enabled by default when the run contract asks for
+implemented, verified, or PR-ready code. Announce this in the upfront route
+brief or run contract. Disable it when the user says not to commit, the stop
+condition is review-only or plan-only, repo instructions forbid commits, the
+worktree cannot be safely separated from unrelated changes, or the current unit
+has unresolved blockers. If commits are disabled, update the canonical artifact
+or progress summary after each unit and state why no commit was made.
+
+When enabled, these semantic commits are soft continuations, not separate human
+checkpoints.
+
+A semantic commit boundary must have:
+
+- one coherent intent a reviewer would accept or revert independently
+- owned files only, with unrelated dirty changes left untouched
+- the relevant targeted proof run, or an explicit note that the unit is
+  documentation/planning only
+- no known unresolved blocker inside the unit
+- the canonical artifact or progress file updated when the unit changes the
+  handoff state
+
+Create a commit immediately after each completed boundary that meets those
+criteria. Do not wait for final closeout when the flow has accumulated a clean
+boundary. Useful boundary moments:
 
 - after `autoplan` reconciles accepted review decisions into
   `docs/plans/<slug>.md`
 - after `gsd-ingest-docs` creates or merges roadmap scope
 - after `gsd-plan-phase` creates an executable phase plan
-- after each coherent implementation slice
+- after each coherent implementation slice, including its focused tests
+- after a standalone test harness or verification tool lands separately from
+  the implementation it validates
 - after `simplify` changes code outside the immediately preceding slice
 - after verification or closeout updates docs/status/retrospectives materially
 - after a big refactor completes its documentation status check and any needed
   `$intuitive-doc` cleanup
 
-When committing is appropriate, prefer one commit per completed unit. Split into
-multiple commits only when the diff contains separate concerns that a reviewer
-would want to accept or revert independently. Do not commit when the user says
-not to, when the run is review-only/plan-only, when there are unresolved
-blockers in the current unit, or when unrelated dirty worktree changes make a
-safe commit boundary unclear. If unrelated changes exist, commit only the files
-owned by the completed unit and leave the rest untouched. Use the target repo's
-commit-message rules and AI co-author trailer when applicable.
+Choose commit messages by semantic intent, following the target repo's local
+style first. If no local style is obvious, use:
+
+- `docs(plan): ...` for accepted plan/review reconciliation
+- `chore(workflow): ...` for GSD manifests, roadmap state, or workflow metadata
+- `feat(<area>): ...` for new user-visible behavior
+- `fix(<area>): ...` for bug fixes or failing-proof repairs
+- `refactor(<area>): ...` for behavior-preserving structural changes
+- `test(<area>): ...` for standalone test or verification harness changes
+- `docs(<area>): ...` for human-facing documentation updates
+
+Before each commit, inspect the diff, stage only the owned files for that
+boundary, run or record the relevant proof, and include the target repo's
+AI co-author trailer when applicable. If a boundary is too mixed to commit
+cleanly, split the diff before continuing or leave it uncommitted with a compact
+reason in the progress summary.
 
 ## Idea-Shaping Mode Selection
 
@@ -910,10 +946,15 @@ When the user asks for the whole durable pipeline, propose this compact sequence
      gsd-plan-phase --prd
 8. gsd-execute-phase
 9. tdd inside risky slices
-10. simplify changed code
-11. gsd-verify-work
-12. intuitive-doc guard/cleanup when code or refactor changes human-facing truth
-13. check/update STATUS.md after the flow; report when it was checked and left unchanged
+10. create semantic commits after each completed reviewable unit when enabled
+11. simplify changed code
+12. create a separate semantic commit for simplify changes when they are a
+    distinct reviewable unit
+13. gsd-verify-work
+14. intuitive-doc guard/cleanup when code or refactor changes human-facing truth
+15. create a semantic commit for material docs/status closeout changes when
+    enabled
+16. check/update STATUS.md after the flow; report when it was checked and left unchanged
 ```
 
 For parallel standalone tasks, write progress to
@@ -1007,6 +1048,7 @@ Current state: <classification>
 Selected path: <stage/skill sequence>
 Why: <one sentence>
 Bypassed/left behind: <stage - reason; stage - reason>
+Commit rhythm: <semantic commits enabled | disabled because ...>
 Stop/continue point: <what happens before the next checkpoint>
 ```
 
@@ -1057,7 +1099,7 @@ Return a compact closeout that includes:
 - verification run and result
 - documentation status check and any doc updates/moves/removals, when code or
   refactor work changed human-facing truth
-- commit id, if committed
+- semantic commit ids created, or why commits were disabled
 - autoplan scope changes, if `autoplan` ran or was checked
 - `STATUS.md` check/update result
 - parked todos, always, including `none found` when empty
