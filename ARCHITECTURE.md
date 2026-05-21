@@ -29,6 +29,9 @@ install and sync pipeline
         v
 local/global agent surfaces
   ~/.claude, ~/.codex, ~/.agents, ~/.gstack, vendor/gstack
+
+local git hooks
+  .githooks/pre-commit -> scripts/dev/pre-commit.sh
 ```
 
 The root docs define what the project is. Agent guidance files define how
@@ -140,6 +143,19 @@ To add a new update phase, implement the phase in `scripts/tasks/`, source it
 from `scripts/update.sh`, schedule it with the task runner, and document any new
 external state or environment variables in the human docs.
 
+## Local Git Hook Contract
+
+Repo-owned Git hooks live under `.githooks/` and are enabled per checkout with:
+
+```bash
+bun run setup:hooks
+```
+
+The pre-commit hook delegates to `scripts/dev/pre-commit.sh` and runs
+`bun run build:skills:check`. This catches stale generated
+`skills/intuitive-*` output before commit without making every commit run the
+full TypeScript and test proof.
+
 ## Codex Adapter Contract
 
 Claude Code slash commands and Codex skills have different shapes. When this
@@ -173,6 +189,9 @@ runs Bun tests. GitHub Actions mirrors the same proof in
 At the moment, the test suite covers the local skill manifest parser, root-skill
 manifest checks, generated intuitive skill expansion, unsafe name/include
 rejection, and pruning of manifest-owned legacy artifacts.
+
+The repo-owned pre-commit hook repeats the generated skill drift check locally
+when `core.hooksPath` points at `.githooks/`.
 
 `scripts/update.sh` is intentionally not part of the default proof command
 because it mutates global tool installations and user-level agent config.

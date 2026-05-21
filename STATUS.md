@@ -13,6 +13,7 @@ currently provides:
 - reusable installed skills under `skills/`
 - generated intuitive skill sources and shared fragments under `skills-src/`
 - update and sync automation under `scripts/`
+- repo-owned Git hooks under `.githooks/`
 - Bun TypeScript helpers and tests under `scripts/lib/`
 - a GitHub Actions verification workflow under `.github/workflows/verify.yml`
 - local workstation utilities under `scripts/dev/`
@@ -28,6 +29,7 @@ Use these for local development:
 
 ```bash
 bun install
+bun run setup:hooks
 bun run verify
 ```
 
@@ -53,6 +55,8 @@ The current maintenance focus is keeping the repo dogfoodable:
   squash; route doc/init/tests and architecture discovery as specialist skills
 - keep root skills listed in `scripts/local-skill-manifest.txt`
 - edit intuitive-family skills in `skills-src/`, then regenerate `skills/`
+- keep local hooks enabled with `bun run setup:hooks` so generated skill drift
+  is caught before commit
 - keep CI and local `bun run verify` aligned
 - keep Bash as the orchestration layer and Bun TypeScript as the structured
   validation layer
@@ -74,6 +78,8 @@ There is no active `.planning/` roadmap or GSD phase in this checkout.
   and user config.
 - `skills/intuitive-*` is generated install output; edit `skills-src/` first and
   use `bun run build:skills` to refresh it.
+- `.githooks/pre-commit` is opt-in per checkout through `bun run setup:hooks`
+  because Git does not version local hook configuration.
 
 ## Next Maintenance
 

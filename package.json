@@ -6,6 +6,7 @@
     "build:skills": "bun scripts/lib/build-intuitive-skills.ts write",
     "build:skills:check": "bun scripts/lib/build-intuitive-skills.ts check",
     "check": "tsc --noEmit",
+    "setup:hooks": "bash scripts/dev/install-git-hooks.sh",
     "test": "bun test scripts/**/*.test.ts",
     "verify": "bun run build:skills:check && bun run check && bun run test"
   },

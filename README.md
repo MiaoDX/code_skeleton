@@ -101,6 +101,7 @@ promotes them.
 | Script | Purpose |
 | --- | --- |
 | `bun run build:skills` | Regenerate flattened `skills/intuitive-*` outputs from `skills-src/` |
+| `bun run setup:hooks` | Configure this checkout to use repo-owned Git hooks from `.githooks/` |
 | `scripts/update.sh` | Install or update agent surfaces, skills, commands, GSD, and gstack |
 | `scripts/dev/*.sh` | Local developer utilities for tmux and workstation sessions |
 | `scripts/support/tmp-fix.sh` | Idempotent updater patch hook used by `scripts/update.sh --tmp-fix` |
@@ -109,6 +110,7 @@ For script development:
 
 ```bash
 bun install
+bun run setup:hooks
 bun run verify
 ```
 
