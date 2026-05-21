@@ -28,6 +28,31 @@ input while keeping one source of truth per stage.
 
 {{> intuitive-common/stage-source-of-truth.md}}
 
+## Domain Context Inputs
+
+Some repos maintain a root `CONTEXT.md` or `CONTEXT-MAP.md` through
+`grill-with-docs`. Treat these files as domain-language and decision-boundary
+evidence, not as executable plans.
+
+At the start of any fuzzy idea, plan shaping, architecture/refactor route, or
+implementation whose terms or long-lived contract boundaries matter, check
+whether `CONTEXT.md` or `CONTEXT-MAP.md` exists. Read the relevant context before
+writing `docs/plans/<slug>.md`, running `autoplan`, or handing off to GSD. If a
+`CONTEXT-MAP.md` exists, use it to select the narrow context file instead of
+assuming root `CONTEXT.md` is the only source.
+
+When user discussion resolves vocabulary, domain boundaries, or durable
+architecture/product distinctions, route that update through `grill-with-docs`
+or follow its context-writing contract: update `CONTEXT.md` inline with the
+resolved term or relationship, keep implementation steps in `docs/plans` or GSD
+artifacts, and link the context file as source evidence from the plan when it
+informs acceptance criteria.
+
+Do not clean up or relocate `CONTEXT.md` as stale planning history merely because
+a `docs/plans` or GSD artifact now exists. Cleanup may remove or rewrite only
+obsolete glossary entries or misleading relationships after checking current
+references and preserving the active domain language somewhere equivalent.
+
 ## Scope Defaults
 
 Keep the workflow small, obvious, and proportionate. The pipeline should make
@@ -93,12 +118,14 @@ path, such as "native probes -> main decision" or
 "skill-runner/tmux -> main inspection."
 
 Give this brief before edits when the request could reasonably have gone
-through `grill-me`, `office-hours`, `docs/plans`, `autoplan`, `to-issues`,
-`gsd-ingest-docs`, `gsd-plan-phase`, `gsd-execute-phase`, `simplify`, or
-`gsd-verify-work`.
+through `grill-me`, `grill-with-docs`, `office-hours`, `docs/plans`,
+`autoplan`, `to-issues`, `gsd-ingest-docs`, `gsd-plan-phase`,
+`gsd-execute-phase`, `simplify`, or `gsd-verify-work`.
 
 If the chosen path bypasses one of those stages, name the skipped stage and why.
 Examples: "skipping `grill-me` because the request is already scoped",
+"skipping `grill-with-docs` because the change does not alter domain language
+or durable boundaries",
 "skipping `office-hours` because value, wedge, and audience are not in question",
 "skipping `autoplan` because the user asked for a direct tiny edit", "skipping
 `gsd-ingest-docs` because an existing GSD phase already owns the roadmap
@@ -489,6 +516,10 @@ silently decide user-owned questions.
 - Matt Pocock discussion skills such as `grill-me` shape decisions through
   questions. The current agent still writes any resulting plan file unless a
   specific writing skill is invoked.
+- `grill-with-docs` maintains domain-language context such as root `CONTEXT.md`
+  or context files selected by `CONTEXT-MAP.md`. Treat those files as source
+  evidence for terminology, invariants, and durable boundaries, not as PRDs or
+  execution ledgers.
 - Auto-guided idea shaping is inline `intuitive-flow` output. It may use
   `grill-me` or `office-hours` question styles, but keep the provenance clear.
 - A single plan-like `docs/adr/**`, `docs/adrs/**`, or `docs/human/**` file is
@@ -511,6 +542,9 @@ silently decide user-owned questions.
   evidence. Do not manually copy the plan to a phase `CONTEXT.md`; use
   `gsd-plan-phase <phase> --prd docs/plans/<slug>.md` when the phase already
   exists.
+- If `CONTEXT.md` or a mapped context file informed the plan, include it as
+  supporting evidence. Do not copy the context body into the plan; cite the
+  relevant terms or relationships and keep the glossary maintained in place.
 - `~/.gstack` artifacts, review logs, and restore points are evidence only.
   They are not the source of truth for the next stage.
 
@@ -807,6 +841,12 @@ docs. If human-surface docs are drifted, update them to match the current
 implementation. If human-surface docs are now outdated implementation detail or
 agent-only procedure, move them to `docs/agents/**`, another AI/process folder,
 or remove them according to `$intuitive-doc` cleanup rules.
+
+If the work touched domain terms, durable boundaries, or context-backed
+acceptance criteria, also re-check the relevant `CONTEXT.md` or `CONTEXT-MAP.md`
+entry before closeout. Update it through `grill-with-docs` semantics when the
+term or relationship changed; otherwise report that the context was checked and
+left unchanged. Do not let context drift hide behind a passing implementation.
 
 Always show parked work in the final implementation closeout. If there is
 nothing parked, say `Parked todos: none found in the canonical artifact or
@@ -1109,6 +1149,11 @@ README or architecture docs unless the user asks.
   as-is.
 - Do not silently bypass idea shaping. If `grill-me` or `office-hours` would
   have been plausible, say whether they are selected or skipped and why.
+- Do not bypass `CONTEXT.md` / `CONTEXT-MAP.md` when the repo uses them for
+  domain language and the requested work depends on terminology, invariants, or
+  long-lived contract boundaries.
+- Do not treat `CONTEXT.md` as a PRD, scratch pad, implementation checklist, or
+  phase execution ledger. It is context evidence maintained in place.
 - Do not bypass `autoplan` for plan-backed implementation because the user said
   "LGTM", "impl", or approved a plan. Run the autoplan precheck first unless
   review evidence is present.
@@ -1134,6 +1179,9 @@ README or architecture docs unless the user asks.
   scan path. Use a manifest when ingesting selected files.
 - Do not manually copy `docs/plans/<slug>.md` into a phase `CONTEXT.md`; use
   `gsd-plan-phase <phase> --prd docs/plans/<slug>.md`.
+- Do not delete or relocate root `CONTEXT.md` during cleanup merely because a
+  `docs/plans` or `.planning` artifact exists. Remove only obsolete entries
+  after checking references and preserving current domain language.
 - Do not use `autoplan` as a code refactor tool.
 - Do not close a big refactor without checking whether human docs still match
   the current implementation.
