@@ -17,10 +17,7 @@ agent guidance
         |
         v
 reusable workflows
-  skills-src/*/SKILL.md + skills-src/intuitive-common/*.md
-        |
-        v
-  skills/*/SKILL.md
+  skills/*/SKILL.md + optional skills/*/{references,templates,scripts}
         |
         v
 install and sync pipeline
@@ -35,10 +32,9 @@ local git hooks
 ```
 
 The root docs define what the project is. Agent guidance files define how
-Claude Code and Codex should operate inside a repo. `skills-src/` is the
-authoring surface for generated intuitive-family skills, `skills/` is the
-flattened install surface, and scripts install and sync those workflows into
-local agent tooling.
+Claude Code and Codex should operate inside a repo. `skills/` is the canonical
+repo-owned skill source and install surface, and scripts install and sync those
+workflows into local agent tooling.
 
 ## Human Documentation Contract
 
@@ -84,18 +80,21 @@ route to the external `improve-codebase-architecture` skill when it is
 installed; accepted cleanup still returns to `$intuitive-refactor` for the
 scope gate and execution.
 
-The intuitive-family skills are authored under `skills-src/<name>/SKILL.md` and
-may include shared fragments from `skills-src/intuitive-common/*.md` with this
-source-only syntax:
+Repo-owned skills are authored directly under `skills/<name>/SKILL.md`. Large
+skills should use progressive disclosure instead of generated includes:
 
 ```text
-{{> intuitive-common/<fragment>.md}}
+skills/<name>/
+  SKILL.md
+  references/*.md
+  templates/*.md
+  scripts/*
 ```
 
-`scripts/lib/build-intuitive-skills.ts` expands those fragments and writes
-flattened standalone outputs under `skills/`. Claude Code and Codex still
-install from `skills/`, so runtime skill consumers do not depend on native
-`@import` or cross-skill loading support.
+`SKILL.md` should remain the compact entrypoint: trigger, route, invariants, and
+which local reference to read next. Conditional detail belongs in one-level
+`references/` files, deterministic mechanics in `scripts/`, and reusable output
+shapes in `templates/`.
 
 The install surface is controlled by `scripts/local-skill-manifest.txt`:
 
@@ -105,14 +104,11 @@ The install surface is controlled by `scripts/local-skill-manifest.txt`:
 - The manifest check fails if a root skill exists but is not listed, or if the
   manifest lists a missing root skill.
 
-To add a public non-generated skill, create `skills/<name>/SKILL.md`, add it to
-the manifest, update `README.md` if it belongs in the preferred skill list, and
-run `bun run verify`. To change an intuitive-family skill, edit
-`skills-src/<name>/SKILL.md` or `skills-src/intuitive-common/*.md`, run
-`bun run build:skills`, and commit both the source and flattened `skills/`
-output. If the change is based on external agent-harness guidance, record the
-source and distilled lesson in `docs/human/agent-harness-references.md` before
-spreading the rule into skills.
+To add a public skill, create `skills/<name>/SKILL.md`, add it to the manifest,
+update `README.md` if it belongs in the preferred skill list, and run
+`bun run verify`. If the change is based on external agent-harness guidance,
+record the source and distilled lesson in
+`docs/human/agent-harness-references.md` before spreading the rule into skills.
 
 ## Update Pipeline Contract
 
@@ -152,8 +148,9 @@ bun run setup:hooks
 ```
 
 The pre-commit hook delegates to `scripts/dev/pre-commit.sh` and runs
-`bun run build:skills:check`. This catches stale generated
-`skills/intuitive-*` output before commit without making every commit run the
+`bun run check:skills`. This catches missing manifest entries, stale generated
+include syntax, invalid frontmatter, broken local skill resource references, and
+deprecated `skills-src/` files before commit without making every commit run the
 full TypeScript and test proof.
 
 ## Codex Adapter Contract
@@ -180,18 +177,17 @@ The basic local proof command is:
 bun run verify
 ```
 
-That checks generated intuitive skills for drift, runs TypeScript checking, and
-runs Bun tests. GitHub Actions mirrors the same proof in
-`.github/workflows/verify.yml`, so direct edits to generated
-`skills/intuitive-*` output fail CI unless `skills-src/` is updated and
-`bun run build:skills` has refreshed the flattened output.
+That validates repo-owned skill structure, runs TypeScript checking, and runs
+Bun tests. GitHub Actions mirrors the same proof in
+`.github/workflows/verify.yml`, so broken skill manifests, frontmatter, resource
+references, or deprecated `skills-src/` files fail CI.
 
 At the moment, the test suite covers the local skill manifest parser, root-skill
-manifest checks, generated intuitive skill expansion, unsafe name/include
-rejection, and pruning of manifest-owned legacy artifacts.
+manifest checks, direct skill validation, deprecated source rejection, resource
+reference checks, and pruning of manifest-owned legacy artifacts.
 
-The repo-owned pre-commit hook repeats the generated skill drift check locally
-when `core.hooksPath` points at `.githooks/`.
+The repo-owned pre-commit hook repeats the skill structure check locally when
+`core.hooksPath` points at `.githooks/`.
 
 `scripts/update.sh` is intentionally not part of the default proof command
 because it mutates global tool installations and user-level agent config.

@@ -11,7 +11,6 @@ currently provides:
 - a human-facing agent harness reference ledger in
   `docs/human/agent-harness-references.md`
 - reusable installed skills under `skills/`
-- generated intuitive skill sources and shared fragments under `skills-src/`
 - update and sync automation under `scripts/`
 - repo-owned Git hooks under `.githooks/`
 - Bun TypeScript helpers and tests under `scripts/lib/`
@@ -54,9 +53,9 @@ The current maintenance focus is keeping the repo dogfoodable:
 - keep the user-facing skill surface small: flow, refactor, reduce-entropy, and
   squash; route doc/init/tests and architecture discovery as specialist skills
 - keep root skills listed in `scripts/local-skill-manifest.txt`
-- edit intuitive-family skills in `skills-src/`, then regenerate `skills/`
-- keep local hooks enabled with `bun run setup:hooks` so generated skill drift
-  is caught before commit
+- edit repo-owned skills directly under `skills/`
+- keep local hooks enabled with `bun run setup:hooks` so skill structure,
+  manifest coverage, and local resource references are checked before commit
 - keep CI and local `bun run verify` aligned
 - keep Bash as the orchestration layer and Bun TypeScript as the structured
   validation layer
@@ -76,8 +75,7 @@ There is no active `.planning/` roadmap or GSD phase in this checkout.
   environment surfaces, not human docs.
 - `scripts/update.sh` is not a harmless test command; it mutates installed tools
   and user config.
-- `skills/intuitive-*` is generated install output; edit `skills-src/` first and
-  use `bun run build:skills` to refresh it.
+- `skills/` is the canonical repo-owned skill source and install surface.
 - `.githooks/pre-commit` is opt-in per checkout through `bun run setup:hooks`
   because Git does not version local hook configuration.
 

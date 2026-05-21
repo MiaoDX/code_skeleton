@@ -6,10 +6,10 @@ This page is the human-facing source for external references that shape
 Intuitive Flow's agent harness: root instructions, layered local guidance,
 skills, hooks, plugins, MCP, subagents, verification, and maintenance cadence.
 
-Use it when updating `AGENTS.md`, `CLAUDE.md`, `skills-src/**`,
-`docs/agents/**`, hooks, MCP config, or repo automation. Add new links here
-before spreading their lessons into skills. Skills should carry the smallest
-operational rule; this page should preserve the source and rationale.
+Use it when updating `AGENTS.md`, `CLAUDE.md`, `skills/**`, `docs/agents/**`,
+hooks, MCP config, or repo automation. Add new links here before spreading
+their lessons into skills. Skills should carry the smallest operational rule;
+this page should preserve the source and rationale.
 
 ## Working Principles
 
@@ -44,7 +44,9 @@ When reviewing a skill, preserve a compact WHY / WHAT / HOW contract:
 
 Route new guidance to the smallest effective harness layer:
 
-- shared rule across generated intuitive-family skills -> `skills-src/intuitive-common/`
+- shared rule across repo-owned skills -> the shortest duplicated invariant in
+  each relevant `SKILL.md`, or an on-demand `references/` file when the detail
+  does not need to be always loaded
 - durable source or doctrine lesson -> this reference page
 - repo-specific operational runbook -> `docs/agents/**`
 - deterministic enforcement -> scripts, tests, CI, hooks, or MCP tools
@@ -84,9 +86,9 @@ When this page gains a source that changes repo practice:
 1. Add the link and the lesson here first.
 2. Decide the right harness layer: root guidance, nested guidance, shared skill
    fragment, targeted skill, hook, script, MCP config, plugin, or human doc.
-3. Update `skills-src/**` or `skills/**` only when the lesson changes runtime
-   agent behavior, not merely how maintainers should review the skill.
-4. Run `bun run build:skills` after intuitive-family skill source edits.
+3. Update `skills/**` only when the lesson changes runtime agent behavior, not
+   merely how maintainers should review the skill.
+4. Run `bun run check:skills` after skill edits.
 5. Run `bun run verify`.
 6. Update `STATUS.md` or `ARCHITECTURE.md` only when the repo's supported
    commands, public contracts, or proof boundaries changed.

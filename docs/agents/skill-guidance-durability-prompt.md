@@ -22,8 +22,7 @@ Target:
 - One named skill, skill family, or prompt/doc seam. If no bounded target is
   named, stop after a report-only scope gate.
 - Repo-owned skill sources and repo-owned skill guidance prompts only.
-- For this repo, edit intuitive-family skills in skills-src/ first, then
-  regenerate skills/ with the project build command.
+- For this repo, edit repo-owned skills directly under skills/.
 - Edit non-generated repo-owned skills directly.
 - Treat third-party, vendored, installed, or system skills as external surfaces
   unless the task is explicitly upstream maintenance.
@@ -33,8 +32,7 @@ Source-of-truth boundaries:
 - A relevant docs/plans/ refactor gate is the durable stop condition for cleanup
   work. Chat history, generated logs, and temporary artifacts are evidence, not
   the gate.
-- Generated skill outputs are artifacts. Change the source first and regenerate
-  them.
+- Repo-owned skills under skills/ are canonical source and install surface.
 - Installed local skills are deployment targets. Sync them only when
   intentionally refreshing user-level tooling.
 
@@ -102,7 +100,8 @@ Do not:
   written as "do not" rules
 - patch external/upstream skills to encode local policy
 - create many new docs; prefer one persistent gate or execution note if needed
-- leave generated skill outputs stale after editing source skills
+- leave skill references, manifest entries, or frontmatter stale after editing
+  skills
 
 Suggested execution:
 1. Create or update one persistent refactor gate under docs/plans/ when needed.
@@ -111,16 +110,15 @@ Suggested execution:
 3. Search repo-owned skills for brittle/meta phrasing.
 4. Read surrounding context before editing; do not do blind keyword deletion.
 5. Apply one coherent cleanup slice.
-6. Regenerate generated skill outputs if the repo has a skill build step.
-7. Run the repo's verification command.
-8. Sync installed local skills only when deliberately refreshing installed
+6. Run the repo's verification command.
+7. Sync installed local skills only when deliberately refreshing installed
    surfaces.
-9. If committing, keep the skill-only cleanup separate from product work.
+8. If committing, keep the skill-only cleanup separate from product work.
 
 Evidence to report:
 - files changed
 - phrases/classes of guidance removed or reframed
-- source/generated sync command, if any
+- skill validation command
 - verification command and result
 - remaining parked cleanup ideas
 - whether installed skills were synced
@@ -131,12 +129,12 @@ Evidence to report:
 For this repo, the usual commands are:
 
 ```bash
-bun run build:skills
+bun run check:skills
 bun run verify
 scripts/tasks/sync-local-commands-skills.sh
 ```
 
-- `bun run build:skills` regenerates `skills/intuitive-*` after source edits.
+- `bun run check:skills` validates repo-owned skills and manifest coverage.
 - `bun run verify` is the normal local proof.
 - `scripts/tasks/sync-local-commands-skills.sh` refreshes installed local agent
   surfaces; run it only when that side effect is intended.

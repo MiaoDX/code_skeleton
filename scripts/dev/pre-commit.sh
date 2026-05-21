@@ -10,9 +10,9 @@ fi
 cd "$ROOT"
 
 if ! command -v bun >/dev/null 2>&1; then
-    echo "pre-commit: bun is required to check generated skill drift" >&2
+    echo "pre-commit: bun is required to check repo skills" >&2
     exit 1
 fi
 
-echo "pre-commit: checking generated intuitive skills"
-bun run build:skills:check
+echo "pre-commit: checking repo skills"
+bun run check:skills

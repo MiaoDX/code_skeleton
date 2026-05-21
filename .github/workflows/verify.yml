@@ -22,5 +22,5 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Verify generated skills and tests
+      - name: Verify skills and tests
         run: bun run verify
