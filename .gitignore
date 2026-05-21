@@ -2,3 +2,4 @@ vendor/
 .venv/
 node_modules/
 .env
+.serena/
