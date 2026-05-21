@@ -169,8 +169,11 @@ Use repo evidence before choosing an LSP path:
 - Rust, Go, Java, Ruby, PHP, C/C++, and other stacks: their canonical manifests,
   lockfiles, toolchain files, and existing editor or agent config.
 - Existing agent/editor surfaces: `.claude/settings.json`, `.mcp.json`,
-  `.vscode/settings.json`, `docs/agents/**`, setup scripts, CI checks, and any
-  checked-in language-server config.
+  `.vscode/settings.json`, `docs/agents/**`, setup scripts, CI checks, any
+  checked-in language-server config, and any MCP-based LSP entries already
+  wired into the host CLI (for example a `serena` entry in `.mcp.json`,
+  `~/.claude.json` MCP servers, `~/.codex/config.toml` `[mcp_servers.*]`
+  blocks, or a `.serena/` project directory).
 
 Prefer checked-in repo-local setup over relying on a global tool that only one
 machine has. Good LSP setup usually means one or more of:
@@ -193,6 +196,60 @@ Stop and report instead of editing when LSP setup would require a paid service,
 local-only hardware, broad package-manager migration, heavy toolchain install,
 or uncertain global state. In that case, add the missing setup to the proposal
 or `docs/agents/**` runbook with the exact command the user should approve.
+
+### MCP-Based LSP Path
+
+A repo-local language-server config is the default. An MCP-based LSP server is
+a recognized alternative when symbol-level operations should also reach the
+coding agent itself, not just the editor or CI. The current reference
+implementation is [Serena](https://github.com/oraios/serena): one MCP server
+that exposes symbol search, references, rename, document outline, hover, and
+diagnostics across Python, TypeScript, Rust, Go, and other stacks through
+their existing language servers.
+
+Prefer the MCP-based path when one or more of these is true:
+
+- the repo spans several languages and a single agent-facing surface is
+  cheaper than wiring one LSP plugin per language
+- the team uses both Claude Code and Codex and wants the same symbol tooling
+  in both (Serena ships a Codex-specific `--context codex` mode)
+- the host CLI's native LSP plugin path is unavailable, broken, or noisier
+  than a checked-in MCP entry
+- the agent needs symbol-level operations during long-running edits where
+  text search alone causes regressions
+
+Prefer the repo-local language-server path when:
+
+- the project already ships a language-server dev dependency and config and
+  the editor/CI flow depends on it
+- only one language is in scope and the native host plugin path works
+- adding an MCP server would duplicate an already-healthy setup
+
+The two paths can coexist: a checked-in language-server config keeps the
+editor and CI honest, while an MCP entry gives the agent symbol tools during
+its own runs.
+
+Operational guidance for the MCP path, intentionally minimal so the agent
+checks current upstream docs before editing config:
+
+- Treat the upstream README and recent release notes as the source of truth
+  for install, transport, and per-host context flags. Do not paste old
+  commands from memory.
+- Add the MCP server through the host CLI's native command when one exists
+  (for example `claude mcp add` or `codex mcp add`) or through a checked-in
+  `.mcp.json` / `~/.codex/config.toml` block. Pin the install method the
+  upstream README currently recommends.
+- Activate the server for the current repo and confirm the agent can see its
+  tools before declaring setup done. Record the activation step in
+  `docs/agents/**` or root guidance only when the host does not auto-activate
+  on session start.
+- For Python repos, still keep a `pyrightconfig.json` or `[tool.pyright]`
+  block with `venvPath` and `venv` set. MCP-based LSP servers reuse the
+  underlying language server, so missing project config still produces
+  false `reportMissingImports` diagnostics.
+- Stop and report instead of editing when the MCP install would require
+  global secrets, paid services, or an install path the user has not
+  approved.
 
 ## Core Rule
 

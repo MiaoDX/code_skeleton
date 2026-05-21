@@ -1,6 +1,6 @@
 # Agent Harness References
 
-Last reviewed: 2026-05-17
+Last reviewed: 2026-05-21
 
 This page is the human-facing source for external references that shape
 Intuitive Flow's agent harness: root instructions, layered local guidance,
@@ -75,6 +75,7 @@ instructions before adding new runtime rules.
 | --- | --- |
 | [HumanLayer: Writing a good CLAUDE.md](https://www.hlyr.dev/blog/writing-a-good-claude-md) | The WHY / WHAT / HOW shape is a useful review lens: explain project purpose, repo shape, and how to build/test/change safely. Keep root guidance short enough to remain useful. |
 | [HumanLayer: Skill Issue, harness engineering for coding agents](https://www.humanlayer.dev/blog/skill-issue-harness-engineering-for-coding-agents) | Skills should be evaluated as part of the harness, not treated as static prompts. Prefer narrow, tested workflows over broad instruction dumps. |
+| [Serena MCP](https://github.com/oraios/serena) | A language-aware MCP server that exposes symbol-level LSP operations (find/rename symbol, find referencing symbols, document symbols, diagnostics) to coding agents through one connection, covering Python, TypeScript, Rust, Go, and other stacks via underlying language servers. Useful when an agent needs symbol navigation in a repo whose host CLI does not already provide a working LSP path, and when the same setup should work for both Claude Code and Codex (Serena ships a Codex-specific `--context codex` mode). Treat as one option among several; checked-in repo-local language-server config still wins when the project already has one. |
 
 ## Repo Upgrade Checklist
 
@@ -95,5 +96,8 @@ When this page gains a source that changes repo practice:
 - Which skill-quality evals should run against fixture repos before a release?
 - Which hook patterns are mature enough to install by default instead of only
   recommending in guidance?
-- How should Intuitive Flow represent LSP and plugin setup for Codex and Claude
-  without overfitting to one host environment?
+- LSP setup now offers at least two recorded paths: checked-in repo-local
+  language-server config (the default) and a Serena MCP connection that exposes
+  symbol operations to both Claude Code and Codex. Open question: when should
+  `$intuitive-init` prefer one over the other by default, and how should that
+  default change as Claude Code's native LSP plugin surface stabilizes?
