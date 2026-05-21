@@ -1,6 +1,6 @@
 ---
 name: intuitive-init
-description: Initialize, audit, aggressively slim, merge, and refresh project-local AGENTS.md and CLAUDE.md files from existing repo guidance, agent /init suggestions, stdin-bundled Codex init-style discovery, and intuitive workflow defaults, including target-repo LSP setup. Use when setting up a repo for Claude Code/Codex, replacing symlinked agent files with local guidance, rerunning agent init after weeks of drift, cleaning overgrown root agent files, or aligning a repo to intuitive-doc, intuitive-tests, intuitive-flow, intuitive-refactor, and intuitive-reduce-entropy without overwriting project-specific hints.
+description: Initialize, audit, aggressively slim, merge, and refresh project-local AGENTS.md and CLAUDE.md files from existing repo guidance, agent /init suggestions, stdin-bundled Codex init-style discovery, and intuitive workflow defaults, including target-repo LSP and agent-facing Serena MCP setup. Use when setting up a repo for Claude Code/Codex, replacing symlinked agent files with local guidance, rerunning agent init after weeks of drift, cleaning overgrown root agent files, or aligning a repo to intuitive-doc, intuitive-tests, intuitive-flow, intuitive-refactor, and intuitive-reduce-entropy without overwriting project-specific hints. When the user asks to "setup LSP" for a coding-agent repo, treat Serena MCP as the preferred agent-facing LSP path unless it is already configured or concretely blocked.
 ---
 
 # Intuitive Init
@@ -157,8 +157,17 @@ definition, reference, rename, diagnostics, and hover signals work for the
 project's real language stack.
 
 Default action in Apply, Refresh, and Symlink Migration modes: detect the
-target repo's primary languages and configure LSP automatically when the setup
-is recognized, repo-local, and safe to apply.
+target repo's primary languages and configure a two-layer LSP setup
+automatically when the setup is recognized, repo-local, and safe to apply:
+
+1. A repo-local language-server config that makes the underlying language
+   server accurate for editors, CI, and MCP servers.
+2. An agent-facing MCP LSP surface, preferably Serena, so Claude/Codex can use
+   symbol search, references, rename, outline, hover, and diagnostics directly.
+
+Do not treat a working Pyright, TypeScript, Rust, Go, or other repo-local
+language-server config as complete agent-facing LSP setup by itself. It is the
+foundation that makes Serena accurate, not a substitute for MCP symbol tools.
 
 Use repo evidence before choosing an LSP path:
 
@@ -176,7 +185,7 @@ Use repo evidence before choosing an LSP path:
   blocks, or a `.serena/` project directory).
 
 Prefer checked-in repo-local setup over relying on a global tool that only one
-machine has. Good LSP setup usually means one or more of:
+machine has. Good underlying language-server setup usually means one or more of:
 
 - the language server or required compiler package is declared as a dev
   dependency in the repo's normal package manager
@@ -188,9 +197,11 @@ machine has. Good LSP setup usually means one or more of:
 For Python repos, prefer `uv` and the project's `.venv` conventions. Do not add
 Python dependencies through the system interpreter.
 
-If the project already gets LSP through a team updater, plugin, devcontainer,
-Nix shell, or toolchain manager, verify that path and record it instead of
-adding a competing local setup.
+If the project already gets underlying language-server setup through a team
+updater, plugin, devcontainer, Nix shell, or toolchain manager, verify that path
+and record it instead of adding a competing local setup. Still evaluate whether
+the coding agent itself has Serena or an equivalent MCP symbol surface; editor
+LSP alone does not satisfy that requirement.
 
 Stop and report instead of editing when LSP setup would require a paid service,
 local-only hardware, broad package-manager migration, heavy toolchain install,
@@ -199,15 +210,21 @@ or `docs/agents/**` runbook with the exact command the user should approve.
 
 ### MCP-Based LSP Path
 
-A repo-local language-server config is the default. An MCP-based LSP server is
-a recognized alternative when symbol-level operations should also reach the
-coding agent itself, not just the editor or CI. The current reference
-implementation is [Serena](https://github.com/oraios/serena): one MCP server
-that exposes symbol search, references, rename, document outline, hover, and
-diagnostics across Python, TypeScript, Rust, Go, and other stacks through
-their existing language servers.
+Serena MCP is the preferred default for agent-facing LSP setup. A repo-local
+language-server config is still required, especially for Python virtualenvs and
+monorepo source roots, but it should normally be paired with Serena so
+symbol-level operations reach the coding agent itself, not just the editor or
+CI. The current reference implementation is
+[Serena](https://github.com/oraios/serena): one MCP server that exposes symbol
+search, references, rename, document outline, hover, and diagnostics across
+Python, TypeScript, Rust, Go, and other stacks through their existing language
+servers.
 
-Prefer the MCP-based path when one or more of these is true:
+In Apply and Refresh modes, after verifying or creating the repo-local
+language-server config, set up Serena MCP or explicitly propose the exact Serena
+setup path unless one of the stop conditions applies.
+
+Prefer Serena MCP by default, and especially when one or more of these is true:
 
 - the repo spans several languages and a single agent-facing surface is
   cheaper than wiring one LSP plugin per language
@@ -218,12 +235,15 @@ Prefer the MCP-based path when one or more of these is true:
 - the agent needs symbol-level operations during long-running edits where
   text search alone causes regressions
 
-Prefer the repo-local language-server path when:
+Use a repo-local language-server-only path only when:
 
-- the project already ships a language-server dev dependency and config and
-  the editor/CI flow depends on it
-- only one language is in scope and the native host plugin path works
-- adding an MCP server would duplicate an already-healthy setup
+- the project already has a working Serena or equivalent MCP symbol server
+- the host CLI cannot use MCP servers in the current environment
+- the Serena install or activation path is uncertain after checking current
+  upstream docs
+- adding or activating Serena would require global secrets, a paid service,
+  local-only hardware, broad toolchain migration, or user approval that has not
+  been granted
 
 The two paths can coexist: a checked-in language-server config keeps the
 editor and CI honest, while an MCP entry gives the agent symbol tools during
@@ -331,11 +351,15 @@ Use this workflow unless the user asks for report-only or a specific file.
    - checked-in `.mcp.json` or project-scoped MCP docs for shared external tools
 7. Set up or verify target-repo LSP:
    - Detect the repo's primary language stack from manifests and lockfiles.
+   - Verify or create the repo-local language-server config first.
+   - Then verify, configure, or propose Serena MCP as the agent-facing symbol
+     tool unless it is already covered or concretely blocked.
    - Prefer repo-local dev dependencies and checked-in config over global-only
-     tools.
+     tools, but do not let editor-only LSP config replace agent-facing MCP.
    - Apply the setup automatically when it is recognized and scoped to the
      target repo.
-   - If LSP is already configured, verify and summarize the existing path.
+   - If LSP is already configured, verify and summarize both the underlying
+     language-server path and the agent-facing MCP path.
    - If setup is unsafe or ambiguous, stop with a concrete proposal and command
      instead of guessing.
 8. Produce a merged proposal first:
@@ -347,8 +371,10 @@ Use this workflow unless the user asks for report-only or a specific file.
      extracted content.
    - Call out any nested instruction files, hooks, skills, or MCP config that
      should be created, left alone, or moved out of the root files.
-   - Call out the target-repo LSP status: configured, refreshed, already
-     covered, skipped with reason, or needs user approval.
+   - Call out the target-repo LSP status separately for:
+     underlying language-server config and agent-facing Serena/MCP setup.
+     Mark Serena/MCP as configured, refreshed, already covered, skipped with a
+     concrete blocker, or needing user approval.
    - Show the diff or proposed file contents.
 9. Apply changes only when the user has asked for direct implementation or
    approves the proposal. When applying, update both `AGENTS.md` and
@@ -592,8 +618,11 @@ Stop after a proposal when:
 Stop after edits when:
 
 - `AGENTS.md` and `CLAUDE.md` are project-local and aligned
-- target-repo LSP is configured, refreshed, already covered by existing repo
-  tooling, or explicitly skipped with a concrete reason
+- target-repo underlying LSP config is configured, refreshed, already covered by
+  existing repo tooling, or explicitly skipped with a concrete reason
+- agent-facing Serena/MCP LSP is configured, refreshed, already covered by an
+  existing MCP entry, or explicitly skipped with a concrete blocker or approval
+  request
 - root files are slim enough to scan, or remaining length is justified by
   critical first-read safety rules
 - stale symlink-first guidance has been removed or explicitly narrowed to
