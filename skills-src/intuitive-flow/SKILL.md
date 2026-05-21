@@ -4,7 +4,8 @@ description: |
   Orchestrate the intuitive idea-to-execution workflow: grill-me or office-hours
   for direct or auto-guided idea shaping, human-confirmed goal/success criteria
   before whole auto-runs, docs/plans as the pre-execution source of truth,
-  autoplan for hard review, optional to-issues for vertical slices, GSD
+  single docs/adr or docs/human plan-like files as intake to refactor into
+  docs/plans, autoplan for hard review, optional to-issues for vertical slices, GSD
   ingest/plan for committed execution, GSD execute/verify for implementation,
   semantic commits after reviewable units, simplify for changed-code cleanup,
   doc-status cleanup after big refactors, bounded scoping for
@@ -43,6 +44,30 @@ Default to:
 
 If the simple path is enough, use it. Split only when the split makes execution
 or verification clearer.
+
+## Single Plan-File Intake
+
+When the user points at exactly one markdown file that looks like a plan, accept
+these roots as pre-execution intake:
+
+- `docs/plans/**/*.md`
+- `docs/adr/**/*.md`
+- `docs/adrs/**/*.md`
+- `docs/human/**/*.md`
+
+Use the supplied file as the current plan only when it already lives under
+`docs/plans/`. For `docs/adr/`, `docs/adrs/`, or `docs/human/`, first refactor
+the actionable parts into `docs/plans/<slug>.md`, then use that canonical plan
+for `autoplan`, `to-issues`, and GSD. The refactor should preserve source links
+and extract only execution-ready material: goal, scope, non-goals, decisions,
+constraints, acceptance criteria, test/verification expectations, risks, and the
+GSD handoff trigger. Do not move, rewrite, or append review logs to the original
+ADR or human-facing doc unless the user explicitly asked to update that file.
+
+If the supplied file is mostly reference material rather than an executable plan,
+create the `docs/plans/<slug>.md` draft with clear "unknown / needs decision"
+markers and stop before `autoplan` unless the user's run contract explicitly says
+to continue through review.
 
 {{> intuitive-common/delegation-model.md}}
 
@@ -87,9 +112,10 @@ questions, compress the brief to one sentence. For durable implementation or
 refactor work, say whether semantic commits are enabled before the first edit.
 
 This direct path does not apply to plan-backed implementation when the
-`autoplan` gate has not already run. If the request points at a
-`docs/plans/*.md` file, committed plan, or reviewed-looking implementation plan,
-run the autoplan precheck below before GSD handoff or execution.
+`autoplan` gate has not already run. If the request points at a supported single
+plan-like file, committed plan, or reviewed-looking implementation plan, run the
+single plan-file intake and autoplan precheck below before GSD handoff or
+execution.
 
 This brief does not override Required Checkpoints. If the selected path crosses
 a checkpoint below, stop there and ask.
@@ -116,8 +142,11 @@ progress.
 ## Autoplan Precheck Before Plan Implementation
 
 When the user asks to implement a specific plan, says "LGTM", or says "impl"
-while pointing at a plan, first check whether `autoplan` already ran and its
-accepted decisions were reconciled into the canonical plan file.
+while pointing at a plan, first resolve the canonical plan path. If the user
+provided a single supported file outside `docs/plans/`, refactor it into
+`docs/plans/<slug>.md` and treat the original file as source evidence. Then check
+whether `autoplan` already ran and its accepted decisions were reconciled into
+the canonical plan file.
 
 Codex routing note: gstack skills are installed as `gstack-*` sibling skill
 directories. When routing to autoplan from this skill, prefer the installed
@@ -144,7 +173,7 @@ Do not treat as `autoplan` evidence:
 If evidence is missing, classify the request as `Draft Plan Exists` and run:
 
 ```text
-gstack-autoplan docs/plans/<slug>.md
+gstack-autoplan <canonical-docs-plans-path>
 ```
 
 For whole-flow, implementation, or long-running review runs, prefer launching
@@ -462,6 +491,10 @@ silently decide user-owned questions.
   specific writing skill is invoked.
 - Auto-guided idea shaping is inline `intuitive-flow` output. It may use
   `grill-me` or `office-hours` question styles, but keep the provenance clear.
+- A single plan-like `docs/adr/**`, `docs/adrs/**`, or `docs/human/**` file is
+  intake evidence for this workflow. Refactor it into `docs/plans/<slug>.md`
+  before review or execution instead of letting ADR/human docs become plan-review
+  ledgers.
 - ADRs are not a default output of this skill. Create or update ADRs only when a
   documentation/ADR-capable skill is explicitly used or the user explicitly asks
   for an ADR. ADRs record durable architecture or product decisions, not
@@ -472,9 +505,12 @@ silently decide user-owned questions.
   artifacts inline and call it GSD. Use `gsd-ingest-docs` to bootstrap/merge
   docs into `.planning/`, and use `gsd-plan-phase` to create executable GSD
   phase plans.
-- Treat `docs/plans/<slug>.md` as pre-GSD PRD input. Do not manually copy it to
-  a phase `CONTEXT.md`; use `gsd-plan-phase <phase> --prd docs/plans/<slug>.md`
-  when the phase already exists.
+- Treat `docs/plans/<slug>.md` as pre-GSD PRD input. If the user started from
+  `docs/adr/**`, `docs/adrs/**`, or `docs/human/**`, the refactored
+  `docs/plans/<slug>.md` is the PRD input and the original file is supporting
+  evidence. Do not manually copy the plan to a phase `CONTEXT.md`; use
+  `gsd-plan-phase <phase> --prd docs/plans/<slug>.md` when the phase already
+  exists.
 - `~/.gstack` artifacts, review logs, and restore points are evidence only.
   They are not the source of truth for the next stage.
 
@@ -556,12 +592,13 @@ Stop after the plan doc unless the user explicitly asks to continue.
 
 Use when a human-readable plan exists and the user wants hard review. Also use
 when the user wants implementation of a plan but the autoplan precheck does not
-find evidence that `autoplan` already ran and was reconciled into the plan.
+find evidence that `autoplan` already ran and was reconciled into the canonical
+plan.
 
 Default path:
 
 ```text
-gstack-autoplan docs/plans/<slug>.md
+single plan-file intake, if needed -> gstack-autoplan docs/plans/<slug>.md
 ```
 
 `gstack-autoplan`/`autoplan` is a review pipeline, not an implementation tool.
@@ -581,10 +618,12 @@ scope changes, phase split choices, public contracts, cost, security, privacy,
 external services, data model changes, or rejected user intent.
 
 When the user approves the `autoplan` gate, or when triage classifies the gate
-as a soft continuation, reconcile the approved decisions back into the same
+as a soft continuation, reconcile the approved decisions back into the canonical
 `docs/plans/<slug>.md` file before moving on. `~/.gstack` artifacts are
 supporting evidence, restore points, and review logs; they are not the handoff
-source of truth.
+source of truth. If the run began from `docs/adr/**`, `docs/adrs/**`, or
+`docs/human/**`, do not propagate `autoplan` review reports back into that
+original document unless the user explicitly asked for a doc update.
 
 Approval means:
 
@@ -621,8 +660,8 @@ updates once reconciled into the plan body.
 After the approval gate and in-place reconciliation, continue when the user
 asked for execution, the active `/goal` objective covers the handoff or
 implementation stage, or the current request is a durable
-`$intuitive-flow for docs/plans/<slug>.md` run without a review-only stop point.
-Otherwise stop with the updated plan ready.
+`$intuitive-flow for <supported-plan-file>.md` run without a review-only stop
+point. Otherwise stop with the updated canonical plan ready.
 
 ### C. Reviewed Plan, Not Yet Committed To Execution
 
@@ -641,6 +680,12 @@ accepted plan lives in `docs/plans/<slug>.md`. Do not use a generated
 `~/.gstack/...test-plan...md`, restore file, review log, or final-gate summary as
 the canonical input unless the user explicitly asks to promote that artifact into
 the plan file first.
+
+If the original user-supplied file was under `docs/adr/**`, `docs/adrs/**`, or
+`docs/human/**`, use the refactored `docs/plans/<slug>.md` for all later phases.
+Include the original file in an ingest manifest only when it contains locked
+decisions or human-facing truth that GSD must respect; otherwise link it from the
+plan as evidence and keep the handoff single-source.
 
 Optional issue path:
 
