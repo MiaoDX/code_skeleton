@@ -68,7 +68,7 @@ instructions before adding new runtime rules.
 | [Claude Code memory docs](https://code.claude.com/docs/en/memory) | `CLAUDE.md` files are loaded as project memory. Root and nested memory should be scoped so broad guidance stays broad and local conventions stay local. |
 | [Claude Code docs map](https://code.claude.com/docs/en/claude_code_docs_map) | Use the docs map as the canonical starting point when checking whether Claude Code feature guidance has moved or expanded. |
 | [Claude Code skills](https://code.claude.com/docs/en/skills) | Skills are the on-demand workflow layer; keep `SKILL.md` concise, use supporting files for reference/scripts/templates, and treat bundled `/run` and `/verify` as candidates for app-level validation rather than replacements for repo proof commands. |
-| [Claude Code goals](https://code.claude.com/docs/en/goal) | Goal mode can keep a long session pointed at measurable completion criteria, but the repo still needs explicit source-of-truth gates and deterministic verification. |
+| [Claude Code goals](https://code.claude.com/docs/en/goal) | Goal mode can keep a long session pointed at measurable completion criteria, but the repo still needs explicit source-of-truth gates and deterministic verification. For `intuitive-flow`, use goals on bounded worker sub-phases rather than the main supervision session. |
 | [Claude Code hooks](https://code.claude.com/docs/en/hooks) | Lifecycle automation belongs in hooks when it is deterministic and repeatable, especially formatting, generated-output checks, notification, and policy gates. |
 | [Claude Code subagents](https://code.claude.com/docs/en/sub-agents) | Use subagents for context-isolated work with clear ownership and handoff expectations; do not let agent fanout replace the main session's source-of-truth decisions. |
 | [Claude Code plugins](https://code.claude.com/docs/en/plugins) | Plugins are a distribution layer for skills, commands, hooks, agents, and MCP servers. Shared plugin adoption should be handled as harness packaging, not copied into runtime skill text. |
@@ -81,7 +81,7 @@ instructions before adding new runtime rules.
 | [Codex plugins](https://developers.openai.com/codex/plugins) | Plugins package reusable agent capabilities. Prefer explicit source manifests and validation before syncing plugin or skill sources into local user-level tooling. |
 | [Codex hooks](https://developers.openai.com/codex/hooks) | Hooks provide deterministic automation around agent lifecycle events; use them for repeatable checks rather than relying on prompt memory. |
 | [Codex subagents](https://developers.openai.com/codex/subagents) | Parallel subagents are useful for independent read-heavy or verification-heavy tasks, but write scopes need disjoint ownership and main-session integration. |
-| [Codex changelog](https://developers.openai.com/codex/changelog) | Re-check release notes after major CLI changes. Goal mode and skill/plugin behavior can shift normal workflow boundaries and should be tested before becoming default runtime rules. |
+| [Codex changelog](https://developers.openai.com/codex/changelog) | Re-check release notes after major CLI changes. Goal mode and skill/plugin behavior can shift normal workflow boundaries and should be tested before becoming default runtime rules. When goal mode is used in Codex, keep it worker-local unless a direct main-session task is tiny. |
 | [AGENTS.md open format](https://agents.md/) | `AGENTS.md` is a cross-agent convention supported by multiple coding tools. Prefer it for shared repo rules, with tool-specific deltas kept in tool-specific files. |
 
 ## Community And Field Reports
@@ -117,8 +117,8 @@ When this page gains a source that changes repo practice:
 - Which skill-quality evals should run against fixture repos before a release?
 - Which hook patterns are mature enough to install by default instead of only
   recommending in guidance?
-- Should `$intuitive-flow` use native goal mode after its run-contract preflight,
-  or does the current checkpoint policy remain more predictable?
+- Should `$intuitive-flow` workers use native goal mode by default after their
+  bounded sub-phase prompt, or only when the user explicitly asks for it?
 - Should Claude `/run` and `/verify` become recommended app-level validation
   steps in repos where they generate stable project recipes?
 - Should CoEvoSkills-style verifier loops become a maintained skill QA workflow

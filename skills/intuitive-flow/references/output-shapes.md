@@ -12,6 +12,7 @@ Current state: <classification>
 Selected path: <stage/skill sequence>
 Why: <one sentence>
 Bypassed/left behind: <stage - reason; stage - reason>
+Execution surface: <main session direct | tmux worker per sub-phase | native subagents>
 Commit rhythm: <semantic commits enabled | disabled because ...>
 Stop/continue point: <what happens before the next checkpoint>
 ```
@@ -69,6 +70,7 @@ Include:
 - `STATUS.md` check/update result for non-trivial durable runs
 - parked todos, always, including `none found`
 - verification explicitly not run
+- worker handoff inspected when execution ran in tmux
 
 Do not bury parked work behind "follow-ups available"; make it visible.
 

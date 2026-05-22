@@ -41,10 +41,10 @@ rationale during a confirmed durable run. Stop only for competing phase matches,
 more than one new phase, conflicting locked docs, or a local-dev/destructive
 gate.
 
-Use native read-only probes to find the route. Run stateful GSD ingest or plan
-generation through `skill-runner`/tmux when the run is long or the main session
-should remain clean for supervision. The main session inspects created or
-updated `.planning/` artifacts before continuing.
+Use native read-only probes to find the route. For durable multi-stage runs,
+run stateful GSD ingest or plan generation through `skill-runner`/tmux by
+default so the main session remains clean for supervision. The main session
+inspects created or updated `.planning/` artifacts before continuing.
 
 This is a real handoff only if the named GSD skill is invoked and its workflow
 is followed. If you only recommend the step, say no GSD artifact was generated.
@@ -77,15 +77,17 @@ simplify <changed-scope>
 gsd-verify-work <phase>
 ```
 
-For committed phase execution, prefer `skill-runner`/tmux around stateful GSD
-execution and verification. Use native worker subagents for bounded disjoint
-implementation or diagnosis slices only when file ownership is explicit and the
-main session owns integration.
+For committed phase execution, prefer `skill-runner`/tmux around each stateful
+GSD execution or verification sub-phase. Use native worker subagents for bounded
+disjoint implementation or diagnosis slices only when file ownership is
+explicit and the main session owns integration.
 
 For phase execution that changes local code, carry the commit rhythm into the
-runner/worker instructions: after each coherent implementation slice and focused
-proof, inspect the diff, stage only owned files, and create a semantic commit
-before starting the next slice. Report commit ids back to the main session.
+runner/worker instructions: after each coherent implementation slice and
+focused proof, inspect the diff, stage only owned files, and create a semantic
+commit before starting the next slice. If the worker uses a host-local `/goal`,
+clear that worker-local goal and exit or stop after writing the handoff. Report
+commit ids back to the main session.
 
 When implementation hits a blocker, stay inside the current phase by default.
 Record the blocker and either fix it, narrow the phase, or mark the phase

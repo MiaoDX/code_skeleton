@@ -23,7 +23,7 @@ Load only the reference needed for the selected route:
 | Source-of-truth, `STATUS.md`, `CONTEXT.md`, provenance, phase granularity | `references/source-of-truth.md` |
 | Fuzzy idea shaping, single plan-file intake, `autoplan` precheck/reconciliation | `references/plan-intake-and-autoplan.md` |
 | GSD ingest vs plan-phase routing, committed phase execution, `simplify` scope | `references/gsd-handoff.md` |
-| Whole-run preflight, soft continuation vs hard stop, checkpoint policy | `references/checkpoints-and-auto-run.md` |
+| Whole-run preflight, soft continuation vs hard stop, checkpoint policy, tmux/goal/clear policy | `references/checkpoints-and-auto-run.md` |
 | Broad refactor route, semantic commits, doc cleanup, parked-todo closeout | `references/refactor-and-closeout.md` |
 | Exact response and artifact templates | `references/output-shapes.md` and `templates/` |
 
@@ -48,6 +48,10 @@ the boundary. Do not preload every reference by default.
   PRDs or execution ledgers.
 - Ask only for hard-stop decisions. Auto-continue routine, reversible, or
   already-implied choices during a confirmed durable run.
+- Keep the main session as the control plane for durable multi-stage runs.
+  Route stateful execution through `skill-runner`/tmux workers by default so
+  host-local `/goal`, `/compact`, `/clear`, or equivalent context controls stay
+  isolated from route decisions and supervision history.
 - For durable runs that change local code, create semantic commits along the
   way after each coherent proof-backed slice. Do not wait until the entire flow
   is done unless commits are explicitly disabled or staging cannot be made safe.
@@ -65,6 +69,7 @@ Current state: <fuzzy idea | draft plan | reviewed plan | GSD phase | changed co
 Selected path: <stage or skill sequence>
 Why: <one sentence>
 Bypassed/left behind: <stage - reason; stage - reason>
+Execution surface: <main session direct | tmux worker per sub-phase | native subagents>
 Commit rhythm: <semantic commits enabled | disabled because ...>
 Stop/continue point: <where work pauses or what will run now>
 ```
@@ -98,17 +103,34 @@ boundaries and told you to use them as-is.
 Keep the main session responsible for route decisions, canonical artifact edits,
 integration, and final synthesis.
 
+For durable multi-stage runs, default to a control-plane split:
+
+- Main session: route, decide, inspect worker artifacts/diffs/logs, verify
+  claims, and synthesize the next stage.
+- Worker tmux session: execute one bounded sub-phase with its own stop
+  condition, optional host-local `/goal`, and disposable context.
+
+Tiny direct edits and read-only probes may stay in the main session. Do not use
+`/goal clear` or `/clear` in the main session while an active flow depends on
+conversation context. If context pressure appears in the main session, prefer a
+handoff-style `/compact` and keep canonical artifacts current.
+
 | Work type | Preferred executor |
 | --- | --- |
 | Independent read-heavy probes | native subagents when available |
 | Verification-heavy log/test inspection | native subagents when available |
 | Bounded disjoint edits | native worker subagents with explicit file ownership |
-| Stateful, interactive, or long-running skill pipelines | `skill-runner` / tmux |
+| Stateful, interactive, durable, or long-running skill pipelines | `skill-runner` / tmux worker per sub-phase |
 | Canonical source-of-truth edits and route decisions | main session |
 
 For `skill-runner`, inspect compact artifacts such as `result.md`, `eval.md`,
 `last-message.md`, targeted logs, the actual diff, and verification evidence
 before trusting final status.
+
+When a worker uses `/goal`, clear or close that goal inside the worker after the
+sub-phase leaves durable state. Prefer exiting the worker over clearing and
+continuing in the same terminal. The main session then reads the handoff and
+decides the next worker scope.
 
 Worker handoff shape:
 

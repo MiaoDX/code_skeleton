@@ -1,7 +1,8 @@
 # Checkpoints And Auto-Run Policy
 
-Use this reference before whole-flow, durable, auto-guided, or `/goal` runs and
-before crossing review, GSD, execution, cleanup, or verification boundaries.
+Use this reference before whole-flow, durable, auto-guided, tmux-worker, or
+`/goal` runs and before crossing review, GSD, execution, cleanup, or
+verification boundaries.
 
 ## Whole-Run Goal Preflight
 
@@ -38,6 +39,37 @@ what should change?
 
 Start only after the user confirms/corrects the contract, or when their latest
 message explicitly supplied the full contract and told you to use it as-is.
+
+## Control Plane And Worker Sessions
+
+For durable runs that may cross multiple stages, keep the main session as the
+control plane and use `skill-runner`/tmux workers as the execution plane by
+default.
+
+Main session responsibilities:
+
+- lock or infer the run contract
+- choose the route and next sub-phase
+- keep source-of-truth decisions coherent
+- inspect worker artifacts, logs, diffs, commits, and verification evidence
+- decide whether to continue, repair, stop, or ask the user
+
+Worker session responsibilities:
+
+- execute one bounded sub-phase
+- use a local `/goal` only for that sub-phase when the host supports it
+- use `/compact` only inside the worker when needed to preserve progress
+- leave durable state before exit: artifact update, verification output, commit,
+  or handoff summary
+- clear the worker-local goal and exit or stop after the handoff
+
+Do not use `/goal clear` or `/clear` in the main session during an active
+durable flow. Those commands can remove the route memory and active goal the
+main session needs for supervision. If the main session needs context relief,
+use a handoff-style `/compact` and immediately re-check the canonical artifact.
+
+Prefer closing a completed worker over clearing it and continuing. A fresh
+worker per sub-phase gives cleaner boundaries and makes stale goals less likely.
 
 ## Decision Triage
 
@@ -76,6 +108,13 @@ If a downstream skill asks a `Confirm`/`Revise` style question and the gate is a
 soft continuation, answer `Confirm` with a one-line rationale instead of waiting
 for the user.
 
+For worker-local `/goal` prompts, phrase the goal as one sub-phase, not the full
+project. Include the artifact to update, required proof, and stop condition.
+
+```text
+/goal <sub-phase outcome>; update <artifact>; run <proof>; stop with handoff
+```
+
 ## GSD Handoff Gates
 
 Auto-continue when exactly one routing row applies:
@@ -111,14 +150,22 @@ Apply decision triage before crossing these boundaries:
 9. GSD plan -> Execute: continue only when execution is covered by request or
    run contract.
 10. Many phases: ask before creating more than three phases.
-11. Code slice -> Next slice/cleanup: when local code changed and commits are
+11. Main -> Worker: for durable multi-stage execution, launch a bounded
+   `skill-runner`/tmux worker instead of running host-local goal/clear mechanics
+   in the main session. Direct main-session execution is acceptable only for
+   tiny direct edits, read-only probes, or local repairs that do not threaten
+   route continuity.
+12. Worker -> Main: before trusting completion, inspect the worker handoff,
+   changed files, logs, commits, and verification evidence. Continue only after
+   durable state exists outside the worker context.
+13. Code slice -> Next slice/cleanup: when local code changed and commits are
    enabled, create a semantic slice commit after focused proof before starting
    the next slice or cleanup pass.
-12. Simplify -> Verify: skip only for docs-only/trivial changes or explicit user
+14. Simplify -> Verify: skip only for docs-only/trivial changes or explicit user
    instruction.
-13. Refactor scope -> Execute: require accepted P0/P1 checklist and stop
+15. Refactor scope -> Execute: require accepted P0/P1 checklist and stop
    condition.
-14. Refactor doc cleanup: auto-run focused doc status; ask before broad
+16. Refactor doc cleanup: auto-run focused doc status; ask before broad
    moves/deletions or protected docs outside scope.
-15. Local-dev gate: stop when proof needs real simulator, Gateway, VLM, Docker,
+17. Local-dev gate: stop when proof needs real simulator, Gateway, VLM, Docker,
    GPU, API keys, or similar unavailable resources.
