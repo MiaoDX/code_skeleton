@@ -19,6 +19,8 @@ from pathlib import Path
 DEFAULT_SKILL_REPO = Path(__file__).resolve().parents[3]
 DEFAULT_CACHE_ROOT = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "skill-runner"
 DEFAULT_RUN_ROOT = DEFAULT_CACHE_ROOT / "runs"
+DEFAULT_TIMEOUT_MINUTES = 600.0
+DEFAULT_IDLE_TIMEOUT_MINUTES = 20.0
 SANDBOX_CAPABILITY_CACHE = DEFAULT_CACHE_ROOT / "sandbox-capability.json"
 SANDBOX_CACHE_SCHEMA_VERSION = 1
 COMMAND_PROBE_TIMEOUT_SECONDS = 5
@@ -172,8 +174,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--session")
     parser.add_argument("--run-root", default=str(DEFAULT_RUN_ROOT))
     parser.add_argument("--skill-repo", default=str(DEFAULT_SKILL_REPO))
-    parser.add_argument("--timeout-min", type=float, default=120.0)
-    parser.add_argument("--idle-timeout-min", type=float, default=20.0)
+    parser.add_argument("--timeout-min", type=float, default=DEFAULT_TIMEOUT_MINUTES)
+    parser.add_argument("--idle-timeout-min", type=float, default=DEFAULT_IDLE_TIMEOUT_MINUTES)
     parser.add_argument("--detach", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--dangerous", action="store_true")
@@ -274,6 +276,12 @@ Operating contract:
 - Do not edit third-party/system skills directly.
 - Commit only when the user's prompt or repo workflow asks for a commit.
 - If blocked by credentials, paid APIs, local hardware, Docker, GPU, or a human decision, stop and report BLOCKED_NEEDS_DECISION.
+- If you realize the current goal is wrong, too broad, looping, or sending you
+  away from the requested artifact, stop and report PARTIAL or
+  BLOCKED_NEEDS_DECISION with the corrected goal you recommend. Do not spend a
+  long run trying to make a bad goal work.
+- For long work, keep producing durable progress artifacts or commits at natural
+  boundaries so the supervising session can steer without killing a healthy run.
 
 Skill-specific guardrails:
 - For $intuitive-flow: one phase is one coherent delivery unit. Do not create more than three phases from this prompt without stopping for grouping approval. Use tasks/checklists for blockers, proof retries, diagnostics, and small report/checker changes.
@@ -293,6 +301,7 @@ COMMITS: <hashes or "none">
 VERIFICATION: <commands and results>
 OPEN_DECISIONS: <remaining decisions or "none">
 SKILL_BEHAVIOR_NOTES: <reusable skill issue candidates or "none">
+RECOMMENDED_GOAL_REVISION: <only if the current goal or prompt should be changed; otherwise "none">
 """
 
 

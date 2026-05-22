@@ -71,6 +71,22 @@ use a handoff-style `/compact` and immediately re-check the canonical artifact.
 Prefer closing a completed worker over clearing it and continuing. A fresh
 worker per sub-phase gives cleaner boundaries and makes stale goals less likely.
 
+For goal-driven workers, set a steering cadence, not a short hard timeout.
+Review progress about hourly. Let a healthy long-running worker continue when
+it is producing durable progress or running an expected long proof. If the
+worker is active after a review interval without durable progress, or if it is
+pursuing the wrong artifact, the main session should inspect the captured
+pane/logs/diff/canonical artifact and either steer the worker with a follow-up,
+stop it as blocked, or relaunch a fresh worker with a narrower corrected goal.
+
+When stopping a bad goal, do not blindly resume. First answer:
+
+- Was the original worker goal too broad, ambiguous, or wrong?
+- Is the canonical artifact still the right source of truth?
+- Is there a smaller sub-phase that can produce durable evidence?
+- Should the next worker use the same skill path, a diagnostic path, or stop for
+  user input?
+
 ## Decision Triage
 
 During a confirmed durable run, classify each question or downstream gate:
@@ -115,6 +131,11 @@ project. Include the artifact to update, required proof, and stop condition.
 /goal <sub-phase outcome>; update <artifact>; run <proof>; stop with handoff
 ```
 
+If a worker reports `RECOMMENDED_GOAL_REVISION`, or if the babysitter stops it
+for drift/timeout, treat that as evidence for the next route decision. The main
+session may revise the worker goal and relaunch only after checking actual
+artifacts and diff state.
+
 ## GSD Handoff Gates
 
 Auto-continue when exactly one routing row applies:
@@ -152,20 +173,27 @@ Apply decision triage before crossing these boundaries:
 10. Many phases: ask before creating more than three phases.
 11. Main -> Worker: for durable multi-stage execution, launch a bounded
    `skill-runner`/tmux worker instead of running host-local goal/clear mechanics
-   in the main session. Direct main-session execution is acceptable only for
-   tiny direct edits, read-only probes, or local repairs that do not threaten
-   route continuity.
+   in the main session. For goal-driven workers, use a long enough timeout for
+   the expected proof, and review progress about hourly. Direct main-session
+   execution is acceptable only for tiny direct edits, read-only probes, or
+   local repairs that do not threaten route continuity.
 12. Worker -> Main: before trusting completion, inspect the worker handoff,
    changed files, logs, commits, and verification evidence. Continue only after
    durable state exists outside the worker context.
-13. Code slice -> Next slice/cleanup: when local code changed and commits are
+13. Worker drift -> Revised worker: if the worker loops, broadens scope, lacks
+   durable progress at a review point, or pursues the wrong artifact, inspect
+   captured logs and state. Steer the current worker only when a concise
+   correction is enough; otherwise stop it and relaunch with a narrower
+   corrected goal or stop for a hard decision. Do not keep the same bad goal
+   running.
+14. Code slice -> Next slice/cleanup: when local code changed and commits are
    enabled, create a semantic slice commit after focused proof before starting
    the next slice or cleanup pass.
-14. Simplify -> Verify: skip only for docs-only/trivial changes or explicit user
+15. Simplify -> Verify: skip only for docs-only/trivial changes or explicit user
    instruction.
-15. Refactor scope -> Execute: require accepted P0/P1 checklist and stop
+16. Refactor scope -> Execute: require accepted P0/P1 checklist and stop
    condition.
-16. Refactor doc cleanup: auto-run focused doc status; ask before broad
+17. Refactor doc cleanup: auto-run focused doc status; ask before broad
    moves/deletions or protected docs outside scope.
-17. Local-dev gate: stop when proof needs real simulator, Gateway, VLM, Docker,
+18. Local-dev gate: stop when proof needs real simulator, Gateway, VLM, Docker,
    GPU, API keys, or similar unavailable resources.

@@ -71,6 +71,8 @@ Include:
 - parked todos, always, including `none found`
 - verification explicitly not run
 - worker handoff inspected when execution ran in tmux
+- worker drift or timeout intervention, including revised goal, when one
+  occurred
 
 Do not bury parked work behind "follow-ups available"; make it visible.
 

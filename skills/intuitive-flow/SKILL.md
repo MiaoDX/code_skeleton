@@ -109,6 +109,11 @@ For durable multi-stage runs, default to a control-plane split:
   claims, and synthesize the next stage.
 - Worker tmux session: execute one bounded sub-phase with its own stop
   condition, optional host-local `/goal`, and disposable context.
+- Babysitter steering: review goal-driven workers about hourly. Let healthy
+  long-running refactors continue, but stop or steer a worker that has no
+  durable progress, loops, broadens scope, or pursues the wrong artifact.
+  Inspect captured logs/diff/artifacts before relaunching with a corrected goal
+  or stopping for a hard decision.
 
 Tiny direct edits and read-only probes may stay in the main session. Do not use
 `/goal clear` or `/clear` in the main session while an active flow depends on
