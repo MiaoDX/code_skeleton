@@ -48,6 +48,9 @@ the boundary. Do not preload every reference by default.
   PRDs or execution ledgers.
 - Ask only for hard-stop decisions. Auto-continue routine, reversible, or
   already-implied choices during a confirmed durable run.
+- For durable runs that change local code, create semantic commits along the
+  way after each coherent proof-backed slice. Do not wait until the entire flow
+  is done unless commits are explicitly disabled or staging cannot be made safe.
 - Verify before completion. For implementation/refactor work, report tests or
   verification run, doc-status result when human-facing truth changed, and parked
   todos even when none were found.
@@ -135,11 +138,19 @@ review/test/verification steps, or choose a reversible low-risk default.
 
 ## Commit Rhythm
 
-Semantic commits are enabled by default only when a durable implementation or
-refactor run may produce multiple reviewable units and repo/user instructions do
-not disable commits. Commit only owned files after a coherent proof-backed
-boundary. For docs-only or review-only work, leave commits disabled unless the
-user asked for them.
+Semantic commits are enabled by default when a durable implementation or
+refactor run changes local code and repo/user instructions do not disable
+commits. Commit as the flow progresses after each coherent proof-backed code
+slice, then continue from that clean boundary instead of accumulating a large
+end-of-run diff. For docs-only or review-only work, leave commits disabled
+unless the user asked for them.
+
+Commit only owned files. Before each commit, inspect `git status` and the staged
+diff, run or record the relevant proof, and use a semantic message such as
+`feat(<area>): ...`, `fix(<area>): ...`, `refactor(<area>): ...`, or
+`test(<area>): ...`. If unrelated dirty changes, unresolved blockers, or user
+instructions make a slice commit unsafe, leave it uncommitted and record the
+reason in the route brief or closeout.
 
 Read `references/refactor-and-closeout.md` before creating commits during this
 workflow.

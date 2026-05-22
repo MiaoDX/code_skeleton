@@ -111,11 +111,14 @@ Apply decision triage before crossing these boundaries:
 9. GSD plan -> Execute: continue only when execution is covered by request or
    run contract.
 10. Many phases: ask before creating more than three phases.
-11. Simplify -> Verify: skip only for docs-only/trivial changes or explicit user
+11. Code slice -> Next slice/cleanup: when local code changed and commits are
+   enabled, create a semantic slice commit after focused proof before starting
+   the next slice or cleanup pass.
+12. Simplify -> Verify: skip only for docs-only/trivial changes or explicit user
    instruction.
-12. Refactor scope -> Execute: require accepted P0/P1 checklist and stop
+13. Refactor scope -> Execute: require accepted P0/P1 checklist and stop
    condition.
-13. Refactor doc cleanup: auto-run focused doc status; ask before broad
+14. Refactor doc cleanup: auto-run focused doc status; ask before broad
    moves/deletions or protected docs outside scope.
-14. Local-dev gate: stop when proof needs real simulator, Gateway, VLM, Docker,
+15. Local-dev gate: stop when proof needs real simulator, Gateway, VLM, Docker,
    GPU, API keys, or similar unavailable resources.

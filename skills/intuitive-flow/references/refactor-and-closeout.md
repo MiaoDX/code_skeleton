@@ -71,17 +71,24 @@ and left unchanged.
 
 ## Semantic Commits
 
-For durable implementation or refactor runs that may produce more than one
-reviewable unit, semantic commits are the default recoverability boundary unless
-the user says not to commit, the stop condition is review-only/plan-only, repo
-instructions forbid commits, unrelated dirty changes prevent safe staging, or
-the unit has unresolved blockers.
+For durable implementation or refactor runs that change local code, semantic
+commits are the default recoverability boundary unless the user says not to
+commit, the stop condition is review-only/plan-only, repo instructions forbid
+commits, unrelated dirty changes prevent safe staging, or the unit has
+unresolved blockers.
+
+Do local slice commits along the way. After each coherent code change with its
+focused proof, inspect the diff, stage only owned files, commit with a semantic
+message, and then continue the flow from that clean checkpoint. Do not defer all
+commits until closeout; that leaves the run with too many changed files and makes
+review/recovery harder.
 
 A semantic commit boundary must have:
 
 - one coherent intent a reviewer could accept or revert independently
 - owned files only
-- relevant targeted proof, or a note that the unit is docs/planning only
+- relevant targeted proof, or a note that proof is not applicable for a
+  docs/planning-only unit
 - no known unresolved blocker
 - canonical artifact/progress updated when the unit changes handoff state
 
@@ -95,9 +102,9 @@ Useful boundaries:
 - after `simplify` changes code outside the preceding slice
 - after material verification, docs/status, or closeout updates
 
-Inspect the diff, stage only owned files, run or record proof, and include repo
-co-author trailers when required. If a boundary is too mixed, split it or leave
-it uncommitted with a compact reason.
+Before each commit, inspect `git status` and the staged diff, run or record
+proof, and include repo co-author trailers when required. If a boundary is too
+mixed, split it or leave it uncommitted with a compact reason.
 
 Fallback commit message style when no local style is obvious:
 

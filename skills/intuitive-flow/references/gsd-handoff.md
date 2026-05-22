@@ -82,6 +82,11 @@ execution and verification. Use native worker subagents for bounded disjoint
 implementation or diagnosis slices only when file ownership is explicit and the
 main session owns integration.
 
+For phase execution that changes local code, carry the commit rhythm into the
+runner/worker instructions: after each coherent implementation slice and focused
+proof, inspect the diff, stage only owned files, and create a semantic commit
+before starting the next slice. Report commit ids back to the main session.
+
 When implementation hits a blocker, stay inside the current phase by default.
 Record the blocker and either fix it, narrow the phase, or mark the phase
 blocked. Create a follow-up phase only when the blocker is a separate coherent
