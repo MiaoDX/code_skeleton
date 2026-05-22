@@ -125,11 +125,11 @@ Useful options:
   refactors and slow verification can run when the supervisor deliberately
   allows them.
 - `--idle-timeout-min N` stops when logs are quiet too long.
-- For goal-driven `intuitive-flow` sub-phases, use about a 60-minute
-  babysitter review interval, not a hard timeout. Inspect artifacts, decide
-  whether the worker drifted, and relaunch with a narrower or corrected goal
-  only when the run is unhealthy. Let healthy long-running refactors continue
-  under the longer timeout.
+- For goal-driven `intuitive-flow` sub-phases, set the babysitter review
+  interval from the task: 10-20 minutes for small delegated edits, 30-60 minutes
+  for normal implementation, 60-120 minutes for broad refactors, or the natural
+  proof checkpoint for slow verification. This is a steering cadence, not a hard
+  timeout. Let healthy long-running refactors continue under the longer timeout.
 - `--dangerous` lets Codex run without sandbox/approval checks. Use only when
   the surrounding environment is already trusted.
 - Codex runs preflight `--sandbox workspace-write` once per host/toolchain
@@ -166,12 +166,13 @@ the whole terminal transcript, so normal repo documentation mentioning auth,
 API keys, or setup instructions does not look like a live authentication
 failure. Inspect `terminal.log` manually when debugging a run.
 
-For goal-driven workers, the main session should review progress about hourly.
-Do not stop a healthy long-running run merely because it is old. Stop only when
-it is making no meaningful durable progress, pursuing the wrong artifact,
-looping, or expanding scope. Use captured logs, current diff, commits, and the
-canonical artifact to decide whether to continue, steer with a follow-up prompt,
-or kill and relaunch with a corrected goal.
+For goal-driven workers, the main session should choose a review cadence before
+launch and adjust it when task evidence changes. Do not stop a healthy
+long-running run merely because it is old. Stop only when it is making no
+meaningful durable progress, pursuing the wrong artifact, looping, or expanding
+scope. Use captured logs, current diff, commits, and the canonical artifact to
+decide whether to continue, steer with a follow-up prompt, or kill and relaunch
+with a corrected goal.
 
 Codex sandbox selection is recorded in `sandbox-preflight.md` and `run.json`.
 Cache hits, preflight results, bypass decisions, and strict sandbox blocks must

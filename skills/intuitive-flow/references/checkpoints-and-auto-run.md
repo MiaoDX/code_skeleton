@@ -72,12 +72,22 @@ Prefer closing a completed worker over clearing it and continuing. A fresh
 worker per sub-phase gives cleaner boundaries and makes stale goals less likely.
 
 For goal-driven workers, set a steering cadence, not a short hard timeout.
-Review progress about hourly. Let a healthy long-running worker continue when
-it is producing durable progress or running an expected long proof. If the
-worker is active after a review interval without durable progress, or if it is
-pursuing the wrong artifact, the main session should inspect the captured
-pane/logs/diff/canonical artifact and either steer the worker with a follow-up,
-stop it as blocked, or relaunch a fresh worker with a narrower corrected goal.
+Choose the cadence per sub-phase from expected proof duration, risk, and
+artifact rhythm:
+
+| Task shape | Suggested review cadence |
+| --- | --- |
+| Tiny or low-risk edit | no worker, or 10-20 minutes if delegated |
+| Normal implementation slice | 30-60 minutes |
+| Broad refactor with active tests | 60-120 minutes |
+| Known slow verification or migration | align with expected proof checkpoints |
+
+Let a healthy long-running worker continue when it is producing durable progress
+or running an expected long proof. If the worker is active after a review
+interval without durable progress, or if it is pursuing the wrong artifact, the
+main session should inspect the captured pane/logs/diff/canonical artifact and
+either steer the worker with a follow-up, stop it as blocked, or relaunch a
+fresh worker with a narrower corrected goal.
 
 When stopping a bad goal, do not blindly resume. First answer:
 
@@ -173,10 +183,11 @@ Apply decision triage before crossing these boundaries:
 10. Many phases: ask before creating more than three phases.
 11. Main -> Worker: for durable multi-stage execution, launch a bounded
    `skill-runner`/tmux worker instead of running host-local goal/clear mechanics
-   in the main session. For goal-driven workers, use a long enough timeout for
-   the expected proof, and review progress about hourly. Direct main-session
-   execution is acceptable only for tiny direct edits, read-only probes, or
-   local repairs that do not threaten route continuity.
+   in the main session. For goal-driven workers, choose and record a
+   task-adjusted review cadence plus a long enough timeout for the expected
+   proof. Direct main-session execution is acceptable only for tiny direct
+   edits, read-only probes, or local repairs that do not threaten route
+   continuity.
 12. Worker -> Main: before trusting completion, inspect the worker handoff,
    changed files, logs, commits, and verification evidence. Continue only after
    durable state exists outside the worker context.
