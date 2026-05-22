@@ -13,10 +13,10 @@ Start here:
 - [agent-harness-references.md](agent-harness-references.md) for the external
   references and lessons that guide agent harness upgrades
 - [intuitive-flow-audit-prompt.md](intuitive-flow-audit-prompt.md) for the
-  periodic human-triggered review prompt for `$intuitive-flow` against current
+  minimal copy/paste prompt for comparing `$intuitive-flow` with current
   official and community agent-workflow practice
 - [skill-self-improvement-audit.md](skill-self-improvement-audit.md) for the
-  current review of repo-owned skills through the self-improvement lens
+  dated baseline review of repo-owned skills through the self-improvement lens
 - [reduce-repo-entropy.md](reduce-repo-entropy.md) for the copy/paste
   `$intuitive-reduce-entropy` maintenance prompt
 

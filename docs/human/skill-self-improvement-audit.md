@@ -8,6 +8,11 @@ repo-owned root skill. The goal is not to paste a maintenance prompt into every
 skill. The goal is to find which skill texts should become smaller, clearer, or
 better routed across docs, scripts, hooks, tests, and skills.
 
+Scope: this is a dated baseline audit result, not the recurring research
+prompt. For a fresh Codex or Claude Code session that should compare
+`skills/intuitive-flow` with current official and community practice, use
+[`intuitive-flow-audit-prompt.md`](intuitive-flow-audit-prompt.md).
+
 ## Result
 
 The lens mostly changes where maintenance knowledge lives. It should not become
