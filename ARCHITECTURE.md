@@ -104,6 +104,13 @@ The install surface is controlled by `scripts/local-skill-manifest.txt`:
 - The manifest check fails if a root skill exists but is not listed, or if the
   manifest lists a missing root skill.
 
+External skill installs are controlled by `scripts/external-skill-sources.txt`.
+Each source names a label, an upstream GitHub repo, and either an explicit
+`allowlist` of trusted skill names or an intentional `all` install. The updater
+reads this manifest before running `npx skills add`, and `bun run check:skills`
+validates the manifest shape so external source drift is visible in the normal
+proof boundary.
+
 To add a public skill, create `skills/<name>/SKILL.md`, add it to the manifest,
 update `README.md` if it belongs in the preferred skill list, and run
 `bun run verify`. If the change is based on external agent-harness guidance,
@@ -126,7 +133,7 @@ The updater currently handles these phases:
 - Claude plugin installation
 - Codex feature and status-line config
 - gstack state sync and vendored gstack setup
-- external skill source installation
+- external skill source installation from `scripts/external-skill-sources.txt`
 - local command and root-skill sync
 
 Task execution is centralized in `scripts/lib/task-runner.sh`. Individual phases
@@ -177,14 +184,15 @@ The basic local proof command is:
 bun run verify
 ```
 
-That validates repo-owned skill structure, runs TypeScript checking, and runs
-Bun tests. GitHub Actions mirrors the same proof in
+That validates repo-owned skill structure and external skill source manifests,
+runs TypeScript checking, and runs Bun tests. GitHub Actions mirrors the same proof in
 `.github/workflows/verify.yml`, so broken skill manifests, frontmatter, resource
 references, or deprecated `skills-src/` files fail CI.
 
 At the moment, the test suite covers the local skill manifest parser, root-skill
 manifest checks, direct skill validation, deprecated source rejection, resource
-reference checks, and pruning of manifest-owned legacy artifacts.
+reference checks, external skill source validation, and pruning of
+manifest-owned legacy artifacts.
 
 The repo-owned pre-commit hook repeats the skill structure check locally when
 `core.hooksPath` points at `.githooks/`.

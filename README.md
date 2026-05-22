@@ -100,7 +100,7 @@ promotes them.
 
 | Script | Purpose |
 | --- | --- |
-| `bun run check:skills` | Validate repo-owned skills, manifest coverage, frontmatter, and local resource links |
+| `bun run check:skills` | Validate repo-owned skills, manifest coverage, external skill sources, frontmatter, and local resource links |
 | `bun run setup:hooks` | Configure this checkout to use repo-owned Git hooks from `.githooks/` |
 | `scripts/update.sh` | Install or update agent surfaces, skills, commands, GSD, and gstack |
 | `scripts/dev/*.sh` | Local developer utilities for tmux and workstation sessions |
@@ -122,7 +122,7 @@ bun run verify
 
 Human docs define repo truth, `AGENTS.md` and `CLAUDE.md` stay project-local,
 `skills/` is the canonical repo-owned skill surface, and `scripts/update.sh`
-syncs Claude Code, Codex, GSD, gstack, external community skill sources, and
+syncs Claude Code, Codex, GSD, gstack, manifest-listed external skill sources, and
 repo-owned skills into user-level tooling. See [ARCHITECTURE.md](ARCHITECTURE.md)
 for subsystem contracts and proof boundaries.
 

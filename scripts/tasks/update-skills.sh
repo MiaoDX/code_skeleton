@@ -8,15 +8,44 @@ _run_skills() {
     echo "  ✓ skills ($label) → $agent"
 }
 
+_external_skill_manifest() {
+    printf '%s/external-skill-sources.txt\n' "$SCRIPT_DIR"
+}
+
+_external_skill_tool() {
+    if ! command -v bun >/dev/null 2>&1; then
+        echo "  ! bun not found; run scripts/update.sh after fixing the environment pre-check"
+        return 1
+    fi
+
+    bun "$SCRIPT_DIR/lib/external-skill-sources.ts" "$@"
+}
+
+_run_external_skills() {
+    local agent="$1" label="$2"
+    local manifest repo skill_args_output
+    manifest=$(_external_skill_manifest)
+    repo=$(_external_skill_tool repo "$manifest" "$label") || return 1
+    skill_args_output=$(_external_skill_tool skill-args "$manifest" "$label") || return 1
+
+    local skill_args=()
+    if [ -n "$skill_args_output" ]; then
+        while IFS= read -r arg; do
+            skill_args+=("$arg")
+        done <<< "$skill_args_output"
+    fi
+
+    _run_skills "$agent" "$repo" "$label" "${skill_args[@]}"
+}
+
 run_skills_anthro() {
-    _run_skills "$1" "anthropics/skills" "anthropics" \
-        --skill skill-creator --skill mcp-builder --skill pdf --skill xlsx --skill docx
+    _run_external_skills "$1" "anthropics"
 }
 
 run_skills_codex() {
-    _run_skills "$1" "skills-directory/skill-codex" "codex"
+    _run_external_skills "$1" "codex"
 }
 
 run_skills_mattpocock() {
-    _run_skills "$1" "https://github.com/mattpocock/skills" "mattpocock"
+    _run_external_skills "$1" "mattpocock"
 }

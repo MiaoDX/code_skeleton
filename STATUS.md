@@ -1,6 +1,6 @@
 # Status
 
-Last reviewed: 2026-05-17
+Last reviewed: 2026-05-22
 
 ## Current State
 
@@ -11,6 +11,7 @@ currently provides:
 - a human-facing agent harness reference ledger in
   `docs/human/agent-harness-references.md`
 - reusable installed skills under `skills/`
+- an external skill source manifest at `scripts/external-skill-sources.txt`
 - update and sync automation under `scripts/`
 - repo-owned Git hooks under `.githooks/`
 - Bun TypeScript helpers and tests under `scripts/lib/`
@@ -53,6 +54,7 @@ The current maintenance focus is keeping the repo dogfoodable:
 - keep the user-facing skill surface small: flow, refactor, reduce-entropy, and
   squash; route doc/init/tests and architecture discovery as specialist skills
 - keep root skills listed in `scripts/local-skill-manifest.txt`
+- keep external skill installs explicit in `scripts/external-skill-sources.txt`
 - edit repo-owned skills directly under `skills/`
 - keep local hooks enabled with `bun run setup:hooks` so skill structure,
   manifest coverage, and local resource references are checked before commit
@@ -75,6 +77,8 @@ There is no active `.planning/` roadmap or GSD phase in this checkout.
   environment surfaces, not human docs.
 - `scripts/update.sh` is not a harmless test command; it mutates installed tools
   and user config.
+- Full external skill-source installs are intentional only when listed as `all`
+  in `scripts/external-skill-sources.txt`; prefer `allowlist` for narrow trust.
 - `skills/` is the canonical repo-owned skill source and install surface.
 - `.githooks/pre-commit` is opt-in per checkout through `bun run setup:hooks`
   because Git does not version local hook configuration.

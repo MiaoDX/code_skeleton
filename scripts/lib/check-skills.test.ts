@@ -23,6 +23,7 @@ const optionsFor = (root: string) => ({
   skillsRoot: join(root, "skills"),
   manifestPath: join(root, "scripts", "local-skill-manifest.txt"),
   deprecatedSourceRoot: join(root, "skills-src"),
+  externalSkillSourcesPath: undefined,
 });
 
 describe("skill checker", () => {
@@ -72,6 +73,21 @@ describe("skill checker", () => {
       const errors = checkSkills(optionsFor(root));
       expect(errors).toContain("template include left in canonical skill file: skills/alpha/SKILL.md");
       expect(errors).toContain("missing referenced skill resource in skills/alpha/SKILL.md: references/missing.md");
+    });
+  });
+
+  test("validates external skill source manifests when configured", async () => {
+    await withTempProject((root) => {
+      writeFixtureFile(root, "scripts/local-skill-manifest.txt", "root-skill alpha\n");
+      writeFixtureFile(root, "scripts/external-skill-sources.txt", "source demo https://example.com/demo all\n");
+      writeFixtureFile(root, "skills/alpha/SKILL.md", "---\nname: alpha\ndescription: Alpha.\n---\n");
+
+      const errors = checkSkills({
+        ...optionsFor(root),
+        externalSkillSourcesPath: join(root, "scripts", "external-skill-sources.txt"),
+      });
+
+      expect(errors).toContain("unsupported external skill repo on line 1: https://example.com/demo");
     });
   });
 });

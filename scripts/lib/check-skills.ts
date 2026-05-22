@@ -2,18 +2,21 @@
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { checkExternalSkillSourcesText } from "./external-skill-sources";
 import { checkRootSkills, parseManifestText } from "./local-skill-manifest";
 
 export type SkillCheckOptions = {
   skillsRoot: string;
   manifestPath: string;
   deprecatedSourceRoot: string;
+  externalSkillSourcesPath?: string;
 };
 
 const defaultOptions = (): SkillCheckOptions => ({
   skillsRoot: join(process.cwd(), "skills"),
   manifestPath: join(process.cwd(), "scripts", "local-skill-manifest.txt"),
   deprecatedSourceRoot: join(process.cwd(), "skills-src"),
+  externalSkillSourcesPath: join(process.cwd(), "scripts", "external-skill-sources.txt"),
 });
 
 const sortedDirEntries = (dir: string) => readdirSync(dir).sort((a, b) => a.localeCompare(b));
@@ -163,6 +166,14 @@ export const checkSkills = (options = defaultOptions()): string[] => {
 
   const manifest = parseManifestText(readFileSync(options.manifestPath, "utf8"));
   errors.push(...checkRootSkills(manifest, options.skillsRoot));
+
+  if (options.externalSkillSourcesPath) {
+    if (!existsSync(options.externalSkillSourcesPath)) {
+      errors.push("missing external skill source manifest: scripts/external-skill-sources.txt");
+    } else {
+      errors.push(...checkExternalSkillSourcesText(readFileSync(options.externalSkillSourcesPath, "utf8")));
+    }
+  }
 
   for (const skillName of skillNames(options.skillsRoot)) {
     errors.push(...checkSkill(options.skillsRoot, skillName));
