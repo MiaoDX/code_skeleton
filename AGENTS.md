@@ -6,7 +6,6 @@
 - Use Bash for orchestration entrypoints and Bun-run TypeScript for structured script logic.
 - For Python work, use `uv` and `.venv` instead of the system interpreter.
 - Avoid adding Python project dependencies unless a workflow truly needs Python-specific libraries.
-- Remote execution: do not run heavy simulations, and never remove folders.
 
 ## Delegation And Verification
 

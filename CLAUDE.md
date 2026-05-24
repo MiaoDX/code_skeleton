@@ -14,7 +14,10 @@
 - Delegate when a task has 2+ independent workstreams, requires reading many files, logs, or test outputs, or when verification can run in parallel with implementation.
 - Return summaries to the main thread, not raw notes or long log dumps.
 - Use subagents aggressively for independent exploration, review, and verification work.
+- Prefer 2-4 subagents by default. Scale up only for clearly partitioned work.
+- Match subagent model strength to task complexity rather than defaulting everything to the highest-cost model.
 - For concurrent edits, assign disjoint ownership and avoid overlapping write scopes.
+- Do not wait idly for subagents if non-overlapping local work is available.
 - Do not mark work complete without verification. Run relevant tests, inspect logs, or otherwise demonstrate correctness.
 
 ## Development And Testing
@@ -61,6 +64,7 @@
 
 - Keep `README.md` as the thin entry guide and put detailed current-state docs in `ARCHITECTURE.md`, `STATUS.md`, and `docs/human/**`.
 - Treat root human docs and `docs/human/**` as the human docs layer; treat `.planning/` as the live summary/control-plane layer and generated release notes or archives as historical material unless promoted.
+- When a refactor changes runtime truth, update the relevant root human doc or `docs/human/**` page in the same slice; if decisions or scope change too, refresh the live `.planning/` summaries as well.
 - Prefer a curated ingest or merge step over broad repo-wide doc discovery when syncing planning from docs.
 
 ## Claude-Specific Notes

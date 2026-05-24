@@ -105,7 +105,7 @@ From the repo where the task should run:
 
 ```bash
 python3 /path/to/intuitive-flow/skills/skill-runner/scripts/run_skill_runner.py \
-  --agent codex \
+  --agent <codex|claude> \
   --cwd "$PWD" \
   -- \
   'impl <task> with $intuitive-flow then $simplify'
