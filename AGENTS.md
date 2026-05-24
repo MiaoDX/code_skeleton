@@ -13,6 +13,7 @@
 - Keep the main thread focused on requirements, architecture decisions, integration, and final synthesis.
 - Delegate when a task has 2+ independent workstreams, requires reading many files, logs, or test outputs, or when verification can run in parallel with implementation.
 - Return summaries to the main thread, not raw notes or long log dumps.
+- Use subagents aggressively for independent exploration, review, and verification work.
 - Prefer 2-4 subagents by default. Scale up only for clearly partitioned work.
 - Match subagent model strength to task complexity rather than defaulting everything to the highest-cost model.
 - This repo often runs through an API relay with a single allowed model; default subagents to the main session model, and only override the model after confirming the target ID is actually available.
@@ -65,10 +66,11 @@
 - Keep `README.md` thin and put detailed current-state setup, runtime, and interface docs in `ARCHITECTURE.md`, `STATUS.md`, and `docs/human/**`.
 - Use root human docs and `docs/human/**` for human-facing truth at `HEAD`; use `.planning/` for locked project summaries and execution state, and treat generated release notes, archives, and spec areas as historical material unless promoted.
 - When a refactor changes runtime truth, update the relevant root human doc or `docs/human/**` page in the same slice; if decisions or scope change too, refresh the live `.planning/` summaries as well.
+- Prefer a curated ingest or merge step over broad repo-wide doc discovery when syncing planning from docs.
 
-## Codex-Specific Notes
+## Agent Notes
 
-- Keep `AGENTS.md` thin and self-contained. Do not rely on follow-up file reads for critical rules.
-- Keep shared repo rules aligned with `CLAUDE.md`, but include the operative constraints in this file.
+- This file is the source of truth for shared agent rules. `CLAUDE.md` consumes it via `@AGENTS.md` and only owns Claude-specific additions; keep all operative shared rules here because Codex does not transclude other files.
 - Move reusable workflows to skills, scripts, or subagents instead of expanding this file.
-- If a commit is created by Codex, include `Co-authored-by: Codex <codex@users.noreply.github.com>`
+- If a workflow must be enforced deterministically, prefer hooks or scripts over prose in this file.
+- Codex commits: include `Co-authored-by: Codex <codex@users.noreply.github.com>` trailer.
