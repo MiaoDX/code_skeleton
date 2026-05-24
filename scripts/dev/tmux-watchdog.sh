@@ -500,7 +500,7 @@ mark_prompt_sent() {
 }
 
 press_enter() {
-  tmux_call send-keys -t "$1" Enter
+  tmux_call send-keys -t "$1" C-m
 }
 
 clear_prompt_buffer() {

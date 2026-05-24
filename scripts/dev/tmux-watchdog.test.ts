@@ -1,7 +1,11 @@
 import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, test } from "bun:test";
 
 const repoRoot = process.cwd();
+const hasTmux = spawnSync("tmux", ["-V"], { encoding: "utf8" }).status === 0;
 
 function runWatchdogScript(script: string, args: string[] = [], env: NodeJS.ProcessEnv = {}) {
   return spawnSync("bash", ["-c", script, "bash", ...args], {
@@ -132,5 +136,58 @@ parse_args
 
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain("set only one of WATCHDOG_TMUX_SOCKET_NAME or WATCHDOG_TMUX_SOCKET_PATH");
+  });
+});
+
+describe("tmux watchdog prompt injection", () => {
+  test.skipIf(!hasTmux)("submits slash commands to an interactive tmux pane", () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "tmux-watchdog-send-"));
+    const session = `tmux-watchdog-send-${process.pid}-${Date.now()}`;
+    const commandLog = join(tempDir, "commands.log");
+    try {
+      const agentScript = [
+        "printf '› '",
+        "while IFS= read -r line; do",
+        `  printf '%s\\n' \"$line\" >> ${JSON.stringify(commandLog)}`,
+        "  printf '\\nACK:%s\\n› ' \"$line\"",
+        "done",
+      ].join("\n");
+      const started = spawnSync("tmux", ["new-session", "-d", "-s", session, "bash", "-lc", agentScript], {
+        cwd: repoRoot,
+        encoding: "utf8",
+      });
+      expect(started.status).toBe(0);
+
+      const result = runWatchdogScript(
+        `
+source scripts/dev/tmux-watchdog.sh
+parse_args default
+PROMPT='/goal stable tmux injection proof'
+send_prompt "$1" true
+PROMPT='/goal clear'
+send_prompt "$1" true
+PROMPT='/clear'
+send_prompt "$1" true
+for _ in 1 2 3 4 5; do
+  [ "$(wc -l < "$2" 2>/dev/null || printf 0)" -ge 3 ] && break
+  sleep 0.1
+done
+`,
+        [session, commandLog],
+        {
+          WATCHDOG_SEND_SETTLE_SECONDS: "0",
+        },
+      );
+
+      expect(result.status).toBe(0);
+      expect(readFileSync(commandLog, "utf8").trim().split("\n")).toEqual([
+        "/goal stable tmux injection proof",
+        "/goal clear",
+        "/clear",
+      ]);
+    } finally {
+      spawnSync("tmux", ["kill-session", "-t", session], { encoding: "utf8" });
+      rmSync(tempDir, { recursive: true, force: true });
+    }
   });
 });
