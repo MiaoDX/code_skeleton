@@ -213,7 +213,7 @@ print(json.dumps({
     }
   });
 
-  test.skipIf(!hasTmux)("interactive mode injects goal, task, goal clear, and clear", () => {
+  function runFakeInteractiveRunner(extraArgs: string[] = []) {
     const tempDir = mkdtempSync(join(tmpdir(), "skill-runner-interactive-"));
     const commandLog = join(tempDir, "commands.log");
     const fakeAgent = join(tempDir, "fake-agent.sh");
@@ -237,58 +237,75 @@ print(json.dumps({
       { mode: 0o755 },
     );
 
-    try {
-      const result = spawnSync(
-        "python3",
-        [
-          runnerScript,
-          "--interactive",
-          "--dangerous",
-          "--no-auto-stop",
-          "--agent-command",
-          fakeAgent,
-          "--cwd",
-          repoRoot,
-          "--run-root",
-          tempDir,
-          "--timeout-min",
-          "0.05",
-          "--idle-timeout-min",
-          "0.05",
-          "--interactive-send-settle-sec",
-          "0",
-          "--interactive-ready-timeout-sec",
-          "2",
-          "--poll-interval-sec",
-          "0.1",
-          "--goal",
-          "stable interactive goal",
-          "--clear-context-on-exit",
-          "--",
-          "fake interactive task",
-        ],
-        {
-          cwd: repoRoot,
-          encoding: "utf8",
-          env: {
-            ...process.env,
-            PYTHONDONTWRITEBYTECODE: "1",
-          },
+    const result = spawnSync(
+      "python3",
+      [
+        runnerScript,
+        "--interactive",
+        "--dangerous",
+        "--no-auto-stop",
+        "--agent-command",
+        fakeAgent,
+        "--cwd",
+        repoRoot,
+        "--run-root",
+        tempDir,
+        "--timeout-min",
+        "0.05",
+        "--idle-timeout-min",
+        "0.05",
+        "--interactive-send-settle-sec",
+        "0",
+        "--interactive-ready-timeout-sec",
+        "2",
+        "--poll-interval-sec",
+        "0.1",
+        "--goal",
+        "stable interactive goal",
+        ...extraArgs,
+        "--",
+        "fake interactive task",
+      ],
+      {
+        cwd: repoRoot,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          PYTHONDONTWRITEBYTECODE: "1",
         },
-      );
+      },
+    );
 
-      expect(result.status).toBe(0);
-      const runDir = result.stdout.trim().split("\n").at(-1) ?? "";
-      expect(existsSync(join(runDir, "result.md"))).toBe(true);
-      expect(readFileSync(join(runDir, "result.md"), "utf8")).toContain("Status: SUCCESS");
-      expect(readFileSync(join(runDir, "tmux-inputs.jsonl"), "utf8")).toContain('"label": "goal"');
-      const commands = readFileSync(commandLog, "utf8").trim().split("\n");
+    const runDir = result.stdout.trim().split("\n").at(-1) ?? "";
+    return { commandLog, result, runDir, tempDir };
+  }
+
+  test.skipIf(!hasTmux)("interactive mode closes tmux without clearing goal by default", () => {
+    const run = runFakeInteractiveRunner();
+    try {
+      expect(run.result.status).toBe(0);
+      expect(existsSync(join(run.runDir, "result.md"))).toBe(true);
+      expect(readFileSync(join(run.runDir, "result.md"), "utf8")).toContain("Status: SUCCESS");
+      expect(readFileSync(join(run.runDir, "tmux-inputs.jsonl"), "utf8")).toContain('"label": "goal"');
+      const commands = readFileSync(run.commandLog, "utf8").trim().split("\n");
       expect(commands[0]).toBe("/goal stable interactive goal");
       expect(commands[1]).toContain("rewritten-prompt.md");
       expect(commands[1]).toContain("RESULT_STATUS");
+      expect(commands).not.toContain("/goal clear");
+      expect(commands).not.toContain("/clear");
+    } finally {
+      rmSync(run.tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test.skipIf(!hasTmux)("interactive mode can opt into goal and context clearing", () => {
+    const run = runFakeInteractiveRunner(["--clear-goal-on-exit", "--clear-context-on-exit"]);
+    try {
+      expect(run.result.status).toBe(0);
+      const commands = readFileSync(run.commandLog, "utf8").trim().split("\n");
       expect(commands.slice(-2)).toEqual(["/goal clear", "/clear"]);
     } finally {
-      rmSync(tempDir, { recursive: true, force: true });
+      rmSync(run.tempDir, { recursive: true, force: true });
     }
   });
 });

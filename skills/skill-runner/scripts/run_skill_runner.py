@@ -208,6 +208,11 @@ def parse_args() -> argparse.Namespace:
         help="Send /clear after an interactive worker reaches RESULT_STATUS.",
     )
     parser.add_argument(
+        "--clear-goal-on-exit",
+        action="store_true",
+        help="Send /goal clear after an interactive worker reaches RESULT_STATUS.",
+    )
+    parser.add_argument(
         "--interactive-ready-timeout-sec",
         type=float,
         default=30.0,
@@ -989,7 +994,7 @@ def stop_session(session: str, run_dir: Path, reason: str) -> None:
 
 
 def close_interactive_session(*, session: str, run_dir: Path, args: argparse.Namespace) -> None:
-    if args.goal:
+    if args.clear_goal_on_exit and args.goal:
         send_tmux_line(
             session=session,
             run_dir=run_dir,
