@@ -114,7 +114,7 @@ add_tmux_target() {
   local target="$1"
   local existing
 
-  for existing in "${TMUX_TARGETS[@]}"; do
+  for existing in ${TMUX_TARGETS[@]+"${TMUX_TARGETS[@]}"}; do
     [[ "$existing" == "$target" ]] && return 0
   done
 
@@ -316,7 +316,7 @@ pane_log_label() {
 scan_all_targets() {
   local target
 
-  for target in "${TMUX_TARGETS[@]}"; do
+  for target in ${TMUX_TARGETS[@]+"${TMUX_TARGETS[@]}"}; do
     configure_tmux_command "$target" || return 1
     scan_all_panes
   done
