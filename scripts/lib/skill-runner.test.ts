@@ -1,11 +1,12 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "bun:test";
 
 const repoRoot = process.cwd();
 const runnerScript = join(repoRoot, "skills", "skill-runner", "scripts", "run_skill_runner.py");
+const hasTmux = spawnSync("tmux", ["-V"], { encoding: "utf8" }).status === 0;
 
 function runPython(body: string) {
   const script = `
@@ -152,5 +153,142 @@ print(json.dumps({
     expect(output.strict_dangerous).toBe(false);
     expect(output.strict_blocked).toBe(true);
     expect(output.strict_mode).toBe("blocked");
+  });
+
+  test("detects interactive approval prompts in terminal logs when requested", () => {
+    const runDir = mkdtempSync(join(tmpdir(), "skill-runner-terminal-risk-"));
+    try {
+      writeFileSync(
+        join(runDir, "terminal.log"),
+        [
+          "[ ! ] Action Required",
+          "Would you like to run the following command?",
+          "",
+        ].join("\n"),
+      );
+
+      const output = runPython(`
+from pathlib import Path
+
+run_dir = Path(${JSON.stringify(runDir)})
+print(json.dumps({
+    "normal": module.detect_risk(run_dir),
+    "interactive": module.detect_risk(run_dir, include_terminal=True),
+}))
+`);
+      expect(output.normal).toBe(null);
+      expect(output.interactive).toBe("interactive-approval");
+    } finally {
+      rmSync(runDir, { recursive: true, force: true });
+    }
+  });
+
+  test("detects RESULT_STATUS rendered with terminal UI prefixes", () => {
+    const runDir = mkdtempSync(join(tmpdir(), "skill-runner-terminal-result-"));
+    try {
+      writeFileSync(
+        join(runDir, "terminal.log"),
+        [
+          "────────────────",
+          "• RESULT_STATUS: SUCCESS",
+          "  SUMMARY: done",
+          "",
+        ].join("\n"),
+      );
+
+      const output = runPython(`
+from pathlib import Path
+
+run_dir = Path(${JSON.stringify(runDir)})
+module.materialize_interactive_last_message(run_dir)
+print(json.dumps({
+    "status": module.read_worker_result_status(run_dir),
+    "last_message": (run_dir / "last-message.md").read_text(),
+}))
+`);
+      expect(output.status).toBe("SUCCESS");
+      expect(output.last_message).toContain("RESULT_STATUS: SUCCESS");
+    } finally {
+      rmSync(runDir, { recursive: true, force: true });
+    }
+  });
+
+  test.skipIf(!hasTmux)("interactive mode injects goal, task, goal clear, and clear", () => {
+    const tempDir = mkdtempSync(join(tmpdir(), "skill-runner-interactive-"));
+    const commandLog = join(tempDir, "commands.log");
+    const fakeAgent = join(tempDir, "fake-agent.sh");
+    writeFileSync(
+      fakeAgent,
+      [
+        "#!/usr/bin/env bash",
+        "set -euo pipefail",
+        "printf '\\n› '",
+        "while IFS= read -r line; do",
+        `  printf '%s\\n' "$line" >> ${JSON.stringify(commandLog)}`,
+        "  case \"$line\" in",
+        "    /goal\\ *) printf '\\nGoal active\\n› ' ;;",
+        "    /goal\\ clear) printf '\\nGoal cleared\\n› ' ;;",
+        "    /clear) printf '\\nCleared\\n› ' ;;",
+        "    *) printf '\\nRESULT_STATUS: SUCCESS\\nSUMMARY: fake interactive worker complete\\nCHANGED_FILES: none\\nCOMMITS: none\\nVERIFICATION: fake agent\\nOPEN_DECISIONS: none\\nSKILL_BEHAVIOR_NOTES: none\\nRECOMMENDED_GOAL_REVISION: none\\n› ' ;;",
+        "  esac",
+        "done",
+        "",
+      ].join("\n"),
+      { mode: 0o755 },
+    );
+
+    try {
+      const result = spawnSync(
+        "python3",
+        [
+          runnerScript,
+          "--interactive",
+          "--dangerous",
+          "--no-auto-stop",
+          "--agent-command",
+          fakeAgent,
+          "--cwd",
+          repoRoot,
+          "--run-root",
+          tempDir,
+          "--timeout-min",
+          "0.05",
+          "--idle-timeout-min",
+          "0.05",
+          "--interactive-send-settle-sec",
+          "0",
+          "--interactive-ready-timeout-sec",
+          "2",
+          "--poll-interval-sec",
+          "0.1",
+          "--goal",
+          "stable interactive goal",
+          "--clear-context-on-exit",
+          "--",
+          "fake interactive task",
+        ],
+        {
+          cwd: repoRoot,
+          encoding: "utf8",
+          env: {
+            ...process.env,
+            PYTHONDONTWRITEBYTECODE: "1",
+          },
+        },
+      );
+
+      expect(result.status).toBe(0);
+      const runDir = result.stdout.trim().split("\n").at(-1) ?? "";
+      expect(existsSync(join(runDir, "result.md"))).toBe(true);
+      expect(readFileSync(join(runDir, "result.md"), "utf8")).toContain("Status: SUCCESS");
+      expect(readFileSync(join(runDir, "tmux-inputs.jsonl"), "utf8")).toContain('"label": "goal"');
+      const commands = readFileSync(commandLog, "utf8").trim().split("\n");
+      expect(commands[0]).toBe("/goal stable interactive goal");
+      expect(commands[1]).toContain("rewritten-prompt.md");
+      expect(commands[1]).toContain("RESULT_STATUS");
+      expect(commands.slice(-2)).toEqual(["/goal clear", "/clear"]);
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
   });
 });

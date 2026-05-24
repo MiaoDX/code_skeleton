@@ -32,6 +32,10 @@ RESULT_STATUS_PATTERN = re.compile(
     r"^\s*RESULT_STATUS:\s*(SUCCESS|PARTIAL|BLOCKED_NEEDS_DECISION|FAILED)\b",
     re.I | re.M,
 )
+TERMINAL_RESULT_STATUS_PATTERN = re.compile(
+    r"RESULT_STATUS:\s*(SUCCESS|PARTIAL|BLOCKED_NEEDS_DECISION|FAILED)\b",
+    re.I,
+)
 SANDBOX_DETECTION_LOGS = (
     "stderr.log",
     "last-message.md",
@@ -60,6 +64,10 @@ RISK_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ),
     ("context-exhausted", re.compile(r"(context length|maximum context|too many tokens)", re.I)),
     ("noninteractive-approval", re.compile(r"(approval required|cannot prompt|requires confirmation)", re.I)),
+    (
+        "interactive-approval",
+        re.compile(r"(Action Required|Would you like to run the following command\?)", re.I),
+    ),
 )
 
 
@@ -90,6 +98,8 @@ def main() -> int:
         {
             "agent": args.agent,
             "cwd": str(cwd),
+            "execution_mode": "interactive" if args.interactive else "exec",
+            "goal": args.goal,
             "skills": skills,
             "session": session,
             "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
@@ -116,6 +126,8 @@ def main() -> int:
         return 0
 
     start_tmux(session=session, run_dir=run_dir, cwd=cwd)
+    if args.interactive:
+        start_interactive_worker(session=session, run_dir=run_dir, args=args)
     if args.detach:
         write_result(run_dir, session, "DETACHED", "Worker session started and left running.")
         print(f"session: {session}")
@@ -148,6 +160,8 @@ def main() -> int:
         )
         write_run_script(run_dir, args, cwd, dangerous=True)
         start_tmux(session=retry_session, run_dir=run_dir, cwd=cwd)
+        if args.interactive:
+            start_interactive_worker(session=retry_session, run_dir=run_dir, args=args)
         status, exit_code, retry_reason = wait_for_worker(
             session=retry_session,
             run_dir=run_dir,
@@ -179,6 +193,34 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--detach", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--dangerous", action="store_true")
+    parser.add_argument(
+        "--interactive",
+        action="store_true",
+        help="Run an interactive tmux agent session and inject prompts with tmux send-keys.",
+    )
+    parser.add_argument(
+        "--goal",
+        help="Set this worker-local slash-command goal before sending the task prompt.",
+    )
+    parser.add_argument(
+        "--clear-context-on-exit",
+        action="store_true",
+        help="Send /clear after an interactive worker reaches RESULT_STATUS.",
+    )
+    parser.add_argument(
+        "--interactive-ready-timeout-sec",
+        type=float,
+        default=30.0,
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--interactive-send-settle-sec",
+        type=float,
+        default=0.5,
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument("--poll-interval-sec", type=float, default=5.0, help=argparse.SUPPRESS)
+    parser.add_argument("--agent-command", help=argparse.SUPPRESS)
     parser.add_argument(
         "--require-sandbox",
         action="store_true",
@@ -709,7 +751,9 @@ def write_run_script(
 ) -> None:
     prompt_path = run_dir / "rewritten-prompt.md"
     exit_path = run_dir / "exit_code"
-    if args.agent == "codex":
+    if args.interactive:
+        command = interactive_agent_command(args=args, cwd=cwd, dangerous=dangerous)
+    elif args.agent == "codex":
         command = [
             "codex",
             "exec",
@@ -737,14 +781,22 @@ def write_run_script(
             command.append("--dangerously-skip-permissions")
 
     quoted = " ".join(shlex.quote(part) for part in command)
+    if args.interactive:
+        body = f"""{quoted} 2> >(tee {shlex.quote(str(run_dir / "stderr.log"))} >&2)
+code=$?
+"""
+    else:
+        body = f"""{quoted} < {shlex.quote(str(prompt_path))} 2> >(tee {shlex.quote(str(run_dir / "stderr.log"))} >&2) | tee {shlex.quote(str(run_dir / "events.jsonl"))}
+code=${{PIPESTATUS[0]}}
+"""
+
     script = f"""#!/usr/bin/env bash
 set -u
 cd {shlex.quote(str(cwd))}
 echo $$ > {shlex.quote(str(run_dir / "worker.pid"))}
 echo running > {shlex.quote(str(run_dir / "status"))}
 set +e
-{quoted} < {shlex.quote(str(prompt_path))} 2> >(tee {shlex.quote(str(run_dir / "stderr.log"))} >&2) | tee {shlex.quote(str(run_dir / "events.jsonl"))}
-code=${{PIPESTATUS[0]}}
+{body}
 echo "$code" > {shlex.quote(str(exit_path))}
 if [ "$code" -eq 0 ]; then
   echo complete > {shlex.quote(str(run_dir / "status"))}
@@ -756,6 +808,28 @@ exit "$code"
     run_script = run_dir / "run.sh"
     write_text(run_script, script)
     run_script.chmod(0o755)
+
+
+def interactive_agent_command(*, args: argparse.Namespace, cwd: Path, dangerous: bool) -> list[str]:
+    if args.agent_command:
+        return shlex.split(str(args.agent_command))
+    if args.agent == "codex":
+        command = [
+            "codex",
+            "--no-alt-screen",
+            "--cd",
+            str(cwd),
+        ]
+        if dangerous:
+            command.append("--dangerously-bypass-approvals-and-sandbox")
+        else:
+            command.extend(["--sandbox", "workspace-write"])
+        return command
+
+    command = ["claude"]
+    if dangerous:
+        command.append("--dangerously-skip-permissions")
+    return command
 
 
 def start_tmux(*, session: str, run_dir: Path, cwd: Path) -> None:
@@ -770,6 +844,91 @@ def start_tmux(*, session: str, run_dir: Path, cwd: Path) -> None:
     )
 
 
+def start_interactive_worker(*, session: str, run_dir: Path, args: argparse.Namespace) -> None:
+    if not wait_for_interactive_prompt(
+        session=session,
+        run_dir=run_dir,
+        timeout_sec=float(args.interactive_ready_timeout_sec),
+    ):
+        write_text(run_dir / "interactive-start-warning", "ready prompt was not detected before injection\n")
+
+    goal = str(args.goal or "").strip()
+    if goal:
+        send_tmux_line(
+            session=session,
+            run_dir=run_dir,
+            text=f"/goal {goal}",
+            label="goal",
+            settle_sec=float(args.interactive_send_settle_sec),
+        )
+
+    task_prompt = interactive_task_prompt(run_dir)
+    send_tmux_line(
+        session=session,
+        run_dir=run_dir,
+        text=task_prompt,
+        label="task",
+        settle_sec=float(args.interactive_send_settle_sec),
+    )
+
+
+def interactive_task_prompt(run_dir: Path) -> str:
+    return (
+        f"Execute the skill-runner task described in {run_dir / 'rewritten-prompt.md'}. "
+        "Follow that file exactly and finish with RESULT_STATUS."
+    )
+
+
+def wait_for_interactive_prompt(*, session: str, run_dir: Path, timeout_sec: float) -> bool:
+    deadline = time.monotonic() + timeout_sec
+    while time.monotonic() < deadline:
+        output = capture_tmux_pane(session)
+        if output is not None:
+            write_text(run_dir / "pane-before-injection.log", output)
+            if has_interactive_prompt(output):
+                return True
+        if not tmux_has_session(session):
+            return False
+        time.sleep(0.25)
+    return False
+
+
+def has_interactive_prompt(output: str) -> bool:
+    tail = "\n".join(output.splitlines()[-12:])
+    return re.search(r"^\s*[›>]\s*.*$", tail, re.M) is not None
+
+
+def send_tmux_line(
+    *,
+    session: str,
+    run_dir: Path,
+    text: str,
+    label: str,
+    settle_sec: float,
+) -> None:
+    input_log = run_dir / "tmux-inputs.jsonl"
+    with input_log.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps({"label": label, "text": text}) + "\n")
+
+    buffer_name = f"skill-runner-{os.getpid()}-{int(time.time() * 1000)}"
+    buffer_path = run_dir / f"tmux-input-{label}.txt"
+    write_text(buffer_path, text)
+    subprocess.run(["tmux", "send-keys", "-t", session, "C-u"], check=False)
+    subprocess.run(["tmux", "load-buffer", "-b", buffer_name, str(buffer_path)], check=True)
+    try:
+        subprocess.run(["tmux", "paste-buffer", "-d", "-b", buffer_name, "-t", session], check=True)
+    finally:
+        subprocess.run(
+            ["tmux", "delete-buffer", "-b", buffer_name],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+    subprocess.run(["tmux", "send-keys", "-t", session, "C-m"], check=True)
+    if settle_sec > 0:
+        time.sleep(settle_sec)
+
+
 def wait_for_worker(*, session: str, run_dir: Path, args: argparse.Namespace) -> tuple[str, int, str]:
     started = time.monotonic()
     last_activity = time.monotonic()
@@ -779,6 +938,13 @@ def wait_for_worker(*, session: str, run_dir: Path, args: argparse.Namespace) ->
     idle_timeout = args.idle_timeout_min * 60
 
     while True:
+        if args.interactive:
+            worker_status = read_worker_result_status(run_dir)
+            if worker_status:
+                materialize_interactive_last_message(run_dir)
+                close_interactive_session(session=session, run_dir=run_dir, args=args)
+                return classify_worker_exit(run_dir, 0)
+
         if exit_path.exists():
             code = read_exit_code(exit_path)
             return classify_worker_exit(run_dir, code)
@@ -800,12 +966,12 @@ def wait_for_worker(*, session: str, run_dir: Path, args: argparse.Namespace) ->
             return "FAILED", 124, f"idle timeout after {args.idle_timeout_min:g} minutes"
 
         if not args.no_auto_stop:
-            risk = detect_risk(run_dir)
+            risk = detect_risk(run_dir, include_terminal=args.interactive)
             if risk:
                 stop_session(session, run_dir, risk)
                 return "BLOCKED", 125, f"auto-stopped: {risk}"
 
-        time.sleep(5)
+        time.sleep(max(0.1, float(args.poll_interval_sec)))
 
 
 def tmux_has_session(session: str) -> bool:
@@ -820,6 +986,55 @@ def stop_session(session: str, run_dir: Path, reason: str) -> None:
     subprocess.run(["tmux", "kill-session", "-t", session], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     write_text(run_dir / "exit_code", "125\n")
     write_text(run_dir / "status", "stopped\n")
+
+
+def close_interactive_session(*, session: str, run_dir: Path, args: argparse.Namespace) -> None:
+    if args.goal:
+        send_tmux_line(
+            session=session,
+            run_dir=run_dir,
+            text="/goal clear",
+            label="goal-clear",
+            settle_sec=float(args.interactive_send_settle_sec),
+        )
+    if args.clear_context_on_exit:
+        send_tmux_line(
+            session=session,
+            run_dir=run_dir,
+            text="/clear",
+            label="clear",
+            settle_sec=float(args.interactive_send_settle_sec),
+        )
+
+    capture_path = run_dir / "pane-before-close.log"
+    output = capture_tmux_pane(session)
+    if output is not None:
+        write_text(capture_path, output)
+    subprocess.run(["tmux", "kill-session", "-t", session], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    write_text(run_dir / "exit_code", "0\n")
+    write_text(run_dir / "status", "complete\n")
+
+
+def capture_tmux_pane(session: str) -> str | None:
+    result = subprocess.run(
+        ["tmux", "capture-pane", "-p", "-S", "-2000", "-t", session],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True,
+    )
+    if result.returncode != 0:
+        return None
+    return result.stdout
+
+
+def materialize_interactive_last_message(run_dir: Path) -> None:
+    if (run_dir / "last-message.md").exists():
+        return
+    terminal = read_log_tail(run_dir / "terminal.log", limit=20000)
+    match = TERMINAL_RESULT_STATUS_PATTERN.search(terminal)
+    if not match:
+        return
+    write_text(run_dir / "last-message.md", terminal[match.start():])
 
 
 def classify_worker_exit(run_dir: Path, code: int) -> tuple[str, int, str]:
@@ -841,13 +1056,16 @@ def classify_worker_exit(run_dir: Path, code: int) -> tuple[str, int, str]:
 
 
 def read_worker_result_status(run_dir: Path) -> str | None:
-    path = run_dir / "last-message.md"
-    if not path.exists():
-        return None
-    match = RESULT_STATUS_PATTERN.search(path.read_text(encoding="utf-8", errors="replace"))
-    if not match:
-        return None
-    return match.group(1).upper()
+    for name in ("last-message.md", "terminal.log", "events.jsonl"):
+        path = run_dir / name
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        pattern = TERMINAL_RESULT_STATUS_PATTERN if name == "terminal.log" else RESULT_STATUS_PATTERN
+        match = pattern.search(text)
+        if match:
+            return match.group(1).upper()
+    return None
 
 
 def detect_sandbox_loopback_failure(run_dir: Path) -> bool:
@@ -903,8 +1121,10 @@ def log_size(run_dir: Path) -> int:
     return total
 
 
-def detect_risk(run_dir: Path) -> str | None:
+def detect_risk(run_dir: Path, *, include_terminal: bool = False) -> str | None:
     text = read_log_tail(run_dir / "stderr.log")
+    if include_terminal:
+        text += "\n" + read_log_tail(run_dir / "terminal.log")
     for label, pattern in RISK_PATTERNS:
         if pattern.search(text):
             return label

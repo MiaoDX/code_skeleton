@@ -125,6 +125,11 @@ Useful options:
   refactors and slow verification can run when the supervisor deliberately
   allows them.
 - `--idle-timeout-min N` stops when logs are quiet too long.
+- `--interactive --goal "..."` starts the worker in an interactive tmux agent
+  session, injects `/goal ...`, sends a short task prompt pointing to
+  `rewritten-prompt.md`, watches `terminal.log` for `RESULT_STATUS`, then sends
+  `/goal clear` before closing the session. Add `--clear-context-on-exit` when
+  the worker should also receive `/clear` after the result is captured.
 - For goal-driven `intuitive-flow` sub-phases, set the babysitter review
   interval from the task: 10-20 minutes for small delegated edits, 30-60 minutes
   for normal implementation, 60-120 minutes for broad refactors, or the natural
