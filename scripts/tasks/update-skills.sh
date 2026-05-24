@@ -35,7 +35,11 @@ _run_external_skills() {
         done <<< "$skill_args_output"
     fi
 
-    _run_skills "$agent" "$repo" "$label" "${skill_args[@]}"
+    if [ "${#skill_args[@]}" -gt 0 ]; then
+        _run_skills "$agent" "$repo" "$label" "${skill_args[@]}"
+    else
+        _run_skills "$agent" "$repo" "$label"
+    fi
 }
 
 run_skills_anthro() {

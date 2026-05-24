@@ -111,11 +111,11 @@ run_gsd_workflow() {
     local out
     # GSD #976: strip context-monitor hook from global settings.json (use auto-compact instead)
     prune_gsd_hooks "${CLAUDE_CONFIG_DIR:-$HOME/.claude}" "Claude Code"
-    out=$(npx -y @opengsd/get-shit-done-redux --claude --global 2>&1) || { echo "$out"; return 1; }
+    out=$(npx --registry=https://registry.npmjs.org -y @opengsd/get-shit-done-redux --claude --global 2>&1) || { echo "$out"; return 1; }
     echo "$out" | grep -E '^  [⚠✗!]' || true
     prune_broken_codex_skill_symlinks
     prune_gsd_hooks "${CODEX_HOME:-$HOME/.codex}" "Codex"
-    out=$(npx -y @opengsd/get-shit-done-redux --codex --global 2>&1) || { echo "$out"; return 1; }
+    out=$(npx --registry=https://registry.npmjs.org -y @opengsd/get-shit-done-redux --codex --global 2>&1) || { echo "$out"; return 1; }
     echo "$out" | grep -E '^  [⚠✗!]' || true
 
     local settings="$HOME/.claude/settings.json"
