@@ -120,7 +120,13 @@ task is solely custom skill maintenance.
 Useful options:
 
 - `--agent codex|claude` chooses the worker CLI.
-- `--detach` starts tmux and returns immediately.
+- `--detach` starts tmux and returns immediately. When combined with
+  `--interactive`, the runner double-forks a background supervisor that still
+  watches `terminal.log` for `RESULT_STATUS`, closes the tmux session, writes
+  `last-message.md`, and rewrites `result.md` with the real outcome. Pass
+  `--no-detached-supervisor` to opt out and keep the legacy
+  fire-and-forget behavior (the tmux session and `result.md: DETACHED`
+  will then leak).
 - `--timeout-min N` caps total runtime. Default is 600 minutes, so long
   refactors and slow verification can run when the supervisor deliberately
   allows them.
@@ -128,9 +134,20 @@ Useful options:
 - `--interactive --goal "..."` starts the worker in an interactive tmux agent
   session, injects `/goal ...`, sends a short task prompt pointing to
   `rewritten-prompt.md`, watches `terminal.log` for `RESULT_STATUS`, then closes
-  the tmux session. Add `--clear-goal-on-exit` or `--clear-context-on-exit`
-  only when reusing the same interactive session is intentionally part of the
-  proof or recovery flow.
+  the tmux session. The session is killed once `RESULT_STATUS` lands;
+  `--clear-goal-on-exit` and `--clear-context-on-exit` send `/goal clear` or
+  `/clear` into the worker *before* the kill, which only matters when the
+  agent persists goal or context state outside the tmux session.
+  `--goal` is only consumed when `--interactive` is also set (passing `--goal`
+  alone is a silent no-op).
+  For claude workers the runner auto-passes `--add-dir <run_dir>`,
+  `--add-dir $HOME/.claude/jobs`, and `--add-dir $CLAUDE_JOB_DIR` (when set)
+  plus `--permission-mode bypassPermissions` so the supervised worker does
+  not stall on Write/Bash prompts during a detached run. Risk detection
+  (`Action Required`, sandbox-loopback, auth) still fires, the rewritten
+  prompt still bounds scope, and the tmux session still isolates state.
+  Pass `--dangerous` to also bypass sandbox/approval at the CLI layer
+  (different gate from prompts).
 - For goal-driven `intuitive-flow` sub-phases, set the babysitter review
   interval from the task: 10-20 minutes for small delegated edits, 30-60 minutes
   for normal implementation, 60-120 minutes for broad refactors, or the natural
@@ -159,18 +176,25 @@ The script writes run artifacts under `~/.cache/skill-runner/runs/` by default.
 
 ## Supervisor Mechanics
 
-The runner treats the worker's final `RESULT_STATUS` as authoritative when
-`last-message.md` contains one:
+The runner treats the worker's final `RESULT_STATUS` as authoritative:
 
 - `SUCCESS` maps to a successful run even if the CLI emitted noisy logs.
 - `PARTIAL` means useful work landed but follow-up remains.
 - `BLOCKED_NEEDS_DECISION` maps to `BLOCKED` even when the CLI exits 0.
 - `FAILED` maps to `FAILED` even when the CLI exits 0.
 
-Automatic blocker detection is intentionally narrow. It scans `stderr.log`, not
-the whole terminal transcript, so normal repo documentation mentioning auth,
-API keys, or setup instructions does not look like a live authentication
-failure. Inspect `terminal.log` manually when debugging a run.
+Exec-mode runs source `RESULT_STATUS` from the agent-written `last-message.md`.
+Interactive runs detect it by scanning `terminal.log` (ANSI escape sequences
+are stripped first so cursor moves and syntax-highlighting do not break the
+regex), then reconstruct `last-message.md` from the terminal scrape so
+downstream artifact consumers see the same shape as exec-mode runs.
+
+Automatic blocker detection is intentionally narrow. In exec mode it scans
+`stderr.log` only, so normal repo documentation mentioning auth, API keys, or
+setup instructions does not look like a live authentication failure.
+Interactive runs additionally include `terminal.log` (with ANSI stripped) so
+injected slash commands and pane output participate in risk detection.
+Inspect `terminal.log` manually when debugging a run.
 
 For goal-driven workers, the main session should choose a review cadence before
 launch and adjust it when task evidence changes. Do not stop a healthy

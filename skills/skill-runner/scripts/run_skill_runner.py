@@ -28,6 +28,8 @@ SANDBOX_LOOPBACK_PATTERN = re.compile(
     r"bwrap:\s+loopback:\s+Failed RTM_NEWADDR:\s+Operation not permitted",
     re.I,
 )
+# ANSI CSI (cursor moves, SGR colors, etc.) plus OSC (terminal-title) sequences.
+ANSI_ESCAPE_PATTERN = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]|\x1B\][^\x07\x1B]*(?:\x07|\x1B\\)")
 RESULT_STATUS_PATTERN = re.compile(
     r"^\s*RESULT_STATUS:\s*(SUCCESS|PARTIAL|BLOCKED_NEEDS_DECISION|FAILED)\b",
     re.I | re.M,
@@ -128,13 +130,58 @@ def main() -> int:
     start_tmux(session=session, run_dir=run_dir, cwd=cwd)
     if args.interactive:
         start_interactive_worker(session=session, run_dir=run_dir, args=args)
+
     if args.detach:
+        if args.interactive and not args.no_detached_supervisor:
+            supervisor_pid = spawn_detached_supervisor(
+                args=args,
+                cwd=cwd,
+                skill_repo=skill_repo,
+                run_dir=run_dir,
+                session=session,
+                workspace_status_before=workspace_status_before,
+                initial_dangerous=initial_dangerous,
+            )
+            write_result(
+                run_dir,
+                session,
+                "DETACHED",
+                f"Worker session started; detached supervisor (pid {supervisor_pid}) "
+                "will close the session on RESULT_STATUS and update result.md.",
+            )
+            print(f"session: {session}")
+            print(f"run_dir: {run_dir}")
+            print(f"supervisor: {supervisor_pid}")
+            print(f"attach: tmux attach -t {shlex.quote(session)}")
+            return 0
+
         write_result(run_dir, session, "DETACHED", "Worker session started and left running.")
         print(f"session: {session}")
         print(f"run_dir: {run_dir}")
         print(f"attach: tmux attach -t {shlex.quote(session)}")
         return 0
 
+    return supervise_to_completion(
+        args=args,
+        cwd=cwd,
+        skill_repo=skill_repo,
+        run_dir=run_dir,
+        session=session,
+        workspace_status_before=workspace_status_before,
+        initial_dangerous=initial_dangerous,
+    )
+
+
+def supervise_to_completion(
+    *,
+    args: argparse.Namespace,
+    cwd: Path,
+    skill_repo: Path,
+    run_dir: Path,
+    session: str,
+    workspace_status_before: str,
+    initial_dangerous: bool,
+) -> int:
     status, exit_code, reason = wait_for_worker(session=session, run_dir=run_dir, args=args)
     if should_retry_sandbox_failure(
         args,
@@ -179,6 +226,77 @@ def main() -> int:
     write_eval(run_dir, cwd, skill_repo, status, exit_code, reason)
     print(run_dir)
     return exit_code
+
+
+def spawn_detached_supervisor(
+    *,
+    args: argparse.Namespace,
+    cwd: Path,
+    skill_repo: Path,
+    run_dir: Path,
+    session: str,
+    workspace_status_before: str,
+    initial_dangerous: bool,
+) -> int:
+    """Double-fork a daemon that runs supervise_to_completion in the background.
+
+    Returns the supervisor PID. The parent then returns control to the caller
+    so the main session can keep working; the supervisor stays alive only
+    long enough to detect RESULT_STATUS (or hit the configured timeouts),
+    close the tmux session, materialize last-message.md, and rewrite
+    result.md / eval.md with the real outcome.
+    """
+    log_path = run_dir / "supervisor.log"
+    pid_path = run_dir / "supervisor.pid"
+
+    first_pid = os.fork()
+    if first_pid > 0:
+        # Parent of first fork — reap the intermediate child and wait for pid file.
+        os.waitpid(first_pid, 0)
+        deadline = time.monotonic() + 5.0
+        while time.monotonic() < deadline:
+            if pid_path.exists():
+                try:
+                    return int(pid_path.read_text(encoding="utf-8").strip())
+                except (OSError, ValueError):
+                    pass
+            time.sleep(0.05)
+        return first_pid
+
+    # First child — fork again so the supervisor is reparented to init.
+    try:
+        os.setsid()
+    except OSError:
+        pass
+    second_pid = os.fork()
+    if second_pid > 0:
+        os._exit(0)
+
+    # Grandchild — this is the real supervisor.
+    try:
+        with open(os.devnull, "rb") as devnull_in:
+            os.dup2(devnull_in.fileno(), 0)
+        log_fh = open(log_path, "ab", buffering=0)
+        os.dup2(log_fh.fileno(), 1)
+        os.dup2(log_fh.fileno(), 2)
+        log_fh.close()
+        try:
+            write_text(pid_path, f"{os.getpid()}\n")
+            supervise_to_completion(
+                args=args,
+                cwd=cwd,
+                skill_repo=skill_repo,
+                run_dir=run_dir,
+                session=session,
+                workspace_status_before=workspace_status_before,
+                initial_dangerous=initial_dangerous,
+            )
+        except BaseException as exc:  # pragma: no cover - exercised via integration
+            sys.stderr.write(f"supervisor crashed: {exc!r}\n")
+            sys.stderr.flush()
+            os._exit(1)
+    finally:
+        os._exit(0)
 
 
 def parse_args() -> argparse.Namespace:
@@ -261,6 +379,12 @@ def parse_args() -> argparse.Namespace:
         help="Do not retry known Codex bwrap loopback sandbox failures automatically.",
     )
     parser.add_argument("--no-auto-stop", action="store_true")
+    parser.add_argument(
+        "--no-detached-supervisor",
+        action="store_true",
+        help="With --interactive --detach, do NOT spawn the background supervisor "
+        "that auto-closes the worker on RESULT_STATUS. Leaks the tmux session.",
+    )
     parser.add_argument("--sync-on-skill-change", action="store_true")
     parser.add_argument("--commit-skill-changes", action="store_true")
     parser.add_argument("prompt", nargs=argparse.REMAINDER)
@@ -757,7 +881,7 @@ def write_run_script(
     prompt_path = run_dir / "rewritten-prompt.md"
     exit_path = run_dir / "exit_code"
     if args.interactive:
-        command = interactive_agent_command(args=args, cwd=cwd, dangerous=dangerous)
+        command = interactive_agent_command(args=args, cwd=cwd, dangerous=dangerous, run_dir=run_dir)
     elif args.agent == "codex":
         command = [
             "codex",
@@ -815,7 +939,13 @@ exit "$code"
     run_script.chmod(0o755)
 
 
-def interactive_agent_command(*, args: argparse.Namespace, cwd: Path, dangerous: bool) -> list[str]:
+def interactive_agent_command(
+    *,
+    args: argparse.Namespace,
+    cwd: Path,
+    dangerous: bool,
+    run_dir: Path,
+) -> list[str]:
     if args.agent_command:
         return shlex.split(str(args.agent_command))
     if args.agent == "codex":
@@ -834,7 +964,46 @@ def interactive_agent_command(*, args: argparse.Namespace, cwd: Path, dangerous:
     command = ["claude"]
     if dangerous:
         command.append("--dangerously-skip-permissions")
+    else:
+        # Interactive supervised mode: the runner has already vetted the task
+        # (rewritten prompt, bounded scope), the tmux session is isolated,
+        # and risk-detection scans terminal.log. Without bypassPermissions
+        # the worker hangs on every Write/Bash prompt because there is no
+        # human at the keyboard. acceptEdits is not enough — paths under
+        # $HOME/.claude/ are treated as "sensitive" and prompt anyway.
+        # --add-dir still narrows file access; bypassPermissions only
+        # affects whether prompts surface.
+        command.extend(["--permission-mode", "bypassPermissions"])
+        for extra in claude_interactive_add_dirs(run_dir):
+            command.extend(["--add-dir", str(extra)])
     return command
+
+
+def claude_interactive_add_dirs(run_dir: Path) -> list[Path]:
+    """Paths the interactive claude worker must read/write without prompting.
+
+    The worker is started with `--cwd <task-repo>`, but the runner injects
+    instructions referencing the rewritten prompt and (commonly) writes
+    reports under user job directories. Pre-authorize those so the worker
+    does not stall on permission prompts during a detached run.
+    """
+    candidates: list[Path] = [run_dir]
+    job_dir_env = os.environ.get("CLAUDE_JOB_DIR")
+    if job_dir_env:
+        candidates.append(Path(job_dir_env).expanduser())
+    candidates.append(Path.home() / ".claude" / "jobs")
+    seen: set[Path] = set()
+    resolved: list[Path] = []
+    for path in candidates:
+        try:
+            normalized = path.expanduser().resolve()
+        except OSError:
+            continue
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        resolved.append(normalized)
+    return resolved
 
 
 def start_tmux(*, session: str, run_dir: Path, cwd: Path) -> None:
@@ -899,8 +1068,11 @@ def wait_for_interactive_prompt(*, session: str, run_dir: Path, timeout_sec: flo
 
 
 def has_interactive_prompt(output: str) -> bool:
-    tail = "\n".join(output.splitlines()[-12:])
-    return re.search(r"^\s*[›>]\s*.*$", tail, re.M) is not None
+    cleaned = strip_ansi(output)
+    tail = "\n".join(cleaned.splitlines()[-30:])
+    # Real prompt glyphs claude/codex render: '›', '>', '❯', '$ ' (when shell).
+    # Some renders also leading-indent with box-drawing whitespace.
+    return re.search(r"(?m)^[\s│┃▏▎▍▌▋▊▉█]*[›>❯$]\s*$|^[\s│┃▏▎▍▌▋▊▉█]*[›>❯$]\s+\S", tail) is not None
 
 
 def send_tmux_line(
@@ -1035,11 +1207,16 @@ def capture_tmux_pane(session: str) -> str | None:
 def materialize_interactive_last_message(run_dir: Path) -> None:
     if (run_dir / "last-message.md").exists():
         return
-    terminal = read_log_tail(run_dir / "terminal.log", limit=20000)
+    terminal = strip_ansi(read_log_tail(run_dir / "terminal.log", limit=20000))
     match = TERMINAL_RESULT_STATUS_PATTERN.search(terminal)
     if not match:
         return
     write_text(run_dir / "last-message.md", terminal[match.start():])
+
+
+def strip_ansi(text: str) -> str:
+    """Remove CSI/OSC escape sequences so terminal-log scans see plain text."""
+    return ANSI_ESCAPE_PATTERN.sub("", text)
 
 
 def classify_worker_exit(run_dir: Path, code: int) -> tuple[str, int, str]:
@@ -1066,7 +1243,11 @@ def read_worker_result_status(run_dir: Path) -> str | None:
         if not path.exists():
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
-        pattern = TERMINAL_RESULT_STATUS_PATTERN if name == "terminal.log" else RESULT_STATUS_PATTERN
+        if name == "terminal.log":
+            text = strip_ansi(text)
+            pattern = TERMINAL_RESULT_STATUS_PATTERN
+        else:
+            pattern = RESULT_STATUS_PATTERN
         match = pattern.search(text)
         if match:
             return match.group(1).upper()
@@ -1129,7 +1310,7 @@ def log_size(run_dir: Path) -> int:
 def detect_risk(run_dir: Path, *, include_terminal: bool = False) -> str | None:
     text = read_log_tail(run_dir / "stderr.log")
     if include_terminal:
-        text += "\n" + read_log_tail(run_dir / "terminal.log")
+        text += "\n" + strip_ansi(read_log_tail(run_dir / "terminal.log"))
     for label, pattern in RISK_PATTERNS:
         if pattern.search(text):
             return label

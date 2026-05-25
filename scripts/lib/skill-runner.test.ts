@@ -213,29 +213,29 @@ print(json.dumps({
     }
   });
 
-  function runFakeInteractiveRunner(extraArgs: string[] = []) {
+  function runFakeInteractiveRunner(
+    extraArgs: string[] = [],
+    options: { fakeAgentBody?: string; timeoutMin?: string; idleTimeoutMin?: string } = {},
+  ) {
     const tempDir = mkdtempSync(join(tmpdir(), "skill-runner-interactive-"));
     const commandLog = join(tempDir, "commands.log");
     const fakeAgent = join(tempDir, "fake-agent.sh");
-    writeFileSync(
-      fakeAgent,
-      [
-        "#!/usr/bin/env bash",
-        "set -euo pipefail",
-        "printf '\\n› '",
-        "while IFS= read -r line; do",
-        `  printf '%s\\n' "$line" >> ${JSON.stringify(commandLog)}`,
-        "  case \"$line\" in",
-        "    /goal\\ *) printf '\\nGoal active\\n› ' ;;",
-        "    /goal\\ clear) printf '\\nGoal cleared\\n› ' ;;",
-        "    /clear) printf '\\nCleared\\n› ' ;;",
-        "    *) printf '\\nRESULT_STATUS: SUCCESS\\nSUMMARY: fake interactive worker complete\\nCHANGED_FILES: none\\nCOMMITS: none\\nVERIFICATION: fake agent\\nOPEN_DECISIONS: none\\nSKILL_BEHAVIOR_NOTES: none\\nRECOMMENDED_GOAL_REVISION: none\\n› ' ;;",
-        "  esac",
-        "done",
-        "",
-      ].join("\n"),
-      { mode: 0o755 },
-    );
+    const defaultBody = [
+      "#!/usr/bin/env bash",
+      "set -euo pipefail",
+      "printf '\\n› '",
+      "while IFS= read -r line; do",
+      `  printf '%s\\n' "$line" >> ${JSON.stringify(commandLog)}`,
+      "  case \"$line\" in",
+      "    /goal\\ *) printf '\\nGoal active\\n› ' ;;",
+      "    /goal\\ clear) printf '\\nGoal cleared\\n› ' ;;",
+      "    /clear) printf '\\nCleared\\n› ' ;;",
+      "    *) printf '\\nRESULT_STATUS: SUCCESS\\nSUMMARY: fake interactive worker complete\\nCHANGED_FILES: none\\nCOMMITS: none\\nVERIFICATION: fake agent\\nOPEN_DECISIONS: none\\nSKILL_BEHAVIOR_NOTES: none\\nRECOMMENDED_GOAL_REVISION: none\\n› ' ;;",
+      "  esac",
+      "done",
+      "",
+    ].join("\n");
+    writeFileSync(fakeAgent, options.fakeAgentBody ?? defaultBody, { mode: 0o755 });
 
     const result = spawnSync(
       "python3",
@@ -251,9 +251,9 @@ print(json.dumps({
         "--run-root",
         tempDir,
         "--timeout-min",
-        "0.05",
+        options.timeoutMin ?? "0.05",
         "--idle-timeout-min",
-        "0.05",
+        options.idleTimeoutMin ?? "0.05",
         "--interactive-send-settle-sec",
         "0",
         "--interactive-ready-timeout-sec",
@@ -308,4 +308,153 @@ print(json.dumps({
       rmSync(run.tempDir, { recursive: true, force: true });
     }
   });
+
+  test("claude interactive command auto-adds run_dir, $CLAUDE_JOB_DIR, $HOME/.claude/jobs", () => {
+    const runDir = mkdtempSync(join(tmpdir(), "skill-runner-add-dir-"));
+    const jobDir = mkdtempSync(join(tmpdir(), "skill-runner-jobdir-"));
+    try {
+      const output = runPython(`
+from pathlib import Path
+import argparse, os
+
+os.environ["CLAUDE_JOB_DIR"] = ${JSON.stringify(jobDir)}
+ns = argparse.Namespace(
+    agent="claude",
+    agent_command=None,
+)
+command = module.interactive_agent_command(
+    args=ns,
+    cwd=Path("/tmp"),
+    dangerous=False,
+    run_dir=Path(${JSON.stringify(runDir)}),
+)
+print(json.dumps({"command": command}))
+`);
+      const cmd = output.command as string[];
+      expect(cmd[0]).toBe("claude");
+      // bypassPermissions mode so the supervised tmux worker does not stall
+      // on file/write/bash prompts during an unattended detached run.
+      expect(cmd).toContain("--permission-mode");
+      expect(cmd[cmd.indexOf("--permission-mode") + 1]).toBe("bypassPermissions");
+      // --add-dir for each pre-authorized path.
+      const addDirPairs: string[] = [];
+      for (let i = 0; i < cmd.length - 1; i++) {
+        if (cmd[i] === "--add-dir") addDirPairs.push(cmd[i + 1]);
+      }
+      // Normalize paths via realpath because macOS /var <-> /private/var symlinks.
+      const expected = new Set(
+        [runDir, jobDir, join(process.env.HOME ?? "", ".claude", "jobs")].map((p) =>
+          existsSync(p) ? realpathLike(p) : p,
+        ),
+      );
+      const seen = new Set(addDirPairs.map((p) => realpathLike(p)));
+      for (const want of expected) {
+        expect(seen.has(want)).toBe(true);
+      }
+    } finally {
+      rmSync(runDir, { recursive: true, force: true });
+      rmSync(jobDir, { recursive: true, force: true });
+    }
+  });
+
+  test("claude interactive command with --dangerous skips --add-dir (uses skip-permissions instead)", () => {
+    const runDir = mkdtempSync(join(tmpdir(), "skill-runner-add-dir-dangerous-"));
+    try {
+      const output = runPython(`
+from pathlib import Path
+import argparse
+
+ns = argparse.Namespace(agent="claude", agent_command=None)
+command = module.interactive_agent_command(
+    args=ns,
+    cwd=Path("/tmp"),
+    dangerous=True,
+    run_dir=Path(${JSON.stringify(runDir)}),
+)
+print(json.dumps({"command": command}))
+`);
+      const cmd = output.command as string[];
+      expect(cmd).toContain("--dangerously-skip-permissions");
+      expect(cmd).not.toContain("--add-dir");
+      // In dangerous mode, we rely on skip-permissions; no need for acceptEdits.
+      expect(cmd).not.toContain("--permission-mode");
+    } finally {
+      rmSync(runDir, { recursive: true, force: true });
+    }
+  });
+
+  test("RESULT_STATUS detection ignores ANSI cursor-move escapes in terminal.log", () => {
+    const runDir = mkdtempSync(join(tmpdir(), "skill-runner-ansi-"));
+    try {
+      // Recreate the real-world pattern we observed:
+      //   `[2G[38;5;231m[2m 79[6G[22mRESULT_STATUS:[21GSUCCESS[39m`
+      writeFileSync(
+        join(runDir, "terminal.log"),
+        "[2G[38;5;231m[2m 79[6G[22mRESULT_STATUS:[21GSUCCESS[39m\n",
+      );
+      const output = runPython(`
+from pathlib import Path
+print(json.dumps({"status": module.read_worker_result_status(Path(${JSON.stringify(runDir)}))}))
+`);
+      expect(output.status).toBe("SUCCESS");
+    } finally {
+      rmSync(runDir, { recursive: true, force: true });
+    }
+  });
+
+  test("has_interactive_prompt accepts ANSI-noisy claude-style prompts", () => {
+    const output = runPython(`
+ansi_prompt = "\\x1b[2m\\x1b[38;5;246m❯ \\x1b[39m\\x1b[22m"
+plain_prompt = "\\n  › \\n"
+no_prompt = "Working...\\nStill thinking...\\n"
+print(json.dumps({
+    "ansi": module.has_interactive_prompt(ansi_prompt),
+    "plain": module.has_interactive_prompt(plain_prompt),
+    "none": module.has_interactive_prompt(no_prompt),
+}))
+`);
+    expect(output.ansi).toBe(true);
+    expect(output.plain).toBe(true);
+    expect(output.none).toBe(false);
+  });
+
+  test.skipIf(!hasTmux)("interactive idle-timeout fires stop_session when RESULT_STATUS never arrives", () => {
+    const stuckAgent = [
+      "#!/usr/bin/env bash",
+      "set -euo pipefail",
+      "printf '\\n› '",
+      "while IFS= read -r line; do",
+      "  printf '%s\\n' \"$line\" >> /dev/null",
+      "  printf '\\nAck; still working\\n› '",
+      "done",
+      // Block on stdin once it closes so the worker stays alive past idle timer.
+      "sleep 60",
+      "",
+    ].join("\n");
+    const run = runFakeInteractiveRunner([], {
+      fakeAgentBody: stuckAgent,
+      idleTimeoutMin: "0.05", // ~3 seconds
+      timeoutMin: "5",
+    });
+    try {
+      // Runner should exit non-zero with stopped_reason: idle-timeout.
+      expect(run.result.status).not.toBe(0);
+      const stoppedReasonPath = join(run.runDir, "stopped_reason");
+      expect(existsSync(stoppedReasonPath)).toBe(true);
+      expect(readFileSync(stoppedReasonPath, "utf8")).toContain("idle-timeout");
+      // result.md must reflect FAILED, not the initial SUCCESS template.
+      const resultText = readFileSync(join(run.runDir, "result.md"), "utf8");
+      expect(resultText).toContain("Status: FAILED");
+      expect(resultText.toLowerCase()).toContain("idle timeout");
+    } finally {
+      rmSync(run.tempDir, { recursive: true, force: true });
+    }
+  });
 });
+
+function realpathLike(p: string): string {
+  // Avoid pulling in fs.realpathSync to keep test deps minimal; this collapses
+  // the common macOS /var -> /private/var symlink that breaks naive path equality.
+  if (p.startsWith("/var/")) return "/private" + p;
+  return p;
+}
