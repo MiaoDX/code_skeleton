@@ -1,4 +1,5 @@
 # Repo-owned root skills installed from ./skills.
+root-skill grill-with-docs-batch
 root-skill intuitive-doc
 root-skill intuitive-flow
 root-skill intuitive-init
