@@ -8,13 +8,13 @@ REPO_SCRIPTS_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 # https://github.com/asheshgoplani/agent-deck
 #
 # Defaults can be overridden by environment variables:
-#   AGENT_DECK_VERSION=v1.9.20|latest
+#   AGENT_DECK_VERSION=latest|v1.9.x
 #   AGENT_DECK_INSTALL_DIR=~/.local/bin
 #   AGENT_DECK_BIN_NAME=agent-deck
 #   AGENT_DECK_CONFIG=~/.agent-deck/config.toml
 #   AGENT_DECK_SKIP_INSTALL=1
 
-AGENT_DECK_VERSION="${AGENT_DECK_VERSION:-v1.9.20}"
+AGENT_DECK_VERSION="${AGENT_DECK_VERSION:-latest}"
 AGENT_DECK_INSTALL_DIR="${AGENT_DECK_INSTALL_DIR:-$HOME/.local/bin}"
 AGENT_DECK_BIN_NAME="${AGENT_DECK_BIN_NAME:-agent-deck}"
 AGENT_DECK_CONFIG="${AGENT_DECK_CONFIG:-$HOME/.agent-deck/config.toml}"
@@ -55,10 +55,26 @@ install_agent_deck() {
     rm -f "$installer"
 }
 
+update_agent_deck() {
+    local cmd="$1"
+    local update_version="${AGENT_DECK_VERSION#v}"
+
+    echo "==> Updating Agent Deck..."
+    if [ "$AGENT_DECK_VERSION" = "latest" ]; then
+        "$cmd" update
+    else
+        "$cmd" update --version "$update_version"
+    fi
+}
+
 if [ "$AGENT_DECK_SKIP_INSTALL" = "1" ]; then
     echo "==> Skipping Agent Deck install because AGENT_DECK_SKIP_INSTALL=1"
 else
-    install_agent_deck
+    if AGENT_DECK_CMD=$(resolve_agent_deck_cmd); then
+        update_agent_deck "$AGENT_DECK_CMD"
+    else
+        install_agent_deck
+    fi
 fi
 
 if ! AGENT_DECK_CMD=$(resolve_agent_deck_cmd); then
