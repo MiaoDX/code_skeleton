@@ -407,15 +407,50 @@ print(json.dumps({"status": module.read_worker_result_status(Path(${JSON.stringi
 ansi_prompt = "\\x1b[2m\\x1b[38;5;246m❯ \\x1b[39m\\x1b[22m"
 plain_prompt = "\\n  › \\n"
 no_prompt = "Working...\\nStill thinking...\\n"
+codex_loading = "model:       loading   /model to change\\n› Find and fix a bug"
+codex_queued = "• Queued follow-up inputs\\n› Find and fix a bug"
 print(json.dumps({
     "ansi": module.has_interactive_prompt(ansi_prompt),
     "plain": module.has_interactive_prompt(plain_prompt),
     "none": module.has_interactive_prompt(no_prompt),
+    "loading_prompt": module.has_interactive_prompt(codex_loading),
+    "loading_busy": module.is_interactive_startup_busy(codex_loading),
+    "queued_busy": module.is_interactive_startup_busy(codex_queued),
 }))
 `);
     expect(output.ansi).toBe(true);
     expect(output.plain).toBe(true);
     expect(output.none).toBe(false);
+    expect(output.loading_prompt).toBe(true);
+    expect(output.loading_busy).toBe(true);
+    expect(output.queued_busy).toBe(true);
+  });
+
+  test("materializes interactive last-message even when RESULT_STATUS is not near log tail", () => {
+    const runDir = mkdtempSync(join(tmpdir(), "skill-runner-long-terminal-"));
+    try {
+      writeFileSync(
+        join(runDir, "terminal.log"),
+        [
+          "RESULT_STATUS: SUCCESS",
+          "SUMMARY: complete",
+          "x".repeat(30000),
+        ].join("\n"),
+      );
+      const output = runPython(`
+from pathlib import Path
+run_dir = Path(${JSON.stringify(runDir)})
+module.materialize_interactive_last_message(run_dir)
+print(json.dumps({
+    "exists": (run_dir / "last-message.md").exists(),
+    "status": module.read_worker_result_status(run_dir),
+}))
+`);
+      expect(output.exists).toBe(true);
+      expect(output.status).toBe("SUCCESS");
+    } finally {
+      rmSync(runDir, { recursive: true, force: true });
+    }
   });
 
   test.skipIf(!hasTmux)("interactive idle-timeout fires stop_session when RESULT_STATUS never arrives", () => {
@@ -446,6 +481,25 @@ print(json.dumps({
       const resultText = readFileSync(join(run.runDir, "result.md"), "utf8");
       expect(resultText).toContain("Status: FAILED");
       expect(resultText.toLowerCase()).toContain("idle timeout");
+    } finally {
+      rmSync(run.tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test.skipIf(!hasTmux)("interactive startup exit writes blocked artifacts instead of traceback", () => {
+    const run = runFakeInteractiveRunner([], {
+      fakeAgentBody: "#!/usr/bin/env bash\nexit 0\n",
+      timeoutMin: "0.05",
+      idleTimeoutMin: "0.05",
+    });
+    try {
+      expect(run.result.status).toBe(125);
+      const resultText = readFileSync(join(run.runDir, "result.md"), "utf8");
+      const evalText = readFileSync(join(run.runDir, "eval.md"), "utf8");
+      expect(resultText).toContain("Status: BLOCKED");
+      expect(resultText).toContain("interactive prompt injection failed");
+      expect(evalText).toContain("Exit code: 125");
+      expect(run.result.stderr).not.toContain("Traceback");
     } finally {
       rmSync(run.tempDir, { recursive: true, force: true });
     }

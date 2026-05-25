@@ -129,7 +129,15 @@ def main() -> int:
 
     start_tmux(session=session, run_dir=run_dir, cwd=cwd)
     if args.interactive:
-        start_interactive_worker(session=session, run_dir=run_dir, args=args)
+        try:
+            start_interactive_worker(session=session, run_dir=run_dir, args=args)
+        except RuntimeError as exc:
+            reason = f"interactive prompt injection failed: {exc}"
+            stop_session(session, run_dir, reason)
+            write_result(run_dir, session, "BLOCKED", reason)
+            write_eval(run_dir, cwd, skill_repo, "BLOCKED", 125, reason)
+            print(run_dir)
+            return 125
 
     if args.detach:
         if args.interactive and not args.no_detached_supervisor:
@@ -208,12 +216,24 @@ def supervise_to_completion(
         write_run_script(run_dir, args, cwd, dangerous=True)
         start_tmux(session=retry_session, run_dir=run_dir, cwd=cwd)
         if args.interactive:
-            start_interactive_worker(session=retry_session, run_dir=run_dir, args=args)
-        status, exit_code, retry_reason = wait_for_worker(
-            session=retry_session,
-            run_dir=run_dir,
-            args=args,
-        )
+            try:
+                start_interactive_worker(session=retry_session, run_dir=run_dir, args=args)
+            except RuntimeError as exc:
+                retry_reason = f"interactive retry prompt injection failed: {exc}"
+                stop_session(retry_session, run_dir, retry_reason)
+                status, exit_code = "BLOCKED", 125
+            else:
+                status, exit_code, retry_reason = wait_for_worker(
+                    session=retry_session,
+                    run_dir=run_dir,
+                    args=args,
+                )
+        else:
+            status, exit_code, retry_reason = wait_for_worker(
+                session=retry_session,
+                run_dir=run_dir,
+                args=args,
+            )
         session = retry_session
         reason = f"auto-retried sandbox-loopback-denied; retry result: {retry_reason}"
 
@@ -1025,6 +1045,8 @@ def start_interactive_worker(*, session: str, run_dir: Path, args: argparse.Name
         timeout_sec=float(args.interactive_ready_timeout_sec),
     ):
         write_text(run_dir / "interactive-start-warning", "ready prompt was not detected before injection\n")
+        if not tmux_has_session(session):
+            raise RuntimeError("tmux session exited before the interactive prompt became ready")
 
     goal = str(args.goal or "").strip()
     if goal:
@@ -1059,7 +1081,7 @@ def wait_for_interactive_prompt(*, session: str, run_dir: Path, timeout_sec: flo
         output = capture_tmux_pane(session)
         if output is not None:
             write_text(run_dir / "pane-before-injection.log", output)
-            if has_interactive_prompt(output):
+            if has_interactive_prompt(output) and not is_interactive_startup_busy(output):
                 return True
         if not tmux_has_session(session):
             return False
@@ -1075,6 +1097,20 @@ def has_interactive_prompt(output: str) -> bool:
     return re.search(r"(?m)^[\s│┃▏▎▍▌▋▊▉█]*[›>❯$]\s*$|^[\s│┃▏▎▍▌▋▊▉█]*[›>❯$]\s+\S", tail) is not None
 
 
+def is_interactive_startup_busy(output: str) -> bool:
+    cleaned = strip_ansi(output)
+    tail = "\n".join(cleaned.splitlines()[-40:])
+    return any(
+        marker in tail
+        for marker in (
+            "model:       loading",
+            "Booting MCP server",
+            "Queued follow-up inputs",
+            "MCP startup interrupted",
+        )
+    )
+
+
 def send_tmux_line(
     *,
     session: str,
@@ -1083,6 +1119,9 @@ def send_tmux_line(
     label: str,
     settle_sec: float,
 ) -> None:
+    if not tmux_has_session(session):
+        raise RuntimeError(f"tmux session {session!r} is not running before sending {label}")
+
     input_log = run_dir / "tmux-inputs.jsonl"
     with input_log.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps({"label": label, "text": text}) + "\n")
@@ -1101,6 +1140,8 @@ def send_tmux_line(
             stderr=subprocess.DEVNULL,
             check=False,
         )
+    if not tmux_has_session(session):
+        raise RuntimeError(f"tmux session {session!r} exited while sending {label}")
     subprocess.run(["tmux", "send-keys", "-t", session, "C-m"], check=True)
     if settle_sec > 0:
         time.sleep(settle_sec)
@@ -1167,6 +1208,7 @@ def stop_session(session: str, run_dir: Path, reason: str) -> None:
 
 def close_interactive_session(*, session: str, run_dir: Path, args: argparse.Namespace) -> None:
     if args.clear_goal_on_exit and args.goal:
+        wait_for_interactive_prompt(session=session, run_dir=run_dir, timeout_sec=10.0)
         send_tmux_line(
             session=session,
             run_dir=run_dir,
@@ -1175,6 +1217,7 @@ def close_interactive_session(*, session: str, run_dir: Path, args: argparse.Nam
             settle_sec=float(args.interactive_send_settle_sec),
         )
     if args.clear_context_on_exit:
+        wait_for_interactive_prompt(session=session, run_dir=run_dir, timeout_sec=10.0)
         send_tmux_line(
             session=session,
             run_dir=run_dir,
@@ -1207,7 +1250,10 @@ def capture_tmux_pane(session: str) -> str | None:
 def materialize_interactive_last_message(run_dir: Path) -> None:
     if (run_dir / "last-message.md").exists():
         return
-    terminal = strip_ansi(read_log_tail(run_dir / "terminal.log", limit=20000))
+    terminal_path = run_dir / "terminal.log"
+    if not terminal_path.exists():
+        return
+    terminal = strip_ansi(terminal_path.read_text(encoding="utf-8", errors="replace"))
     match = TERMINAL_RESULT_STATUS_PATTERN.search(terminal)
     if not match:
         return
