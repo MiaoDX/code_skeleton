@@ -1,6 +1,6 @@
 ---
 name: grill-with-docs-batch
-description: Grouped grilling session that wraps grill-with-docs semantics while discussing related questions in batches. Use when the user wants to stress-test a plan against docs and domain language faster than one-question-at-a-time grilling, without lowering documentation or decision quality.
+description: Grouped grilling session that wraps grill-with-docs semantics while discussing related questions in batches, with explicit convergence checks so it stops when docs already contain enough decision quality. Use when the user wants to stress-test a plan against docs and domain language faster than one-question-at-a-time grilling, especially when asking whether remaining questions exist.
 ---
 
 # Grill With Docs Batch
@@ -8,6 +8,27 @@ description: Grouped grilling session that wraps grill-with-docs semantics while
 Challenge a plan against the repository's domain model and documentation like
 `grill-with-docs`, but move in small coherent batches instead of one question at
 a time.
+
+## First Decide Whether To Stop
+
+Before asking any batch, run a saturation audit:
+
+- Read the target plan/ADR/spec and the domain glossary or context file it
+  depends on.
+- Check recent git history for the same target docs when available. If the same
+  decision area has already received repeated refinement commits, assume the
+  risk is discussion churn unless a new contradiction appears.
+- Separate durable decision questions from implementation defaults. Do not ask
+  the user to discuss things the implementation can decide locally without
+  changing public contracts, private-data boundaries, safety policy, cost/model
+  infrastructure, or irreversible file moves.
+- If an ADR is accepted, a plan names its phases/gates, and local docs/code do
+  not contradict it, answer that no more discussion is needed and point to the
+  next execution step.
+
+When the user asks whether remaining questions exist, answer the yes/no first.
+Only ask a batch if at least one unresolved question would materially change the
+plan, contract, public/private boundary, or acceptance gate.
 
 ## Core Rule
 
@@ -19,9 +40,44 @@ Keep the quality bar of `grill-with-docs`:
 - Update `CONTEXT.md` inline as soon as glossary terms are resolved.
 - Offer ADRs only when a decision is hard to reverse, surprising without
   context, and the result of a real trade-off.
+- Stop once the remaining items are implementation defaults, test details, or
+  local wording polish rather than unresolved product/domain decisions.
 
-The only behavioral change is pacing: ask grouped questions when the questions
-belong to the same decision layer and can be answered together.
+The behavioral changes are pacing and convergence: ask grouped questions when
+the questions belong to the same decision layer, and stop when the remaining
+items no longer need user decision.
+
+## Stop Conditions
+
+Stop grilling and say so when any of these are true:
+
+- The target docs already answer the contract boundary and the remaining choices
+  can be made during implementation.
+- Recent commits show multiple rounds of refinement on the same doc area and the
+  new pass would only add more edge-case gates.
+- The question would produce another planning-document edit but would not change
+  what gets built, verified, or protected.
+- The user shows process-fatigue signals such as "we have done this multiple
+  times", "is this just not stopping", or "can we move on".
+
+Default response at a stop condition:
+
+```text
+No more discussion is needed before implementation.
+
+What is already decided:
+- <durable decision>
+- <boundary/gate>
+
+Remaining items are implementation defaults:
+- <default the implementer can choose>
+
+Next step: <execute / convert to tasks / patch the plan narrowly>
+```
+
+Do not convert implementation defaults into another batch. If the user wants the
+defaults recorded, patch the plan directly with concise defaults instead of
+asking more questions.
 
 ## Batch Shape
 
@@ -49,6 +105,10 @@ Wait for the user's response before applying docs or moving to the next batch.
 Accept shorthand answers such as "all agree", "1 yes, 2 no because...", or
 "change 3 to...".
 
+Use at most two batches for one target plan unless the user explicitly asks to
+continue. After each batch, re-run the saturation audit and either stop or
+explain why one more batch is still necessary.
+
 ## When To Fall Back To One Question
 
 Ask one question at a time when:
@@ -67,7 +127,8 @@ After each accepted batch:
 2. Keep `CONTEXT.md` free of implementation details, plans, and progress notes.
 3. If an ADR is warranted, create or update it separately with clear context,
    decision, alternatives, and consequences.
-4. Report exactly what changed before asking the next batch.
+4. Report exactly what changed, then run the saturation audit before asking any
+   next batch.
 
 ## Language
 
