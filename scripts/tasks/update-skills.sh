@@ -1,9 +1,14 @@
 #!/bin/bash
 
+_TASK_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+source "$_TASK_DIR/../lib/npm-registry.sh"
+unset _TASK_DIR
+
 _run_skills() {
     local agent="$1" repo="$2" label="$3"; shift 3
-    local out
-    out=$(npx -y skills add "$repo" -a "$agent" -g -y "$@" 2>&1) || { echo "$out"; return 1; }
+    local out registry
+    registry=$(select_npm_registry "Skills CLI" skills) || return 1
+    out=$(npx --registry="$registry" -y skills add "$repo" -a "$agent" -g -y "$@" 2>&1) || { echo "$out"; return 1; }
     echo "$out" | grep -E '(warn|error|⚠|✗)' || true
     echo "  ✓ skills ($label) → $agent"
 }

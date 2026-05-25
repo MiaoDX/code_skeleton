@@ -1,5 +1,9 @@
 #!/bin/bash
 
+_TASK_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+source "$_TASK_DIR/../lib/npm-registry.sh"
+unset _TASK_DIR
+
 # Failure hint for run_global_cli_tools — surfaces the most common npm error
 # (ENOTEMPTY when an old global package directory blocks the rename).
 print_npm_failure_hint() {
@@ -28,17 +32,46 @@ print_npm_failure_hint() {
     fi
 }
 
+print_tool_version() {
+    local label="$1"
+    local binary="$2"
+    local version
+
+    version=$("$binary" --version 2>&1) || {
+        echo "  ! $label failed after install:"
+        echo "$version"
+        return 1
+    }
+
+    echo "  ✓ $label $version"
+}
+
 run_global_cli_tools() {
+    local packages=(
+        @anthropic-ai/claude-code
+        claude-fetch-setup
+        @openai/codex
+        pyright
+    )
+    local native_package
+    native_package=$(claude_native_package)
+    if [ -n "$native_package" ]; then
+        packages+=("$native_package")
+    fi
+
+    local registry
+    registry=$(select_npm_registry "Global CLI tools" "${packages[@]}") || return 1
+
     # Keep all global npm installs in one command so they do not race on the same prefix.
-    npm install -g --loglevel=error \
+    npm install -g --loglevel=error --include=optional --foreground-scripts --registry="$registry" \
         @anthropic-ai/claude-code \
         claude-fetch-setup \
         @openai/codex \
         pyright
 
-    echo "  ✓ claude $(claude --version 2>/dev/null)"
-    echo "  ✓ codex $(codex --version 2>/dev/null)"
-    echo "  ✓ pyright $(pyright --version 2>/dev/null)"
+    print_tool_version claude claude
+    print_tool_version codex codex
+    print_tool_version pyright pyright
 }
 
 prune_broken_codex_skill_symlinks() {
@@ -109,13 +142,16 @@ run_claude_plugins() {
 
 run_gsd_workflow() {
     local out
+    local registry
+    registry=$(select_npm_registry "GSD workflow" @opengsd/get-shit-done-redux) || return 1
+
     # GSD #976: strip context-monitor hook from global settings.json (use auto-compact instead)
     prune_gsd_hooks "${CLAUDE_CONFIG_DIR:-$HOME/.claude}" "Claude Code"
-    out=$(npx --registry=https://registry.npmjs.org -y @opengsd/get-shit-done-redux --claude --global 2>&1) || { echo "$out"; return 1; }
+    out=$(npx --registry="$registry" -y @opengsd/get-shit-done-redux --claude --global 2>&1) || { echo "$out"; return 1; }
     echo "$out" | grep -E '^  [⚠✗!]' || true
     prune_broken_codex_skill_symlinks
     prune_gsd_hooks "${CODEX_HOME:-$HOME/.codex}" "Codex"
-    out=$(npx --registry=https://registry.npmjs.org -y @opengsd/get-shit-done-redux --codex --global 2>&1) || { echo "$out"; return 1; }
+    out=$(npx --registry="$registry" -y @opengsd/get-shit-done-redux --codex --global 2>&1) || { echo "$out"; return 1; }
     echo "$out" | grep -E '^  [⚠✗!]' || true
 
     local settings="$HOME/.claude/settings.json"

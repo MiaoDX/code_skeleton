@@ -2,6 +2,7 @@
 
 _TASK_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source "$_TASK_DIR/../lib/codex-skill-adapter.sh"
+source "$_TASK_DIR/../lib/npm-registry.sh"
 unset _TASK_DIR
 
 _copy_dir_contents() {
@@ -85,6 +86,8 @@ run_sync_local_commands_skills() {
     local skills_src="$project_dir/.claude/skills"
     if [ -d "$skills_src" ]; then
         local skills_synced=0
+        local skills_registry
+        skills_registry=$(select_npm_registry "Skills CLI" skills) || return 1
         for skill_dir in "$skills_src"/*; do
             [ -d "$skill_dir" ] || continue
             [ -f "$skill_dir/SKILL.md" ] || continue
@@ -92,7 +95,7 @@ run_sync_local_commands_skills() {
             local skill_name
             skill_name=$(basename "$skill_dir")
 
-            if npx -y skills add "$skill_dir" -g -y -a codex >/dev/null 2>&1 </dev/null; then
+            if npx --registry="$skills_registry" -y skills add "$skill_dir" -g -y -a codex >/dev/null 2>&1 </dev/null; then
                 skills_synced=$((skills_synced + 1))
                 echo "  synced skill: $skill_name"
             else
@@ -113,10 +116,12 @@ run_sync_local_commands_skills() {
         if ! _check_root_skill_manifest "$local_skill_manifest" "$root_skills_src"; then
             return 1
         fi
+        local skills_registry
+        skills_registry=$(select_npm_registry "Skills CLI" skills) || return 1
         while IFS= read -r skill_name; do
             skill_dir="$root_skills_src/$skill_name"
 
-            if npx -y skills add "$skill_dir" -g -y -a claude-code >/dev/null 2>&1 </dev/null; then
+            if npx --registry="$skills_registry" -y skills add "$skill_dir" -g -y -a claude-code >/dev/null 2>&1 </dev/null; then
                 root_skills_claude_synced=$((root_skills_claude_synced + 1))
             else
                 echo "  ! failed to sync Claude Code skill: $skill_name"
