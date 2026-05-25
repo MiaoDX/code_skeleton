@@ -7,7 +7,50 @@ npm_package_available() {
     local package="$1"
     local registry="$2"
 
-    npm view "$package" version --registry="$registry" >/dev/null 2>&1
+    npm_package_version "$package" "$registry" >/dev/null 2>&1
+}
+
+npm_package_version() {
+    local package="$1"
+    local registry="$2"
+
+    npm view "$package" version --registry="$registry" 2>/dev/null | tail -1
+}
+
+global_npm_package_version() {
+    local package="$1"
+    local tree
+
+    tree=$(npm ls -g "$package" --json --depth=10 2>/dev/null) || true
+    [ -n "$tree" ] || return 1
+
+    PACKAGE_NAME="$package" node -e '
+const target = process.env.PACKAGE_NAME
+let root
+
+try {
+  root = JSON.parse(require("fs").readFileSync(0, "utf8"))
+} catch {
+  process.exit(1)
+}
+
+function findPackage(node, name) {
+  if (!node?.dependencies) return null
+
+  for (const [depName, dep] of Object.entries(node.dependencies)) {
+    if (depName === name && dep?.version) return dep.version
+
+    const nested = findPackage(dep, name)
+    if (nested) return nested
+  }
+
+  return null
+}
+
+const version = findPackage(root, target)
+if (!version) process.exit(1)
+console.log(version)
+' <<< "$tree"
 }
 
 select_npm_registry() {

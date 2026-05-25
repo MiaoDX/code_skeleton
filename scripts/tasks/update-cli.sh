@@ -46,6 +46,35 @@ print_tool_version() {
     echo "  ✓ $label $version"
 }
 
+global_cli_packages_current() {
+    local registry="$1"
+    shift
+
+    local package latest installed all_current=true
+    for package in "$@"; do
+        latest=$(npm_package_version "$package" "$registry") || latest=""
+        installed=$(global_npm_package_version "$package") || installed=""
+
+        if [ -z "$installed" ]; then
+            echo "  ! missing global package: $package@$latest"
+            all_current=false
+        elif [ -z "$latest" ]; then
+            echo "  ! could not resolve latest version for: $package"
+            all_current=false
+        elif [ "$installed" != "$latest" ]; then
+            echo "  ! global package update available: $package $installed → $latest"
+            all_current=false
+        fi
+    done
+
+    if $all_current; then
+        echo "  ✓ global CLI packages already current"
+        return 0
+    fi
+
+    return 1
+}
+
 run_global_cli_tools() {
     local packages=(
         @anthropic-ai/claude-code
@@ -61,6 +90,13 @@ run_global_cli_tools() {
 
     local registry
     registry=$(select_npm_registry "Global CLI tools" "${packages[@]}") || return 1
+
+    if global_cli_packages_current "$registry" "${packages[@]}"; then
+        print_tool_version claude claude
+        print_tool_version codex codex
+        print_tool_version pyright pyright
+        return 0
+    fi
 
     # Keep all global npm installs in one command so they do not race on the same prefix.
     npm install -g --loglevel=error --include=optional --foreground-scripts --registry="$registry" \
@@ -140,19 +176,57 @@ run_claude_plugins() {
     done
 }
 
-run_gsd_workflow() {
+gsd_current_for_target() {
+    local label="$1"
+    local config_dir="$2"
+    local latest="$3"
+    local version_file="$config_dir/get-shit-done/VERSION"
+    local installed=""
+
+    if [ -f "$version_file" ]; then
+        installed=$(cat "$version_file")
+    fi
+
+    if [ "$installed" = "$latest" ]; then
+        echo "  ✓ gsd $label already current: v$installed"
+        return 0
+    fi
+
+    if [ -z "$installed" ]; then
+        echo "  ! gsd $label missing; installing v$latest"
+    else
+        echo "  ! gsd $label update available: v$installed → v$latest"
+    fi
+
+    return 1
+}
+
+run_gsd_installer() {
+    local registry="$1"
+    local target="$2"
     local out
+
+    out=$(npx --registry="$registry" -y @opengsd/get-shit-done-redux "$target" --global 2>&1) || { echo "$out"; return 1; }
+    echo "$out" | grep -E '^  [⚠✗!]' || true
+}
+
+run_gsd_workflow() {
     local registry
+    local latest
     registry=$(select_npm_registry "GSD workflow" @opengsd/get-shit-done-redux) || return 1
+    latest=$(npm_package_version @opengsd/get-shit-done-redux "$registry") || return 1
 
     # GSD #976: strip context-monitor hook from global settings.json (use auto-compact instead)
     prune_gsd_hooks "${CLAUDE_CONFIG_DIR:-$HOME/.claude}" "Claude Code"
-    out=$(npx --registry="$registry" -y @opengsd/get-shit-done-redux --claude --global 2>&1) || { echo "$out"; return 1; }
-    echo "$out" | grep -E '^  [⚠✗!]' || true
+    if ! gsd_current_for_target "claude" "${CLAUDE_CONFIG_DIR:-$HOME/.claude}" "$latest"; then
+        run_gsd_installer "$registry" --claude || return 1
+    fi
+
     prune_broken_codex_skill_symlinks
     prune_gsd_hooks "${CODEX_HOME:-$HOME/.codex}" "Codex"
-    out=$(npx --registry="$registry" -y @opengsd/get-shit-done-redux --codex --global 2>&1) || { echo "$out"; return 1; }
-    echo "$out" | grep -E '^  [⚠✗!]' || true
+    if ! gsd_current_for_target "codex" "${CODEX_HOME:-$HOME/.codex}" "$latest"; then
+        run_gsd_installer "$registry" --codex || return 1
+    fi
 
     local settings="$HOME/.claude/settings.json"
     if [ -f "$settings" ] && command -v jq >/dev/null 2>&1; then
