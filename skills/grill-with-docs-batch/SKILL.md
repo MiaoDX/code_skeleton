@@ -15,20 +15,37 @@ Before asking any batch, run a saturation audit:
 
 - Read the target plan/ADR/spec and the domain glossary or context file it
   depends on.
-- Check recent git history for the same target docs when available. If the same
-  decision area has already received repeated refinement commits, assume the
-  risk is discussion churn unless a new contradiction appears.
+- Check recent git history for the same target docs when available, but use it
+  only as supporting evidence. Commit count is not a stop condition by itself;
+  it helps find decisions that were already made and areas that may be getting
+  re-litigated.
 - Separate durable decision questions from implementation defaults. Do not ask
   the user to discuss things the implementation can decide locally without
   changing public contracts, private-data boundaries, safety policy, cost/model
   infrastructure, or irreversible file moves.
-- If an ADR is accepted, a plan names its phases/gates, and local docs/code do
-  not contradict it, answer that no more discussion is needed and point to the
-  next execution step.
+- If an ADR is accepted, a plan names what changes, what is out of scope, the
+  important boundaries, the acceptance gates, and the next execution step, and
+  local docs/code do not contradict it, answer that no more discussion is needed.
 
 When the user asks whether remaining questions exist, answer the yes/no first.
 Only ask a batch if at least one unresolved question would materially change the
 plan, contract, public/private boundary, or acceptance gate.
+
+## Decision-Impact Test
+
+Before asking a question, state why its answer matters. A question is worth
+asking only when a concrete answer could change at least one of:
+
+- the public API, MCP/tool contract, file layout, or command surface;
+- private-data, safety, security, credential, cost, or external-infrastructure
+  boundaries;
+- acceptance criteria, verification gates, rollout gates, or hard blockers;
+- phase ordering, ownership, or whether a feature belongs in the current slice;
+- glossary/ADR language whose meaning affects future implementation choices.
+
+If the answer would only choose a local implementation default, test detail,
+wording polish, or "nice to record" preference, do not ask. Pick the conservative
+default, or patch the plan directly if the user asked to record defaults.
 
 ## Core Rule
 
@@ -51,10 +68,12 @@ items no longer need user decision.
 
 Stop grilling and say so when any of these are true:
 
-- The target docs already answer the contract boundary and the remaining choices
-  can be made during implementation.
-- Recent commits show multiple rounds of refinement on the same doc area and the
-  new pass would only add more edge-case gates.
+- The target docs let an implementer answer: what changes, what does not change,
+  what boundary must be protected, how it will be verified, and what the next
+  execution step is.
+- Remaining candidate questions fail the Decision-Impact Test.
+- Git history or prior discussion shows repeated refinement of the same area and
+  the new pass would not change what gets built, verified, or protected.
 - The question would produce another planning-document edit but would not change
   what gets built, verified, or protected.
 - The user shows process-fatigue signals such as "we have done this multiple
@@ -105,9 +124,11 @@ Wait for the user's response before applying docs or moving to the next batch.
 Accept shorthand answers such as "all agree", "1 yes, 2 no because...", or
 "change 3 to...".
 
-Use at most two batches for one target plan unless the user explicitly asks to
-continue. After each batch, re-run the saturation audit and either stop or
-explain why one more batch is still necessary.
+Do not impose a fixed batch limit on a first-pass grill of an unclear plan. After
+each batch, re-run the saturation audit and either stop or explain which
+Decision-Impact Test item justifies another batch. For a target that is already
+accepted, repeatedly refined, or close to execution, default to zero or one batch
+unless the user explicitly asks to keep exploring.
 
 ## When To Fall Back To One Question
 
