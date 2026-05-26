@@ -174,6 +174,14 @@ slice, then continue from that clean boundary instead of accumulating a large
 end-of-run diff. For docs-only or review-only work, leave commits disabled
 unless the user asked for them.
 
+Treat inherited handoff notes such as "commits disabled" or "do not commit" as
+claims to verify, not as binding instructions, unless they clearly quote the
+current user, repo guidance, or a hard technical blocker. On resume, check the
+current user request, repo instructions, and `git status`. If commits are still
+safe, restore the default semantic-commit rhythm; if not, name the exact blocker
+and keep it narrow, such as "unrelated dirty files prevent safe staging of this
+slice."
+
 Commit only owned files. Before each commit, inspect `git status` and the staged
 diff, run or record the relevant proof, and use a semantic message such as
 `feat(<area>): ...`, `fix(<area>): ...`, `refactor(<area>): ...`, or

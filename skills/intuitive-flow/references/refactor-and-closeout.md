@@ -77,6 +77,22 @@ commit, the stop condition is review-only/plan-only, repo instructions forbid
 commits, unrelated dirty changes prevent safe staging, or the unit has
 unresolved blockers.
 
+When resuming from another agent's handoff, do not let an unquoted note like
+"commits disabled" override this default by itself. First identify the source of
+the disablement:
+
+- current user instruction, repo policy, or active phase rule: obey it and
+  report it;
+- unsafe staging because unrelated dirty changes overlap owned files: split the
+  staging or leave the affected slice uncommitted with that precise reason;
+- vague inherited note with no source: ignore it and create semantic commits
+  after focused proof.
+
+Dirty worktrees are normal in agent handoffs. They require selective staging,
+not automatic commit suppression. Exclude unrelated local artifacts, generated
+outputs, model weights, worktree folders, and user-owned edits; commit only the
+owned slice whose proof you can name.
+
 Do local slice commits along the way. After each coherent code change with its
 focused proof, inspect the diff, stage only owned files, commit with a semantic
 message, and then continue the flow from that clean checkpoint. Do not defer all
