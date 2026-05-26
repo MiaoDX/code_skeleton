@@ -3,6 +3,7 @@ root-skill grill-with-docs-batch
 root-skill intuitive-doc
 root-skill intuitive-flow
 root-skill intuitive-init
+root-skill intuitive-port-worktree
 root-skill intuitive-reduce-entropy
 root-skill intuitive-refactor
 root-skill intuitive-squash
