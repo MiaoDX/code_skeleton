@@ -55,6 +55,10 @@ the boundary. Do not preload every reference by default.
 - For durable runs that change local code, create semantic commits along the
   way after each coherent proof-backed slice. Do not wait until the entire flow
   is done unless commits are explicitly disabled or staging cannot be made safe.
+- Before any closeout that changed files, run a commit audit: inspect
+  `git status --short`, separate owned changes from unrelated dirty files,
+  commit the owned verified slice, and leave unrelated files exactly as they
+  are. A dirty worktree is not by itself a reason to skip commits.
 - Verify before completion. For implementation/refactor work, report tests or
   verification run, doc-status result when human-facing truth changed, and parked
   todos even when none were found.
@@ -171,23 +175,45 @@ Semantic commits are enabled by default when a durable implementation or
 refactor run changes local code and repo/user instructions do not disable
 commits. Commit as the flow progresses after each coherent proof-backed code
 slice, then continue from that clean boundary instead of accumulating a large
-end-of-run diff. For docs-only or review-only work, leave commits disabled
-unless the user asked for them.
+end-of-run diff. For docs-only changes that are part of durable plan
+reconciliation, implementation evidence, status, or closeout, use the same
+commit default. Leave commits disabled only for review-only, question-answering,
+or explicitly plan-only work unless the user asked for a docs commit.
+
+Default to at least one semantic commit before final closeout whenever owned
+files changed. Use several commits when the diff has multiple independently
+reviewable intents; use one commit when the changed set is small and coherent.
+Do not finish a durable flow with verified owned changes merely staged or
+unstaged.
 
 Treat inherited handoff notes such as "commits disabled" or "do not commit" as
 claims to verify, not as binding instructions, unless they clearly quote the
 current user, repo guidance, or a hard technical blocker. On resume, check the
 current user request, repo instructions, and `git status`. If commits are still
-safe, restore the default semantic-commit rhythm; if not, name the exact blocker
-and keep it narrow, such as "unrelated dirty files prevent safe staging of this
-slice."
+safe, restore the default semantic-commit rhythm. Treat inherited dirty changes
+that are inside the accepted scope as owned once you have inspected and verified
+them; inherited authorship alone is not a blocker. If commits are not safe,
+name the exact blocker and keep it narrow, such as "unrelated dirty changes
+overlap the same hunks and cannot be staged safely."
 
 Commit only owned files. Before each commit, inspect `git status` and the staged
 diff, run or record the relevant proof, and use a semantic message such as
 `feat(<area>): ...`, `fix(<area>): ...`, `refactor(<area>): ...`, or
-`test(<area>): ...`. If unrelated dirty changes, unresolved blockers, or user
-instructions make a slice commit unsafe, leave it uncommitted and record the
-reason in the route brief or closeout.
+`test(<area>): ...`. Use path-specific staging for owned files or hunks and
+leave unrelated user changes, generated artifacts, worktrees, caches, model
+weights, and local outputs unstaged. Unrelated dirty files outside the owned
+slice should be mentioned as left alone, not used to disable committing the
+owned slice. If unresolved blockers, user instructions, or overlapping
+unrelated hunks make a slice commit unsafe, leave only that slice uncommitted
+and record the reason in the route brief or closeout.
+
+Before final answer on a durable implementation/refactor run, require one of
+these states:
+
+- owned changes committed, with commit ids ready for closeout;
+- no files changed;
+- commit explicitly disabled by current user/repo/phase rule;
+- precise unsafe-staging blocker recorded, with unrelated changes left as-is.
 
 Read `references/refactor-and-closeout.md` before creating commits during this
 workflow.

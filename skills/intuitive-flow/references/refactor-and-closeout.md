@@ -77,6 +77,12 @@ commit, the stop condition is review-only/plan-only, repo instructions forbid
 commits, unrelated dirty changes prevent safe staging, or the unit has
 unresolved blockers.
 
+The default is operational, not aspirational: before final closeout, either
+commit the verified owned changes or record the exact current instruction,
+repo/phase policy, or unsafe staging blocker that prevents it. Do not leave
+owned implementation, docs, tests, or status updates uncommitted just because
+the run started from an inherited dirty worktree.
+
 When resuming from another agent's handoff, do not let an unquoted note like
 "commits disabled" override this default by itself. First identify the source of
 the disablement:
@@ -87,17 +93,33 @@ the disablement:
   staging or leave the affected slice uncommitted with that precise reason;
 - vague inherited note with no source: ignore it and create semantic commits
   after focused proof.
+- inherited dirty changes that match the accepted scope: inspect, verify, and
+  commit them as the owned slice; do not treat "another agent started it" as a
+  commit blocker.
 
 Dirty worktrees are normal in agent handoffs. They require selective staging,
 not automatic commit suppression. Exclude unrelated local artifacts, generated
 outputs, model weights, worktree folders, and user-owned edits; commit only the
 owned slice whose proof you can name.
 
+Unrelated dirty files outside the owned slice are not a reason to skip the
+commit. Leave them untouched and unstaged, then mention them only if useful for
+review. If unrelated edits are in the same files, inspect the diff carefully and
+use path/hunk-specific staging where safe; if hunk separation is not safe, keep
+that precise file out of the commit and explain the blocker.
+
 Do local slice commits along the way. After each coherent code change with its
 focused proof, inspect the diff, stage only owned files, commit with a semantic
 message, and then continue the flow from that clean checkpoint. Do not defer all
 commits until closeout; that leaves the run with too many changed files and makes
 review/recovery harder.
+
+Use multiple commits when the work naturally splits into independently
+reviewable plan, implementation, test, docs, or verification units. Use one
+commit when the diff is small and has one coherent intent. If a run accidentally
+accumulates several slices before the first commit, split the staged diff if it
+is practical; otherwise create one coherent catch-up commit only after the full
+owned diff has focused proof.
 
 A semantic commit boundary must have:
 
@@ -121,6 +143,10 @@ Useful boundaries:
 Before each commit, inspect `git status` and the staged diff, run or record
 proof, and include repo co-author trailers when required. If a boundary is too
 mixed, split it or leave it uncommitted with a compact reason.
+
+Closeout must not report "commits disabled" unless the disablement came from a
+current user instruction, repo policy, phase rule, or explicit unsafe-staging
+blocker. Otherwise include the commit id(s) created during the flow.
 
 Fallback commit message style when no local style is obvious:
 
