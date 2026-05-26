@@ -21,6 +21,21 @@ AGENT_DECK_CONFIG="${AGENT_DECK_CONFIG:-$HOME/.agent-deck/config.toml}"
 AGENT_DECK_SKIP_INSTALL="${AGENT_DECK_SKIP_INSTALL:-0}"
 AGENT_DECK_AVAILABLE=true
 
+print_command_output() {
+    local output="$1"
+    if [ -n "$output" ]; then
+        printf '%s\n' "$output" | sed 's/^/    /'
+    fi
+}
+
+print_failure() {
+    local message="$1"
+    local output="${2:-}"
+
+    echo "  ✗ $message"
+    print_command_output "$output"
+}
+
 resolve_agent_deck_cmd() {
     local installed_cmd="$AGENT_DECK_INSTALL_DIR/$AGENT_DECK_BIN_NAME"
     if [ -x "$installed_cmd" ]; then
@@ -38,19 +53,25 @@ resolve_agent_deck_cmd() {
 
 install_agent_deck() {
     local installer
+    local out
     installer=$(mktemp)
 
-    echo "==> Installing Agent Deck..."
-    echo "    Version: $AGENT_DECK_VERSION"
-    echo "    Install dir: $AGENT_DECK_INSTALL_DIR"
+    if ! out=$(curl -fsSL https://raw.githubusercontent.com/asheshgoplani/agent-deck/main/install.sh -o "$installer" 2>&1); then
+        rm -f "$installer"
+        print_failure "agent-deck installer download failed" "$out"
+        return 1
+    fi
 
-    curl -fsSL https://raw.githubusercontent.com/asheshgoplani/agent-deck/main/install.sh -o "$installer"
-    bash "$installer" \
+    if ! out=$(bash "$installer" \
         --name "$AGENT_DECK_BIN_NAME" \
         --dir "$AGENT_DECK_INSTALL_DIR" \
         --version "$AGENT_DECK_VERSION" \
         --skip-tmux-config \
-        --non-interactive
+        --non-interactive 2>&1); then
+        rm -f "$installer"
+        print_failure "agent-deck install failed" "$out"
+        return 1
+    fi
 
     rm -f "$installer"
 }
@@ -58,17 +79,51 @@ install_agent_deck() {
 update_agent_deck() {
     local cmd="$1"
     local update_version="${AGENT_DECK_VERSION#v}"
+    local out
 
-    echo "==> Updating Agent Deck..."
     if [ "$AGENT_DECK_VERSION" = "latest" ]; then
-        "$cmd" update
+        if ! out=$("$cmd" update <<<"y" 2>&1); then
+            print_failure "agent-deck update failed" "$out"
+            return 1
+        fi
     else
-        "$cmd" update --version "$update_version"
+        if ! out=$("$cmd" update --version "$update_version" <<<"y" 2>&1); then
+            print_failure "agent-deck update failed" "$out"
+            return 1
+        fi
     fi
 }
 
+print_agent_deck_version() {
+    local version
+    if ! version=$("$AGENT_DECK_CMD" --version 2>&1); then
+        if ! version=$("$AGENT_DECK_CMD" version 2>&1); then
+            print_failure "agent-deck version check failed" "$version"
+            return 1
+        fi
+    fi
+
+    version=$(printf '%s\n' "$version" | sed -n '1p')
+    version="${version#Agent Deck }"
+    if [ -n "$version" ]; then
+        echo "  ✓ agent-deck $version"
+    else
+        echo "  ✓ agent-deck"
+    fi
+}
+
+install_codex_notify_hook() {
+    local out
+    if ! out=$("$AGENT_DECK_CMD" codex-hooks install 2>&1); then
+        print_failure "agent-deck codex notify hook failed" "$out"
+        return 1
+    fi
+
+    echo "  ✓ agent-deck codex notify hook"
+}
+
 if [ "$AGENT_DECK_SKIP_INSTALL" = "1" ]; then
-    echo "==> Skipping Agent Deck install because AGENT_DECK_SKIP_INSTALL=1"
+    echo "  ! agent-deck install/update skipped (AGENT_DECK_SKIP_INSTALL=1)"
 else
     if AGENT_DECK_CMD=$(resolve_agent_deck_cmd); then
         update_agent_deck "$AGENT_DECK_CMD"
@@ -82,42 +137,26 @@ if ! AGENT_DECK_CMD=$(resolve_agent_deck_cmd); then
         AGENT_DECK_AVAILABLE=false
         AGENT_DECK_CMD="$AGENT_DECK_BIN_NAME"
     else
-        echo "ERROR: could not find $AGENT_DECK_BIN_NAME after setup." >&2
-        echo "       Add $AGENT_DECK_INSTALL_DIR to PATH or set AGENT_DECK_INSTALL_DIR." >&2
+        print_failure "could not find $AGENT_DECK_BIN_NAME after setup" "Add $AGENT_DECK_INSTALL_DIR to PATH or set AGENT_DECK_INSTALL_DIR."
         exit 1
     fi
 fi
 
 mkdir -p "$(dirname "$AGENT_DECK_CONFIG")"
 if [ -s "$AGENT_DECK_CONFIG" ]; then
-    cp "$AGENT_DECK_CONFIG" "$AGENT_DECK_CONFIG.bak.$(date +%s)"
-    echo "==> Backed up existing Agent Deck config."
+    if ! out=$(cp "$AGENT_DECK_CONFIG" "$AGENT_DECK_CONFIG.bak.$(date +%s)" 2>&1); then
+        print_failure "agent-deck config backup failed" "$out"
+        exit 1
+    fi
 fi
 
-echo "==> Applying Agent Deck pilot config..."
-bun "$REPO_SCRIPTS_DIR/lib/ensure-agent-deck-config.ts" "$AGENT_DECK_CONFIG"
+if ! out=$(bun "$REPO_SCRIPTS_DIR/lib/ensure-agent-deck-config.ts" "$AGENT_DECK_CONFIG" 2>&1); then
+    print_failure "agent-deck config update failed" "$out"
+    exit 1
+fi
+echo "  ✓ agent-deck config"
 
 if [ "$AGENT_DECK_AVAILABLE" = true ]; then
-    echo "==> Agent Deck version:"
-    "$AGENT_DECK_CMD" --version 2>/dev/null || "$AGENT_DECK_CMD" version 2>/dev/null || true
-
-    echo "==> Checking Agent Deck Codex notify hook..."
-    "$AGENT_DECK_CMD" codex-hooks install
+    print_agent_deck_version
+    install_codex_notify_hook
 fi
-
-echo ""
-echo "==> Done."
-echo ""
-echo "Configured defaults:"
-echo "  - Codex is the default tool."
-echo "  - Agent Deck uses isolated tmux socket: tmux -L agent-deck"
-echo "  - Agent Deck status line is enabled only inside that isolated tmux server."
-echo "  - Auto-update and startup update checks are disabled."
-echo "  - Global search is enabled with bounded indexing: balanced, 100MB, 90 days, rate 10."
-echo "  - MCP pooling, Docker-by-default, and worktree-by-default are disabled."
-echo "  - Codex turn notifications are installed with agent-deck codex-hooks install."
-echo ""
-echo "Try:"
-echo "  $AGENT_DECK_CMD"
-echo "  $AGENT_DECK_CMD web --read-only"
-echo "  tmux -L agent-deck ls"
