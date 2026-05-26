@@ -141,6 +141,36 @@ changed between source and target.
 5. Preserve user-facing behavior and tests from the source change, not the old
    file layout.
 
+## Semantic Conflict Policy
+
+Classify conflicts by whether they require a durable meaning decision, not by
+whether Git printed conflict markers.
+
+Treat these as **not semantically large** and continue autonomously:
+
+- clean cherry-picks or patch applies;
+- context-line drift, adjacent documentation edits, import/order churn, or
+  formatter-only changes where the source intent is unchanged;
+- manual ports where the target has a newer canonical location but the behavior,
+  public contract, private-data boundary, and verification gate stay equivalent.
+
+Treat these as **semantically large** and stop before committing:
+
+- public API, command surface, MCP/tool contract, file layout, or data-schema
+  changes that have diverged between source and target;
+- safety, security, credential, private-data, cost, or external-infrastructure
+  boundaries that are different on the target;
+- acceptance criteria, rollout gates, or verification gates that contradict the
+  source change;
+- source and target implementations that solve the same problem differently and
+  choosing one would discard meaningful behavior;
+- overlapping target-local edits where it is unclear whether the user wanted
+  those edits included in the port.
+
+When a conflict is not semantically large, resolve it, verify it, and proceed to
+the auto-commit policy below. When it is semantically large, leave the target in
+a clean or clearly paused state, report the decision needed, and do not commit.
+
 ## Verification
 
 After applying changes:
@@ -160,11 +190,24 @@ target-side equivalent. Do not mark complete without some verification signal.
 
 ## Commit Policy
 
-Commit only when the user asks for a commit, says "as needed", or the repo's
-active workflow explicitly requires it.
+Auto-commit successful ports by default after verification passes when there was
+no semantically large conflict. The user asked for a port, so the normal complete
+state is a focused target commit, not merely staged changes.
 
 Use one focused commit in the target. The message should describe the result,
 not the transport mechanism, unless the port itself is the point.
+
+Do not auto-commit when:
+
+- verification failed or was skipped for reasons that make the port unsafe to
+  claim complete;
+- the target had overlapping local changes or unrelated staged changes that
+  could be swept into the commit;
+- the port required a semantically large decision as defined above;
+- the user explicitly asked not to commit.
+
+If the target has unrelated dirty changes on non-overlapping paths, commit only
+the ported paths and leave unrelated work untouched.
 
 ## Final Report
 
