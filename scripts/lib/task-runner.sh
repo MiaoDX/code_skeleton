@@ -23,11 +23,25 @@ _TR_STATUS=()   # "ok" | "fail" | "skip" | ""  (empty = pending)
 _TR_FAILED=()   # names that failed, for summary
 _TR_LOGDIR=""
 _TR_CLEANING_UP=false
+_TR_COLOR_RESET=""
+_TR_COLOR_RED=""
+_TR_COLOR_YELLOW=""
+_TR_COLOR_GREEN=""
+_TR_COLOR_BLUE=""
+_TR_COLOR_BOLD=""
 
 task_init() {
     _TR_LOGDIR=$(mktemp -d)
     exec 3>&1
     export TASK_NOTICE_FD=3
+    if [ -t 1 ] && [ "${NO_COLOR:-}" = "" ]; then
+        _TR_COLOR_RESET=$'\033[0m'
+        _TR_COLOR_RED=$'\033[31m'
+        _TR_COLOR_YELLOW=$'\033[33m'
+        _TR_COLOR_GREEN=$'\033[32m'
+        _TR_COLOR_BLUE=$'\033[34m'
+        _TR_COLOR_BOLD=$'\033[1m'
+    fi
     trap _tr_on_exit EXIT
     trap '_tr_on_signal INT 130' INT
     trap '_tr_on_signal TERM 143' TERM
@@ -38,8 +52,20 @@ task_notice() {
     local message="$*"
 
     if [[ "${TASK_NOTICE_FD:-}" =~ ^[0-9]+$ ]]; then
-        printf '  → %s\n' "$message" >&"$TASK_NOTICE_FD" 2>/dev/null || true
+        printf '  %s→%s %s\n' "$_TR_COLOR_BLUE" "$_TR_COLOR_RESET" "$message" >&"$TASK_NOTICE_FD" 2>/dev/null || true
     fi
+}
+
+task_warn() {
+    printf '  %s!%s %s\n' "$_TR_COLOR_YELLOW" "$_TR_COLOR_RESET" "$*"
+}
+
+task_error() {
+    printf '  %s!%s %s\n' "$_TR_COLOR_RED" "$_TR_COLOR_RESET" "$*"
+}
+
+task_success() {
+    printf '  %s✓%s %s\n' "$_TR_COLOR_GREEN" "$_TR_COLOR_RESET" "$*"
 }
 
 _tr_pending_pids() {
@@ -119,7 +145,7 @@ _tr_on_signal() {
     _TR_CLEANING_UP=true
 
     echo
-    echo "  ! interrupted by SIG$signal_name; terminating pending update task(s)"
+    task_warn "interrupted by SIG$signal_name; terminating pending update task(s)"
     _tr_kill_pending
     _tr_extra_cleanup
     [ -n "${_TR_LOGDIR:-}" ] && rm -rf "$_TR_LOGDIR"
@@ -139,7 +165,10 @@ _tr_index_of() {
     return 1
 }
 
-_section() { echo ""; echo "══ $1 ══"; }
+_section() {
+    echo ""
+    printf '%s══ %s ══%s\n' "$_TR_COLOR_BOLD" "$1" "$_TR_COLOR_RESET"
+}
 
 # task_run NAME FN [args...] [--hint HINT_FN]
 task_run() {
@@ -255,7 +284,7 @@ task_skip() {
         _TR_STATUS+=("skip")
     fi
     _section "$name"
-    echo "  ! $reason"
+    task_warn "$reason"
 }
 
 # task_succeeded NAME — return 0 iff the named task's status is "ok".
@@ -271,7 +300,7 @@ task_summary() {
         _section "Failed ✗"
         local n
         for n in "${_TR_FAILED[@]}"; do
-            echo "  - $n"
+            printf '  %s-%s %s\n' "$_TR_COLOR_RED" "$_TR_COLOR_RESET" "$n"
         done
         return 1
     fi

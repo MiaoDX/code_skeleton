@@ -20,13 +20,25 @@ codex_running_hint() {
 print_npm_source() {
     case "$NPM_REGISTRY_MODE" in
         direct)
-            echo "  ✓ npm registry mode: direct ($NPM_FALLBACK_REGISTRY)"
+            if declare -F task_success >/dev/null 2>&1; then
+                task_success "npm registry mode: direct ($NPM_FALLBACK_REGISTRY)"
+            else
+                echo "  ✓ npm registry mode: direct ($NPM_FALLBACK_REGISTRY)"
+            fi
             ;;
         mirror-first)
-            echo "  ✓ npm registry mode: mirror-first ($NPM_MIRROR_REGISTRY; fallback $NPM_FALLBACK_REGISTRY)"
+            if declare -F task_success >/dev/null 2>&1; then
+                task_success "npm registry mode: mirror-first ($NPM_MIRROR_REGISTRY; fallback $NPM_FALLBACK_REGISTRY)"
+            else
+                echo "  ✓ npm registry mode: mirror-first ($NPM_MIRROR_REGISTRY; fallback $NPM_FALLBACK_REGISTRY)"
+            fi
             ;;
         *)
-            echo "  ! unknown NPM_REGISTRY_MODE=$NPM_REGISTRY_MODE; using mirror-first selector"
+            if declare -F task_warn >/dev/null 2>&1; then
+                task_warn "unknown NPM_REGISTRY_MODE=$NPM_REGISTRY_MODE; using mirror-first selector"
+            else
+                echo "  ! unknown NPM_REGISTRY_MODE=$NPM_REGISTRY_MODE; using mirror-first selector"
+            fi
             ;;
     esac
 }
@@ -129,7 +141,6 @@ done
 
 source "$SCRIPT_DIR/lib/npm-registry.sh"
 export NPM_REGISTRY_MODE
-print_npm_source
 
 acquire_update_lock
 
@@ -160,9 +171,12 @@ source "$SCRIPT_DIR/tasks/sync-local-commands-skills.sh"
 
 TASK_RUNNER_EXTRA_CLEANUP=cleanup_update_lock
 
+task_init
+print_npm_source
+
 ensure_clean_env
 if [ "$SKIP_CODEX_RUNNING_CHECK" = true ]; then
-    echo "  ! Skipping Codex running-process check by request."
+    task_warn "Skipping Codex running-process check by request."
 else
     if ! ensure_no_running_codex; then
         echo
@@ -171,8 +185,6 @@ else
         exit 1
     fi
 fi
-
-task_init
 
 # ── Update phases ────────────────────────────────────────────────────
 #

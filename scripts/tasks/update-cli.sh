@@ -72,6 +72,24 @@ global_cli_packages_current() {
         fi
     done
 
+    local codex_native_name codex_native_version codex_native_installed
+    codex_native_name=$(codex_native_package_name)
+    if [ -n "$codex_native_name" ]; then
+        codex_native_version=$(codex_native_package_version "$registry") || codex_native_version=""
+        codex_native_installed=$(global_npm_package_version "$codex_native_name") || codex_native_installed=""
+
+        if [ -z "$codex_native_version" ]; then
+            echo "  ! could not resolve Codex native package version for: $codex_native_name"
+            all_current=false
+        elif [ -z "$codex_native_installed" ]; then
+            echo "  ! missing global package: $codex_native_name@$codex_native_version"
+            all_current=false
+        elif [ "$codex_native_installed" != "$codex_native_version" ]; then
+            echo "  ! global package update available: $codex_native_name $codex_native_installed → $codex_native_version"
+            all_current=false
+        fi
+    fi
+
     if $all_current; then
         echo "  ✓ global CLI packages already current"
         return 0
@@ -105,12 +123,22 @@ run_global_cli_tools() {
     fi
 
     # Keep all global npm installs in one command so they do not race on the same prefix.
-    task_notice "Global CLI tools: installing claude, codex, claude-fetch-setup, pyright via $registry"
-    npm install -g --loglevel=error --include=optional --foreground-scripts --registry="$registry" \
-        @anthropic-ai/claude-code \
-        claude-fetch-setup \
-        @openai/codex \
+    local install_packages=(
+        @anthropic-ai/claude-code
+        claude-fetch-setup
+        @openai/codex
         pyright
+    )
+    local codex_native_version
+    local codex_native_name
+    codex_native_version=$(codex_native_package_version "$registry") || codex_native_version=""
+    codex_native_name=$(codex_native_package_name)
+    if [ -n "$codex_native_name" ] && [ -n "$codex_native_version" ]; then
+        install_packages+=("$codex_native_name@npm:@openai/codex@$codex_native_version")
+    fi
+
+    task_notice "Global CLI tools: installing ${install_packages[*]} via $registry"
+    npm install -g --loglevel=error --include=optional --foreground-scripts --registry="$registry" "${install_packages[@]}"
 
     print_tool_version claude claude
     print_tool_version codex codex

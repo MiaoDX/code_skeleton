@@ -14,6 +14,16 @@ npm_registry_notice() {
     fi
 }
 
+npm_registry_warn() {
+    local message="$*"
+
+    if declare -F task_warn >/dev/null 2>&1; then
+        task_warn "$message" >&2
+    else
+        echo "  ! $message" >&2
+    fi
+}
+
 npm_package_available() {
     local package="$1"
     local registry="$2"
@@ -146,10 +156,41 @@ npm_registry_has_required_native_packages() {
     local package
     for package in "$@"; do
         if [ "$package" = "@openai/codex" ] && ! codex_native_package_available "$registry"; then
-            echo "  ! Codex native package is unavailable from registry: $registry" >&2
+            npm_registry_warn "Codex native package is unavailable from registry: $registry"
             return 1
         fi
     done
+}
+
+codex_native_package_version() {
+    local registry="$1"
+    local codex_version native_name optional_dependencies native_spec native_version
+
+    native_name=$(codex_native_package_name)
+    [ -n "$native_name" ] || return 1
+
+    codex_version=$(npm_package_version @openai/codex "$registry") || return 1
+    [ -n "$codex_version" ] || return 1
+
+    optional_dependencies=$(npm_package_field_json "@openai/codex@$codex_version" optionalDependencies "$registry") || return 1
+    native_spec=$(NATIVE_NAME="$native_name" node -e '
+const nativeName = process.env.NATIVE_NAME
+let optionalDependencies
+
+try {
+  optionalDependencies = JSON.parse(require("fs").readFileSync(0, "utf8"))
+} catch {
+  process.exit(1)
+}
+
+const spec = optionalDependencies?.[nativeName]
+if (!spec) process.exit(1)
+console.log(spec)
+' <<< "$optional_dependencies") || return 1
+
+    native_version="${native_spec#npm:@openai/codex@}"
+    [ "$native_version" != "$native_spec" ] || return 1
+    printf '%s\n' "$native_version"
 }
 
 select_npm_registry() {
@@ -160,7 +201,7 @@ select_npm_registry() {
         npm_registry_notice "$purpose: checking npm registry $NPM_FALLBACK_REGISTRY"
         for package in "$@"; do
             if ! npm_package_available "$package" "$NPM_FALLBACK_REGISTRY"; then
-                echo "  ! $purpose package unavailable from npm registry: $package" >&2
+                npm_registry_warn "$purpose package unavailable from npm registry: $package"
                 return 1
             fi
         done
@@ -190,16 +231,16 @@ select_npm_registry() {
 
     if [ "${#missing[@]}" -gt 0 ]; then
         npm_registry_notice "$purpose: mirror missing ${missing[*]}; checking fallback $NPM_FALLBACK_REGISTRY"
-        echo "  ! $purpose mirror missing package(s): ${missing[*]}" >&2
+        npm_registry_warn "$purpose mirror missing package(s): ${missing[*]}"
     else
         npm_registry_notice "$purpose: mirror missing required native package; checking fallback $NPM_FALLBACK_REGISTRY"
-        echo "  ! $purpose mirror missing required native package(s)" >&2
+        npm_registry_warn "$purpose mirror missing required native package(s)"
     fi
-    echo "  ! falling back to $NPM_FALLBACK_REGISTRY" >&2
+    npm_registry_warn "falling back to $NPM_FALLBACK_REGISTRY"
 
     for package in "$@"; do
         if ! npm_package_available "$package" "$NPM_FALLBACK_REGISTRY"; then
-            echo "  ! $purpose package unavailable from fallback registry: $package" >&2
+            npm_registry_warn "$purpose package unavailable from fallback registry: $package"
             return 1
         fi
     done
