@@ -174,36 +174,42 @@ fi
 
 task_init
 
-# ── Phase 1: independent tasks in parallel ───────────────────────────
+# ── Update phases ────────────────────────────────────────────────────
+#
+# These tasks mutate global npm packages, ~/.claude, ~/.codex, ~/.agents,
+# and vendored skill checkouts. Run them sequentially so installers do not
+# contend for npm cache, global package trees, or agent config files.
 task_run "Global CLI tools" run_global_cli_tools --hint print_npm_failure_hint
-task_run "GSD workflow"     run_gsd_workflow
-
-# Codex config runs sequentially after GSD workflow — both rewrite
-# ~/.codex/config.toml, so racing them can clobber feature and [tui] updates.
-
-skills_names=()
-
-# ── Collect results, gating downstream tasks on CLI success ──────────
 task_await "Global CLI tools"
 
+task_run "GSD workflow" run_gsd_workflow
+task_await "GSD workflow"
+
 if task_succeeded "Global CLI tools"; then
-    task_run "MCP: fetch"     run_mcp_fetch
-    task_run "Claude plugins" run_claude_plugins
+    task_run "MCP: fetch" run_mcp_fetch
     task_await "MCP: fetch"
+
+    task_run "Claude plugins" run_claude_plugins
     task_await "Claude plugins"
 else
     task_skip "MCP: fetch"     "skipped because Global CLI tools failed"
     task_skip "Claude plugins" "skipped because Global CLI tools failed"
 fi
 
-task_await "GSD workflow"
-
-task_run "Codex config" run_codex_config
-task_await "Codex config"
+if task_succeeded "Global CLI tools"; then
+    task_run "Codex config" run_codex_config
+    task_await "Codex config"
+else
+    task_skip "Codex config" "skipped because Global CLI tools failed"
+fi
 
 # Agent Deck installs Codex notify hooks, so run it after Codex hooks are enabled.
-task_run "Agent Deck" run_agent_deck
-task_await "Agent Deck"
+if task_succeeded "Global CLI tools"; then
+    task_run "Agent Deck" run_agent_deck
+    task_await "Agent Deck"
+else
+    task_skip "Agent Deck" "skipped because Global CLI tools failed"
+fi
 
 task_run "GStack State" run_gstack_state
 task_await "GStack State"
@@ -219,11 +225,10 @@ fi
 # Keep those phases ahead of the remaining skill installers so home-level skill
 # updates do not overlap.
 for agent in claude-code codex; do
-    n="skills-anthro-$agent";     skills_names+=("$n"); task_run "$n" run_skills_anthro     "$agent"
-    n="skills-codex-$agent";      skills_names+=("$n"); task_run "$n" run_skills_codex      "$agent"
-    n="skills-mattpocock-$agent"; skills_names+=("$n"); task_run "$n" run_skills_mattpocock "$agent"
+    n="skills-anthro-$agent"; task_run "$n" run_skills_anthro "$agent"; task_await "$n"
+    n="skills-codex-$agent"; task_run "$n" run_skills_codex "$agent"; task_await "$n"
+    n="skills-mattpocock-$agent"; task_run "$n" run_skills_mattpocock "$agent"; task_await "$n"
 done
-task_await_group "Skills" "${skills_names[@]}"
 
 # Local command/skill sync also writes to ~/.codex/skills. Run it last so local
 # skill overrides win deterministically.
