@@ -12,7 +12,7 @@ Current state: <classification>
 Selected path: <stage/skill sequence>
 Why: <one sentence>
 Bypassed/left behind: <stage - reason; stage - reason>
-Execution surface: <main session direct | tmux worker per sub-phase | native subagents>
+Execution surface: <main session direct | tmux worker per sub-phase | native subagents if stable/non-Codex>
 Babysitter cadence: <none | every N min based on task risk/proof duration>
 Commit rhythm: <semantic commits enabled | disabled because ...>
 Stop/continue point: <what happens before the next checkpoint>

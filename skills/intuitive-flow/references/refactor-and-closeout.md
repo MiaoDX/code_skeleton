@@ -33,11 +33,14 @@ It is the source of truth for the pass and must name:
 - persistent gate file, usually `docs/plans/refactor-<target>.md`
 - stop condition
 
-Use native subagents for report-only scans, stale-path searches, test discovery,
-and independent verification probes when available. Use `skill-runner`/tmux for
-broad or long-running `$intuitive-refactor` execution. Use worker subagents for
-direct edits only when the accepted checklist splits into disjoint ownership
-scopes.
+On Codex, keep report-only scans, stale-path searches, test discovery, and
+independent verification probes in the main session or `skill-runner`/tmux
+until native subagents have been revalidated on the installed release. On
+stable/non-Codex hosts, native subagents are acceptable for those read-only
+probes when available. Use `skill-runner`/tmux for broad or long-running
+`$intuitive-refactor` execution. Use worker subagents for direct edits only on
+stable/non-Codex hosts, or after Codex subagent revalidation, and only when the
+accepted checklist splits into disjoint ownership scopes.
 
 Once implementation starts, do not keep discovering and implementing new P2
 cleanup. Add newly discovered work only when it is a P0/P1 regression found

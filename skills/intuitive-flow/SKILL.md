@@ -52,6 +52,11 @@ the boundary. Do not preload every reference by default.
   Route stateful execution through `skill-runner`/tmux workers by default so
   host-local `/goal`, `/compact`, `/clear`, or equivalent context controls stay
   isolated from route decisions and supervision history.
+- On Codex, avoid native subagents by default until the upstream subagent
+  lifecycle is stable again. Prefer main-session direct work for small probes
+  and `skill-runner`/tmux workers for durable parallelism unless the user
+  explicitly asks for Codex subagents or the local Codex release has been
+  revalidated.
 - For durable runs that change local code, create semantic commits along the
   way after each coherent proof-backed slice. Do not wait until the entire flow
   is done unless commits are explicitly disabled or staging cannot be made safe.
@@ -73,7 +78,7 @@ Current state: <fuzzy idea | draft plan | reviewed plan | GSD phase | changed co
 Selected path: <stage or skill sequence>
 Why: <one sentence>
 Bypassed/left behind: <stage - reason; stage - reason>
-Execution surface: <main session direct | tmux worker per sub-phase | native subagents>
+Execution surface: <main session direct | tmux worker per sub-phase | native subagents if stable/non-Codex>
 Babysitter cadence: <none | every N min based on task risk/proof duration>
 Commit rhythm: <semantic commits enabled | disabled because ...>
 Stop/continue point: <where work pauses or what will run now>
@@ -126,11 +131,17 @@ Tiny direct edits and read-only probes may stay in the main session. Do not use
 conversation context. If context pressure appears in the main session, prefer a
 handoff-style `/compact` and keep canonical artifacts current.
 
+Codex host caveat: native Codex subagents are currently treated as an unstable
+execution surface. Do not select them for routine probes, verification, or
+bounded edits when main-session work or `skill-runner`/tmux can handle the
+scope. Re-enable this preference only after Codex subagent spawn, completion,
+close, and mailbox delivery have been revalidated on the installed release.
+
 | Work type | Preferred executor |
 | --- | --- |
-| Independent read-heavy probes | native subagents when available |
-| Verification-heavy log/test inspection | native subagents when available |
-| Bounded disjoint edits | native worker subagents with explicit file ownership |
+| Independent read-heavy probes | main session on Codex; native subagents only when stable/non-Codex |
+| Verification-heavy log/test inspection | main session or `skill-runner`/tmux on Codex; native subagents only when stable/non-Codex |
+| Bounded disjoint edits | `skill-runner`/tmux workers on Codex; native worker subagents only when stable/non-Codex and file ownership is explicit |
 | Stateful, interactive, durable, or long-running skill pipelines | `skill-runner` / tmux worker per sub-phase |
 | Canonical source-of-truth edits and route decisions | main session |
 
