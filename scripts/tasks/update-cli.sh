@@ -98,6 +98,66 @@ global_cli_packages_current() {
     return 1
 }
 
+append_if_package_needs_update() {
+    local registry="$1"
+    local package="$2"
+    local install_spec="${3:-$2}"
+    local latest installed
+
+    task_notice "Global CLI tools: checking $package"
+    latest=$(npm_package_version "$package" "$registry") || latest=""
+    installed=$(global_npm_package_version "$package") || installed=""
+
+    if [ -z "$latest" ]; then
+        echo "  ! could not resolve latest version for: $package"
+        GLOBAL_CLI_CHECK_FAILED=true
+    elif [ -z "$installed" ]; then
+        echo "  ! missing global package: $package@$latest"
+        GLOBAL_CLI_INSTALL_PACKAGES+=("$install_spec")
+    elif [ "$installed" != "$latest" ]; then
+        echo "  ! global package update available: $package $installed → $latest"
+        GLOBAL_CLI_INSTALL_PACKAGES+=("$install_spec")
+    fi
+}
+
+collect_global_cli_install_packages() {
+    local registry="$1"
+    shift
+
+    GLOBAL_CLI_INSTALL_PACKAGES=()
+    GLOBAL_CLI_CHECK_FAILED=false
+
+    local package
+    for package in "$@"; do
+        append_if_package_needs_update "$registry" "$package"
+    done
+
+    local codex_native_name codex_native_version codex_native_installed codex_native_spec
+    codex_native_name=$(codex_native_package_name)
+    if [ -n "$codex_native_name" ]; then
+        codex_native_version=$(codex_native_package_version "$registry") || codex_native_version=""
+        codex_native_installed=$(global_npm_package_version "$codex_native_name") || codex_native_installed=""
+        codex_native_spec="$codex_native_name@npm:@openai/codex@$codex_native_version"
+
+        if [ -z "$codex_native_version" ]; then
+            echo "  ! could not resolve Codex native package version for: $codex_native_name"
+            GLOBAL_CLI_CHECK_FAILED=true
+        elif [ -z "$codex_native_installed" ]; then
+            echo "  ! missing global package: $codex_native_name@$codex_native_version"
+            GLOBAL_CLI_INSTALL_PACKAGES+=("$codex_native_spec")
+        elif [ "$codex_native_installed" != "$codex_native_version" ]; then
+            echo "  ! global package update available: $codex_native_name $codex_native_installed → $codex_native_version"
+            GLOBAL_CLI_INSTALL_PACKAGES+=("$codex_native_spec")
+        fi
+    fi
+
+    if [ "$GLOBAL_CLI_CHECK_FAILED" = true ]; then
+        return 1
+    fi
+
+    return 0
+}
+
 run_global_cli_tools() {
     local packages=(
         @anthropic-ai/claude-code
@@ -115,7 +175,9 @@ run_global_cli_tools() {
     registry=$(select_npm_registry "Global CLI tools" "${packages[@]}") || return 1
 
     task_notice "Global CLI tools: checking installed versions"
-    if global_cli_packages_current "$registry" "${packages[@]}"; then
+    collect_global_cli_install_packages "$registry" "${packages[@]}" || return 1
+    if [ "${#GLOBAL_CLI_INSTALL_PACKAGES[@]}" -eq 0 ]; then
+        echo "  ✓ global CLI packages already current"
         print_tool_version claude claude
         print_tool_version codex codex
         print_tool_version pyright pyright
@@ -123,22 +185,8 @@ run_global_cli_tools() {
     fi
 
     # Keep all global npm installs in one command so they do not race on the same prefix.
-    local install_packages=(
-        @anthropic-ai/claude-code
-        claude-fetch-setup
-        @openai/codex
-        pyright
-    )
-    local codex_native_version
-    local codex_native_name
-    codex_native_version=$(codex_native_package_version "$registry") || codex_native_version=""
-    codex_native_name=$(codex_native_package_name)
-    if [ -n "$codex_native_name" ] && [ -n "$codex_native_version" ]; then
-        install_packages+=("$codex_native_name@npm:@openai/codex@$codex_native_version")
-    fi
-
-    task_notice "Global CLI tools: installing ${install_packages[*]} via $registry"
-    npm install -g --loglevel=error --include=optional --foreground-scripts --registry="$registry" "${install_packages[@]}"
+    task_notice "Global CLI tools: installing ${GLOBAL_CLI_INSTALL_PACKAGES[*]} via $registry"
+    npm install -g --loglevel=error --include=optional --foreground-scripts --registry="$registry" "${GLOBAL_CLI_INSTALL_PACKAGES[@]}"
 
     print_tool_version claude claude
     print_tool_version codex codex
