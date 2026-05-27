@@ -8,15 +8,96 @@ if ! declare -F task_notice >/dev/null 2>&1; then
     task_notice() { :; }
 fi
 
+global_cli_repair_specs() {
+    local registry="$1"
+    local specs=(
+        @anthropic-ai/claude-code
+        claude-fetch-setup
+        @openai/codex
+        pyright
+    )
+
+    local claude_native
+    claude_native=$(claude_native_package)
+    if [ -n "$claude_native" ]; then
+        specs+=("$claude_native")
+    fi
+
+    local codex_native_name codex_native_version
+    codex_native_name=$(codex_native_package_name)
+    if [ -n "$codex_native_name" ]; then
+        codex_native_version=$(codex_native_package_version "$registry" 2>/dev/null) || codex_native_version=""
+        if [ -n "$codex_native_version" ]; then
+            specs+=("$codex_native_name@npm:@openai/codex@$codex_native_version")
+        fi
+    fi
+
+    printf '%s\n' "${specs[@]}"
+}
+
+print_npm_install_command() {
+    local registry="$1"
+    shift
+
+    printf '    npm install -g --include=optional --foreground-scripts --registry=%q' "$registry"
+    local spec
+    for spec in "$@"; do
+        printf ' %q' "$spec"
+    done
+    printf '\n'
+}
+
+print_global_cli_manual_repair() {
+    local registry="$1"
+    shift
+
+    local specs=("$@")
+    if [ "${#specs[@]}" -eq 0 ]; then
+        while IFS= read -r spec; do
+            [ -n "$spec" ] || continue
+            specs+=("$spec")
+        done < <(global_cli_repair_specs "$registry")
+    fi
+
+    echo "  ! To repair the global CLI packages outside update.sh, run:"
+    print_npm_install_command "$registry" "${specs[@]}"
+
+    if [ "$registry" != "$NPM_FALLBACK_REGISTRY" ]; then
+        local direct_specs=()
+        while IFS= read -r spec; do
+            [ -n "$spec" ] || continue
+            direct_specs+=("$spec")
+        done < <(global_cli_repair_specs "$NPM_FALLBACK_REGISTRY")
+
+        echo "  ! If the mirror looks stale, use the original npm registry:"
+        print_npm_install_command "$NPM_FALLBACK_REGISTRY" "${direct_specs[@]}"
+    fi
+}
+
 # Failure hint for run_global_cli_tools — surfaces the most common npm error
-# (ENOTEMPTY when an old global package directory blocks the rename).
+# (ENOTEMPTY when an old global package directory blocks the rename), then prints
+# a raw npm command so the user can repair CLI packages outside update.sh.
 print_npm_failure_hint() {
     local log_file="$1"
-    local path dest npm_log
+    local path dest npm_log registry install_specs
 
     path=$(sed -n 's/^npm error path //p' "$log_file" | tail -1)
     dest=$(sed -n 's/^npm error dest //p' "$log_file" | tail -1)
     npm_log=$(sed -n 's/^npm error A complete log of this run can be found in: //p' "$log_file" | tail -1)
+    registry=$(
+        sed -n \
+            -e 's/^  ✓ Global CLI tools registry: \([^ ]*\).*/\1/p' \
+            -e 's/^  ! falling back to \([^ ]*\).*/\1/p' \
+            "$log_file" | tail -1
+    )
+    if [ -z "$registry" ]; then
+        if [ "$NPM_REGISTRY_MODE" = "direct" ]; then
+            registry="$NPM_FALLBACK_REGISTRY"
+        else
+            registry="$NPM_MIRROR_REGISTRY"
+        fi
+    fi
+    install_specs=$(sed -n 's/^  → installing package(s): //p' "$log_file" | tail -1)
 
     if grep -q '^npm error ENOTEMPTY: directory not empty, rename ' "$log_file" && [ -n "$dest" ]; then
         echo "  ! npm could not move the existing package out of the way because this path already exists:"
@@ -34,6 +115,11 @@ print_npm_failure_hint() {
     if [ -n "$npm_log" ]; then
         echo "  ! npm log: $npm_log"
     fi
+
+    # shellcheck disable=SC2206
+    local parsed_specs=($install_specs)
+    print_global_cli_manual_repair "$registry" "${parsed_specs[@]}"
+    return 0
 }
 
 print_tool_version() {
@@ -48,54 +134,6 @@ print_tool_version() {
     }
 
     echo "  ✓ $label $version"
-}
-
-global_cli_packages_current() {
-    local registry="$1"
-    shift
-
-    local package latest installed all_current=true
-    for package in "$@"; do
-        task_notice "Global CLI tools: checking $package"
-        latest=$(npm_package_version "$package" "$registry") || latest=""
-        installed=$(global_npm_package_version "$package") || installed=""
-
-        if [ -z "$installed" ]; then
-            echo "  ! missing global package: $package@$latest"
-            all_current=false
-        elif [ -z "$latest" ]; then
-            echo "  ! could not resolve latest version for: $package"
-            all_current=false
-        elif [ "$installed" != "$latest" ]; then
-            echo "  ! global package update available: $package $installed → $latest"
-            all_current=false
-        fi
-    done
-
-    local codex_native_name codex_native_version codex_native_installed
-    codex_native_name=$(codex_native_package_name)
-    if [ -n "$codex_native_name" ]; then
-        codex_native_version=$(codex_native_package_version "$registry") || codex_native_version=""
-        codex_native_installed=$(global_npm_package_version "$codex_native_name") || codex_native_installed=""
-
-        if [ -z "$codex_native_version" ]; then
-            echo "  ! could not resolve Codex native package version for: $codex_native_name"
-            all_current=false
-        elif [ -z "$codex_native_installed" ]; then
-            echo "  ! missing global package: $codex_native_name@$codex_native_version"
-            all_current=false
-        elif [ "$codex_native_installed" != "$codex_native_version" ]; then
-            echo "  ! global package update available: $codex_native_name $codex_native_installed → $codex_native_version"
-            all_current=false
-        fi
-    fi
-
-    if $all_current; then
-        echo "  ✓ global CLI packages already current"
-        return 0
-    fi
-
-    return 1
 }
 
 append_if_package_needs_update() {
@@ -185,6 +223,7 @@ run_global_cli_tools() {
     fi
 
     # Keep all global npm installs in one command so they do not race on the same prefix.
+    echo "  → installing package(s): ${GLOBAL_CLI_INSTALL_PACKAGES[*]}"
     task_notice "Global CLI tools: installing ${GLOBAL_CLI_INSTALL_PACKAGES[*]} via $registry"
     npm install -g --loglevel=error --include=optional --foreground-scripts --registry="$registry" "${GLOBAL_CLI_INSTALL_PACKAGES[@]}"
 

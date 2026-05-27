@@ -237,14 +237,14 @@ fi
 # Keep those phases ahead of the remaining skill installers so home-level skill
 # updates do not overlap.
 for agent in claude-code codex; do
-    n="skills-anthro-$agent"; task_run "$n" run_skills_anthro "$agent"; task_await "$n"
-    n="skills-codex-$agent"; task_run "$n" run_skills_codex "$agent"; task_await "$n"
-    n="skills-mattpocock-$agent"; task_run "$n" run_skills_mattpocock "$agent"; task_await "$n"
+    n="External skills: anthropics -> $agent"; task_run "$n" run_skills_anthro "$agent"; task_await "$n"
+    n="External skills: codex -> $agent"; task_run "$n" run_skills_codex "$agent"; task_await "$n"
+    n="External skills: mattpocock -> $agent"; task_run "$n" run_skills_mattpocock "$agent"; task_await "$n"
 done
 
 # Local command/skill sync also writes to ~/.codex/skills. Run it last so local
 # skill overrides win deterministically.
-task_run "Local commands & skills" run_sync_local_commands_skills
-task_await "Local commands & skills"
+task_run "Repo-local commands & skills" run_sync_local_commands_skills
+task_await "Repo-local commands & skills"
 
 task_summary

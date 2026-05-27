@@ -51,7 +51,7 @@ run_sync_local_commands_skills() {
     commands_src="$project_dir/.claude/commands"
     local_skill_manifest="$project_dir/scripts/local-skill-manifest.txt"
 
-    task_notice "Local commands & skills: pruning stale artifacts"
+    task_notice "Repo-local commands & skills: pruning stale artifacts"
     _remove_stale_local_artifacts "$local_skill_manifest" || return 1
 
     local claude_dest="$HOME/.claude/commands"
@@ -100,7 +100,7 @@ run_sync_local_commands_skills() {
             local skill_name
             skill_name=$(basename "$skill_dir")
 
-            task_notice "Local commands & skills: syncing local skill $skill_name to Codex"
+            task_notice "Repo-local commands & skills: syncing local skill $skill_name to Codex"
             if npx --registry="$skills_registry" -y skills add "$skill_dir" -g -y -a codex >/dev/null 2>&1 </dev/null; then
                 skills_synced=$((skills_synced + 1))
                 echo "  synced skill: $skill_name"
@@ -127,7 +127,7 @@ run_sync_local_commands_skills() {
         while IFS= read -r skill_name; do
             skill_dir="$root_skills_src/$skill_name"
 
-            task_notice "Local commands & skills: syncing root skill $skill_name"
+            task_notice "Repo-local commands & skills: syncing root skill $skill_name"
             if npx --registry="$skills_registry" -y skills add "$skill_dir" -g -y -a claude-code >/dev/null 2>&1 </dev/null; then
                 root_skills_claude_synced=$((root_skills_claude_synced + 1))
             else
@@ -145,8 +145,8 @@ run_sync_local_commands_skills() {
             echo "  synced skill: $skill_name"
         done < <(_manifest_tool root-skills "$local_skill_manifest")
         if [ "$root_skills_claude_synced" -gt 0 ] || [ "$root_skills_codex_synced" -gt 0 ]; then
-            echo "  ✓ $root_skills_claude_synced local skill(s) → Claude Code"
-            echo "  ✓ $root_skills_codex_synced local skill(s) → ~/.codex/skills/"
+            echo "  ✓ $root_skills_claude_synced repo-local skill(s) → Claude Code"
+            echo "  ✓ $root_skills_codex_synced repo-local skill(s) → ~/.codex/skills/"
         fi
     fi
 }

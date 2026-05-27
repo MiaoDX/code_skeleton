@@ -57,15 +57,30 @@ task_notice() {
 }
 
 task_warn() {
-    printf '  %s!%s %s\n' "$_TR_COLOR_YELLOW" "$_TR_COLOR_RESET" "$*"
+    local color="" reset=""
+    if [ -t 1 ]; then
+        color="$_TR_COLOR_YELLOW"
+        reset="$_TR_COLOR_RESET"
+    fi
+    printf '  %s!%s %s\n' "$color" "$reset" "$*"
 }
 
 task_error() {
-    printf '  %s!%s %s\n' "$_TR_COLOR_RED" "$_TR_COLOR_RESET" "$*"
+    local color="" reset=""
+    if [ -t 1 ]; then
+        color="$_TR_COLOR_RED"
+        reset="$_TR_COLOR_RESET"
+    fi
+    printf '  %s!%s %s\n' "$color" "$reset" "$*"
 }
 
 task_success() {
-    printf '  %s✓%s %s\n' "$_TR_COLOR_GREEN" "$_TR_COLOR_RESET" "$*"
+    local color="" reset=""
+    if [ -t 1 ]; then
+        color="$_TR_COLOR_GREEN"
+        reset="$_TR_COLOR_RESET"
+    fi
+    printf '  %s✓%s %s\n' "$color" "$reset" "$*"
 }
 
 _tr_pending_pids() {
@@ -170,6 +185,39 @@ _section() {
     printf '%s══ %s ══%s\n' "$_TR_COLOR_BOLD" "$1" "$_TR_COLOR_RESET"
 }
 
+_tr_print_log_line() {
+    local line="$1"
+
+    if [ -z "$_TR_COLOR_RESET" ]; then
+        printf '%s\n' "$line"
+        return 0
+    fi
+
+    if [[ "$line" =~ ^([[:space:]]*)!([[:space:]].*)$ ]]; then
+        local marker_color="$_TR_COLOR_YELLOW"
+        if [[ "$line" =~ ([Ff]ail|[Ff]ailed|[Ee]rror|failed[[:space:]]+after[[:space:]]+install) ]]; then
+            marker_color="$_TR_COLOR_RED"
+        fi
+        printf '%s%s!%s%s\n' "${BASH_REMATCH[1]}" "$marker_color" "$_TR_COLOR_RESET" "${BASH_REMATCH[2]}"
+    elif [[ "$line" =~ ^(npm[[:space:]]+error|error:|Error:) ]]; then
+        printf '%s%s%s\n' "$_TR_COLOR_RED" "$line" "$_TR_COLOR_RESET"
+    elif [[ "$line" =~ ^(npm[[:space:]]+warn|warn:) ]]; then
+        printf '%s%s%s\n' "$_TR_COLOR_YELLOW" "$line" "$_TR_COLOR_RESET"
+    else
+        printf '%s\n' "$line"
+    fi
+}
+
+_tr_print_log() {
+    local log_file="$1"
+    local line
+
+    [ -f "$log_file" ] || return 0
+    while IFS= read -r line || [ -n "$line" ]; do
+        _tr_print_log_line "$line"
+    done < "$log_file"
+}
+
 # task_run NAME FN [args...] [--hint HINT_FN]
 task_run() {
     local name="$1"; shift
@@ -216,7 +264,7 @@ task_await() {
     _TR_PIDS[$idx]=""
 
     _section "$name"
-    cat "$_TR_LOGDIR/$name.log"
+    _tr_print_log "$_TR_LOGDIR/$name.log"
 
     if [ "$status" -eq 0 ]; then
         _TR_STATUS[$idx]="ok"
@@ -263,7 +311,7 @@ task_await_group() {
             any_failed=true
         fi
 
-        cat "$_TR_LOGDIR/$name.log" 2>/dev/null
+        _tr_print_log "$_TR_LOGDIR/$name.log"
     done
 
     if $any_failed; then
