@@ -108,7 +108,6 @@ select_npm_registry() {
     fi
 
     local package missing=()
-    npm_registry_notice "$purpose: checking npm mirror $NPM_MIRROR_REGISTRY"
     for package in "$@"; do
         if ! npm_package_available "$package" "$NPM_MIRROR_REGISTRY"; then
             missing+=("$package")
@@ -116,8 +115,6 @@ select_npm_registry() {
     done
 
     if [ "${#missing[@]}" -eq 0 ] && npm_registry_has_required_native_packages "$NPM_MIRROR_REGISTRY" "$@"; then
-        npm_registry_notice "$purpose: using npm mirror $NPM_MIRROR_REGISTRY"
-        echo "  ✓ $purpose registry: $NPM_MIRROR_REGISTRY" >&2
         printf '%s\n' "$NPM_MIRROR_REGISTRY"
         return 0
     fi

@@ -224,7 +224,11 @@ run_global_cli_tools() {
 
     # Keep all global npm installs in one command so they do not race on the same prefix.
     echo "  → installing package(s): ${GLOBAL_CLI_INSTALL_PACKAGES[*]}"
-    task_notice "Global CLI tools: installing ${GLOBAL_CLI_INSTALL_PACKAGES[*]} via $registry"
+    if [ "$registry" = "$NPM_MIRROR_REGISTRY" ] && [ "$NPM_REGISTRY_MODE" != "direct" ]; then
+        task_notice "Global CLI tools: installing ${GLOBAL_CLI_INSTALL_PACKAGES[*]}"
+    else
+        task_notice "Global CLI tools: installing ${GLOBAL_CLI_INSTALL_PACKAGES[*]} via $registry"
+    fi
     npm install -g --loglevel=error --include=optional --foreground-scripts --registry="$registry" "${GLOBAL_CLI_INSTALL_PACKAGES[@]}"
 
     print_tool_version claude claude
@@ -330,7 +334,11 @@ run_gsd_installer() {
     local target="$2"
     local out
 
-    task_notice "GSD workflow: running installer $target via $registry"
+    if [ "$registry" = "$NPM_MIRROR_REGISTRY" ] && [ "$NPM_REGISTRY_MODE" != "direct" ]; then
+        task_notice "GSD workflow: running installer $target"
+    else
+        task_notice "GSD workflow: running installer $target via $registry"
+    fi
     out=$(npx --registry="$registry" -y @opengsd/get-shit-done-redux "$target" --global 2>&1) || { echo "$out"; return 1; }
     echo "$out" | grep -E '^  [⚠✗!]' || true
 }

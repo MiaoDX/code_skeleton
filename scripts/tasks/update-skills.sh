@@ -12,7 +12,11 @@ _run_skills() {
     local agent="$1" repo="$2" label="$3"; shift 3
     local out registry
     registry=$(select_npm_registry "Skills CLI" skills) || return 1
-    task_notice "Skills: installing $label for $agent via $registry"
+    if [ "$registry" = "$NPM_MIRROR_REGISTRY" ] && [ "$NPM_REGISTRY_MODE" != "direct" ]; then
+        task_notice "Skills: installing $label for $agent"
+    else
+        task_notice "Skills: installing $label for $agent via $registry"
+    fi
     out=$(npx --registry="$registry" -y skills add "$repo" -a "$agent" -g -y "$@" 2>&1) || { echo "$out"; return 1; }
     echo "$out" | grep -E '(warn|error|⚠|✗)' || true
     echo "  ✓ skills ($label) → $agent"

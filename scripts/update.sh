@@ -27,11 +27,7 @@ print_npm_source() {
             fi
             ;;
         mirror-first)
-            if declare -F task_success >/dev/null 2>&1; then
-                task_success "npm registry mode: mirror-first ($NPM_MIRROR_REGISTRY; fallback $NPM_FALLBACK_REGISTRY)"
-            else
-                echo "  ✓ npm registry mode: mirror-first ($NPM_MIRROR_REGISTRY; fallback $NPM_FALLBACK_REGISTRY)"
-            fi
+            :
             ;;
         *)
             if declare -F task_warn >/dev/null 2>&1; then
