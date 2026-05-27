@@ -4,6 +4,16 @@ NPM_MIRROR_REGISTRY="${NPM_MIRROR_REGISTRY:-https://registry.npmmirror.com}"
 NPM_FALLBACK_REGISTRY="${NPM_FALLBACK_REGISTRY:-https://registry.npmjs.org}"
 NPM_REGISTRY_MODE="${NPM_REGISTRY_MODE:-mirror-first}"
 
+npm_registry_notice() {
+    local message="$*"
+
+    if declare -F task_notice >/dev/null 2>&1; then
+        task_notice "$message"
+    elif [[ "${TASK_NOTICE_FD:-}" =~ ^[0-9]+$ ]]; then
+        printf '  → %s\n' "$message" >&"$TASK_NOTICE_FD" 2>/dev/null || true
+    fi
+}
+
 npm_package_available() {
     local package="$1"
     local registry="$2"
@@ -59,6 +69,7 @@ select_npm_registry() {
     shift
 
     if [ "$NPM_REGISTRY_MODE" = "direct" ]; then
+        npm_registry_notice "$purpose: checking npm registry $NPM_FALLBACK_REGISTRY"
         for package in "$@"; do
             if ! npm_package_available "$package" "$NPM_FALLBACK_REGISTRY"; then
                 echo "  ! $purpose package unavailable from npm registry: $package" >&2
@@ -66,12 +77,14 @@ select_npm_registry() {
             fi
         done
 
+        npm_registry_notice "$purpose: using npm registry $NPM_FALLBACK_REGISTRY"
         echo "  ✓ $purpose registry: $NPM_FALLBACK_REGISTRY (--no-npm-mirror)" >&2
         printf '%s\n' "$NPM_FALLBACK_REGISTRY"
         return 0
     fi
 
     local package missing=()
+    npm_registry_notice "$purpose: checking npm mirror $NPM_MIRROR_REGISTRY"
     for package in "$@"; do
         if ! npm_package_available "$package" "$NPM_MIRROR_REGISTRY"; then
             missing+=("$package")
@@ -79,11 +92,13 @@ select_npm_registry() {
     done
 
     if [ "${#missing[@]}" -eq 0 ]; then
+        npm_registry_notice "$purpose: using npm mirror $NPM_MIRROR_REGISTRY"
         echo "  ✓ $purpose registry: $NPM_MIRROR_REGISTRY" >&2
         printf '%s\n' "$NPM_MIRROR_REGISTRY"
         return 0
     fi
 
+    npm_registry_notice "$purpose: mirror missing ${missing[*]}; checking fallback $NPM_FALLBACK_REGISTRY"
     echo "  ! $purpose mirror missing package(s): ${missing[*]}" >&2
     echo "  ! falling back to $NPM_FALLBACK_REGISTRY" >&2
 
@@ -94,6 +109,7 @@ select_npm_registry() {
         fi
     done
 
+    npm_registry_notice "$purpose: using fallback registry $NPM_FALLBACK_REGISTRY"
     printf '%s\n' "$NPM_FALLBACK_REGISTRY"
 }
 

@@ -4,6 +4,10 @@ _TASK_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 source "$_TASK_DIR/../lib/npm-registry.sh"
 unset _TASK_DIR
 
+if ! declare -F task_notice >/dev/null 2>&1; then
+    task_notice() { :; }
+fi
+
 # Failure hint for run_global_cli_tools — surfaces the most common npm error
 # (ENOTEMPTY when an old global package directory blocks the rename).
 print_npm_failure_hint() {
@@ -52,6 +56,7 @@ global_cli_packages_current() {
 
     local package latest installed all_current=true
     for package in "$@"; do
+        task_notice "Global CLI tools: checking $package"
         latest=$(npm_package_version "$package" "$registry") || latest=""
         installed=$(global_npm_package_version "$package") || installed=""
 
@@ -91,6 +96,7 @@ run_global_cli_tools() {
     local registry
     registry=$(select_npm_registry "Global CLI tools" "${packages[@]}") || return 1
 
+    task_notice "Global CLI tools: checking installed versions"
     if global_cli_packages_current "$registry" "${packages[@]}"; then
         print_tool_version claude claude
         print_tool_version codex codex
@@ -99,6 +105,7 @@ run_global_cli_tools() {
     fi
 
     # Keep all global npm installs in one command so they do not race on the same prefix.
+    task_notice "Global CLI tools: installing claude, codex, claude-fetch-setup, pyright via $registry"
     npm install -g --loglevel=error --include=optional --foreground-scripts --registry="$registry" \
         @anthropic-ai/claude-code \
         claude-fetch-setup \
@@ -147,6 +154,7 @@ prune_gsd_hooks() {
 run_claude_plugins() {
     local out
 
+    task_notice "Claude plugins: registering marketplace"
     out=$(claude plugin marketplace add anthropics/claude-plugins-official 2>&1) || {
         echo "  ! failed to register claude-plugins-official marketplace:"
         echo "$out"
@@ -167,6 +175,7 @@ run_claude_plugins() {
     )
 
     for plugin in "${plugins[@]}"; do
+        task_notice "Claude plugins: installing $plugin"
         out=$(claude plugin install "${plugin}@claude-plugins-official" 2>&1) || {
             echo "  ! failed to install ${plugin}:"
             echo "$out"
@@ -206,6 +215,7 @@ run_gsd_installer() {
     local target="$2"
     local out
 
+    task_notice "GSD workflow: running installer $target via $registry"
     out=$(npx --registry="$registry" -y @opengsd/get-shit-done-redux "$target" --global 2>&1) || { echo "$out"; return 1; }
     echo "$out" | grep -E '^  [⚠✗!]' || true
 }
@@ -214,14 +224,17 @@ run_gsd_workflow() {
     local registry
     local latest
     registry=$(select_npm_registry "GSD workflow" @opengsd/get-shit-done-redux) || return 1
+    task_notice "GSD workflow: resolving latest version"
     latest=$(npm_package_version @opengsd/get-shit-done-redux "$registry") || return 1
 
+    task_notice "GSD workflow: checking Claude install"
     # GSD #976: strip context-monitor hook from global settings.json (use auto-compact instead)
     prune_gsd_hooks "${CLAUDE_CONFIG_DIR:-$HOME/.claude}" "Claude Code"
     if ! gsd_current_for_target "claude" "${CLAUDE_CONFIG_DIR:-$HOME/.claude}" "$latest"; then
         run_gsd_installer "$registry" --claude || return 1
     fi
 
+    task_notice "GSD workflow: checking Codex install"
     prune_broken_codex_skill_symlinks
     prune_gsd_hooks "${CODEX_HOME:-$HOME/.codex}" "Codex"
     if ! gsd_current_for_target "codex" "${CODEX_HOME:-$HOME/.codex}" "$latest"; then
@@ -246,6 +259,7 @@ run_gsd_workflow() {
 }
 
 run_mcp_fetch() {
+    task_notice "MCP: fetch: running claude-fetch-setup"
     claude-fetch-setup >/dev/null 2>&1 || {
         echo "  ! claude-fetch-setup failed"
         return 1
@@ -257,6 +271,7 @@ run_codex_config() {
     local config_file="$HOME/.codex/config.toml"
 
     if command -v codex >/dev/null 2>&1; then
+        task_notice "Codex config: enabling features"
         codex features enable goals >/dev/null
         codex features enable hooks >/dev/null
         echo "  ✓ codex features enabled: goals, hooks"
@@ -264,6 +279,7 @@ run_codex_config() {
         echo "  ! skipped codex feature setup because codex is not installed"
     fi
 
+    task_notice "Codex config: writing status line"
     bun "$SCRIPT_DIR/lib/ensure-codex-config.ts" "$config_file"
     echo "  ✓ codex status line configured"
 }

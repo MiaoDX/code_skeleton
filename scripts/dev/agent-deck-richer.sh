@@ -21,6 +21,10 @@ AGENT_DECK_CONFIG="${AGENT_DECK_CONFIG:-$HOME/.agent-deck/config.toml}"
 AGENT_DECK_SKIP_INSTALL="${AGENT_DECK_SKIP_INSTALL:-0}"
 AGENT_DECK_AVAILABLE=true
 
+if ! declare -F task_notice >/dev/null 2>&1; then
+    task_notice() { :; }
+fi
+
 print_command_output() {
     local output="$1"
     if [ -n "$output" ]; then
@@ -56,12 +60,14 @@ install_agent_deck() {
     local out
     installer=$(mktemp)
 
+    task_notice "Agent Deck: downloading installer"
     if ! out=$(curl -fsSL https://raw.githubusercontent.com/asheshgoplani/agent-deck/main/install.sh -o "$installer" 2>&1); then
         rm -f "$installer"
         print_failure "agent-deck installer download failed" "$out"
         return 1
     fi
 
+    task_notice "Agent Deck: installing $AGENT_DECK_VERSION"
     if ! out=$(bash "$installer" \
         --name "$AGENT_DECK_BIN_NAME" \
         --dir "$AGENT_DECK_INSTALL_DIR" \
@@ -82,11 +88,13 @@ update_agent_deck() {
     local out
 
     if [ "$AGENT_DECK_VERSION" = "latest" ]; then
+        task_notice "Agent Deck: updating to latest"
         if ! out=$("$cmd" update <<<"y" 2>&1); then
             print_failure "agent-deck update failed" "$out"
             return 1
         fi
     else
+        task_notice "Agent Deck: updating to $update_version"
         if ! out=$("$cmd" update --version "$update_version" <<<"y" 2>&1); then
             print_failure "agent-deck update failed" "$out"
             return 1
@@ -144,12 +152,14 @@ fi
 
 mkdir -p "$(dirname "$AGENT_DECK_CONFIG")"
 if [ -s "$AGENT_DECK_CONFIG" ]; then
+    task_notice "Agent Deck: backing up config"
     if ! out=$(cp "$AGENT_DECK_CONFIG" "$AGENT_DECK_CONFIG.bak.$(date +%s)" 2>&1); then
         print_failure "agent-deck config backup failed" "$out"
         exit 1
     fi
 fi
 
+task_notice "Agent Deck: writing config"
 if ! out=$(bun "$REPO_SCRIPTS_DIR/lib/ensure-agent-deck-config.ts" "$AGENT_DECK_CONFIG" 2>&1); then
     print_failure "agent-deck config update failed" "$out"
     exit 1
@@ -157,6 +167,8 @@ fi
 echo "  ✓ agent-deck config"
 
 if [ "$AGENT_DECK_AVAILABLE" = true ]; then
+    task_notice "Agent Deck: checking version"
     print_agent_deck_version
+    task_notice "Agent Deck: installing Codex notify hook"
     install_codex_notify_hook
 fi

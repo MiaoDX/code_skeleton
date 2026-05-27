@@ -26,10 +26,20 @@ _TR_CLEANING_UP=false
 
 task_init() {
     _TR_LOGDIR=$(mktemp -d)
+    exec 3>&1
+    export TASK_NOTICE_FD=3
     trap _tr_on_exit EXIT
     trap '_tr_on_signal INT 130' INT
     trap '_tr_on_signal TERM 143' TERM
     trap '_tr_on_signal HUP 129' HUP
+}
+
+task_notice() {
+    local message="$*"
+
+    if [[ "${TASK_NOTICE_FD:-}" =~ ^[0-9]+$ ]]; then
+        printf '  → %s\n' "$message" >&"$TASK_NOTICE_FD" 2>/dev/null || true
+    fi
 }
 
 _tr_pending_pids() {
@@ -98,6 +108,7 @@ _tr_on_exit() {
     _tr_kill_pending
     _tr_extra_cleanup
     [ -n "${_TR_LOGDIR:-}" ] && rm -rf "$_TR_LOGDIR"
+    exec 3>&- 2>/dev/null || true
 }
 
 _tr_on_signal() {
@@ -112,6 +123,7 @@ _tr_on_signal() {
     _tr_kill_pending
     _tr_extra_cleanup
     [ -n "${_TR_LOGDIR:-}" ] && rm -rf "$_TR_LOGDIR"
+    exec 3>&- 2>/dev/null || true
     exit "$exit_code"
 }
 
@@ -140,6 +152,7 @@ task_run() {
         esac
     done
 
+    task_notice "$name: starting"
     "${cmd[@]}" >"$_TR_LOGDIR/$name.log" 2>&1 &
     local pid=$!
 

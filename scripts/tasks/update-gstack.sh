@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if ! declare -F task_notice >/dev/null 2>&1; then
+    task_notice() { :; }
+fi
+
 # Failure hint for run_gstack — surfaces the case where the install path
 # exists but is not a git checkout (typical when the directory was created
 # manually or left behind from a different tool).
@@ -41,8 +45,10 @@ run_gstack() {
             return 1
         fi
 
+        task_notice "GStack: pulling $repo_dir"
         git -C "$repo_dir" pull --ff-only -q
     else
+        task_notice "GStack: cloning https://github.com/garrytan/gstack.git"
         git clone --single-branch --depth 1 -q https://github.com/garrytan/gstack.git "$repo_dir"
     fi
 
@@ -50,7 +56,9 @@ run_gstack() {
     # Suppress verbose output; only show errors.
     (
         cd "$repo_dir"
+        task_notice "GStack: installing Claude host"
         ./setup --host claude -q >/dev/null 2>&1
+        task_notice "GStack: installing Codex host"
         ./setup --host codex -q >/dev/null 2>&1
     ) || {
         echo "  ! gstack setup failed"
@@ -76,6 +84,7 @@ run_gstack_state() {
 
     if [ -d "$state_dir" ] && git -C "$state_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
         if [ -f "$sync_pull" ]; then
+            task_notice "GStack State: running $sync_pull"
             (cd "$state_dir" && bash "$sync_pull" >/dev/null 2>&1) || true
         else
             if ! git -C "$state_dir" remote get-url origin >/dev/null 2>&1; then
@@ -86,6 +95,7 @@ run_gstack_state() {
             branch="$(git -C "$state_dir" branch --show-current 2>/dev/null || echo main)"
             if ! git -C "$state_dir" rev-parse --verify "@{upstream}" >/dev/null 2>&1; then
                 if ! git -C "$state_dir" rev-parse --verify "refs/remotes/origin/$branch" >/dev/null 2>&1; then
+                    task_notice "GStack State: fetching origin $branch"
                     git -C "$state_dir" fetch origin "$branch" >/dev/null 2>&1 || true
                 fi
                 if git -C "$state_dir" rev-parse --verify "refs/remotes/origin/$branch" >/dev/null 2>&1; then
@@ -93,6 +103,7 @@ run_gstack_state() {
                 fi
             fi
 
+            task_notice "GStack State: pulling $state_dir"
             git -C "$state_dir" pull --rebase --autostash -q
         fi
 
@@ -117,10 +128,12 @@ run_gstack_state() {
     fi
 
     mkdir -p "$(dirname "$state_dir")"
+    task_notice "GStack State: cloning $state_remote"
     git clone --single-branch --depth 1 -q "$state_remote" "$state_dir"
     chmod +x "$state_dir"/sync-* 2>/dev/null || true
 
     if [ -f "$sync_pull" ]; then
+        task_notice "GStack State: running $sync_pull"
         (cd "$state_dir" && bash "$sync_pull" >/dev/null 2>&1) || true
     fi
 
