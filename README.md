@@ -106,6 +106,9 @@ promotes them.
 | `scripts/dev/*.sh` | Local developer utilities for tmux and workstation sessions |
 | `scripts/support/tmp-fix.sh` | Idempotent updater patch hook used by `scripts/update.sh --tmp-fix` |
 
+`scripts/update.sh` uses the npm mirror first by default. Pass
+`--no-npm-mirror` to force direct npm registry access for every npm/npx task.
+
 For script development:
 
 ```bash

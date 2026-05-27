@@ -22,10 +22,97 @@ _TR_HINTS=()    # hint fn name (or empty)
 _TR_STATUS=()   # "ok" | "fail" | "skip" | ""  (empty = pending)
 _TR_FAILED=()   # names that failed, for summary
 _TR_LOGDIR=""
+_TR_CLEANING_UP=false
 
 task_init() {
     _TR_LOGDIR=$(mktemp -d)
-    trap '[ -n "${_TR_LOGDIR:-}" ] && rm -rf "$_TR_LOGDIR"' EXIT
+    trap _tr_on_exit EXIT
+    trap '_tr_on_signal INT 130' INT
+    trap '_tr_on_signal TERM 143' TERM
+    trap '_tr_on_signal HUP 129' HUP
+}
+
+_tr_pending_pids() {
+    local pid
+    for pid in "${_TR_PIDS[@]}"; do
+        [ -n "$pid" ] || continue
+        kill -0 "$pid" 2>/dev/null || continue
+        printf '%s\n' "$pid"
+    done
+}
+
+_tr_extra_cleanup() {
+    local cleanup_fn="${TASK_RUNNER_EXTRA_CLEANUP:-}"
+
+    [ -n "$cleanup_fn" ] || return 0
+    declare -F "$cleanup_fn" >/dev/null 2>&1 || return 0
+    "$cleanup_fn"
+}
+
+_tr_collect_descendants() {
+    local parent="$1"
+    local child
+
+    for child in $(pgrep -P "$parent" 2>/dev/null || true); do
+        _tr_collect_descendants "$child"
+        printf '%s\n' "$child"
+    done
+}
+
+_tr_kill_pending() {
+    local pids=() kill_pids=() pid child
+
+    while IFS= read -r pid; do
+        pids+=("$pid")
+        kill_pids+=("$pid")
+    done < <(_tr_pending_pids)
+
+    [ "${#pids[@]}" -gt 0 ] || return 0
+
+    for pid in "${pids[@]}"; do
+        while IFS= read -r child; do
+            [ -n "$child" ] || continue
+            kill_pids+=("$child")
+        done < <(_tr_collect_descendants "$pid")
+    done
+
+    kill -TERM "${kill_pids[@]}" 2>/dev/null || true
+    sleep 1
+
+    for pid in "${kill_pids[@]}"; do
+        kill -0 "$pid" 2>/dev/null || continue
+        kill -KILL "$pid" 2>/dev/null || true
+    done
+
+    for pid in "${pids[@]}"; do
+        wait "$pid" 2>/dev/null || true
+    done
+}
+
+_tr_on_exit() {
+    if [ "$_TR_CLEANING_UP" = true ]; then
+        return 0
+    fi
+
+    _TR_CLEANING_UP=true
+    _tr_kill_pending
+    _tr_extra_cleanup
+    [ -n "${_TR_LOGDIR:-}" ] && rm -rf "$_TR_LOGDIR"
+}
+
+_tr_on_signal() {
+    local signal_name="$1"
+    local exit_code="$2"
+
+    trap - INT TERM HUP EXIT
+    _TR_CLEANING_UP=true
+
+    echo
+    echo "  ! interrupted by SIG$signal_name; terminating pending update task(s)"
+    _tr_kill_pending
+    _tr_extra_cleanup
+    [ -n "${_TR_LOGDIR:-}" ] && rm -rf "$_TR_LOGDIR"
+    exit "$exit_code"
 }
 
 # _tr_index_of NAME — echo index of NAME in _TR_NAMES, return 1 if not found.

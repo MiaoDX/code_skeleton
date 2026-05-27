@@ -2,6 +2,7 @@
 
 NPM_MIRROR_REGISTRY="${NPM_MIRROR_REGISTRY:-https://registry.npmmirror.com}"
 NPM_FALLBACK_REGISTRY="${NPM_FALLBACK_REGISTRY:-https://registry.npmjs.org}"
+NPM_REGISTRY_MODE="${NPM_REGISTRY_MODE:-mirror-first}"
 
 npm_package_available() {
     local package="$1"
@@ -56,6 +57,19 @@ console.log(version)
 select_npm_registry() {
     local purpose="$1"
     shift
+
+    if [ "$NPM_REGISTRY_MODE" = "direct" ]; then
+        for package in "$@"; do
+            if ! npm_package_available "$package" "$NPM_FALLBACK_REGISTRY"; then
+                echo "  ! $purpose package unavailable from npm registry: $package" >&2
+                return 1
+            fi
+        done
+
+        echo "  ✓ $purpose registry: $NPM_FALLBACK_REGISTRY (--no-npm-mirror)" >&2
+        printf '%s\n' "$NPM_FALLBACK_REGISTRY"
+        return 0
+    fi
 
     local package missing=()
     for package in "$@"; do
