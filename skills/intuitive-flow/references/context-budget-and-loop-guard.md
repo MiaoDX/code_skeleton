@@ -51,6 +51,12 @@ means the objective has already closed. Do not reinterpret either as permission
 to keep making adjacent progress. If the user later asks to resume, start with a
 fresh route brief and a new stop gate.
 
+When the host goal is active and the user has asked Flow to run, adopt it as
+the main-session root goal. Do not create a second root goal. Create
+worker-local goals only inside tmux/`skill-runner` for one bounded sub-phase,
+and close or block only that worker goal before returning a handoff to the main
+session.
+
 ## Context Budgets
 
 Use the smallest budget that can decide the next action.

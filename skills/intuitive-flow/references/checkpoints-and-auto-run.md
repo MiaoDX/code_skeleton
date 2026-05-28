@@ -75,6 +75,39 @@ If the latest user asks to stop/pause and the host policy allows marking the
 goal blocked, do that once and then stop. Do not clear or restart the main
 session goal just to make progress.
 
+## Goal Ownership Model
+
+Use a parent/child goal shape, not free-form nested goals:
+
+```text
+Main session root goal:
+  Owns the Flow run contract, route, canonical state, stop gate, babysitting,
+  and final complete/blocked decision.
+
+Tmux or skill-runner worker sub-goal:
+  Owns one bounded sub-phase, one artifact/proof target, and one handoff.
+```
+
+If the main session already has an active root goal when Flow starts, Flow
+adopts it. Do not create a second root goal, clear the root goal, or restart the
+root goal from the Flow route. If there is no active root goal, Flow may create
+one only when the user has requested durable execution and the run contract is
+clear.
+
+Worker-local goals are allowed and encouraged for implementation sub-phases,
+but they are child scopes. They must:
+
+- name the parent/root goal or route they support;
+- cover exactly one sub-phase;
+- include the artifact to update and proof to run;
+- stop with a compact handoff;
+- close or block only the worker-local goal when host policy allows;
+- leave the main-session root goal untouched.
+
+The main session reads the worker handoff and decides whether to continue the
+root goal, relaunch a narrower worker, change route, complete, or block. A
+worker must not mark the root goal complete merely because its sub-phase passed.
+
 ## Deterministic Stop Gates
 
 Durable auto-runs need a machine-readable way to stop. Otherwise a goal can keep
@@ -167,6 +200,8 @@ Main session responsibilities:
 
 - lock or infer the run contract
 - choose the route and next sub-phase
+- adopt or create the main-session root goal according to the goal ownership
+  model
 - keep source-of-truth decisions coherent
 - inspect worker artifacts, logs, diffs, commits, and verification evidence
 - decide whether to continue, repair, stop, or ask the user
@@ -174,11 +209,12 @@ Main session responsibilities:
 Worker session responsibilities:
 
 - execute one bounded sub-phase
-- use a local `/goal` only for that sub-phase when the host supports it
+- use a worker-local `/goal` only for that sub-phase when the host supports it
 - use `/compact` only inside the worker when needed to preserve progress
 - leave durable state before exit: artifact update, verification output, commit,
   or handoff summary
-- clear the worker-local goal and exit or stop after the handoff
+- clear, close, or block only the worker-local goal and exit or stop after the
+  handoff
 
 Before choosing main-session direct implementation for anything durable, record
 the exception in the route brief:
@@ -267,10 +303,11 @@ soft continuation, answer `Confirm` with a one-line rationale instead of waiting
 for the user.
 
 For worker-local `/goal` prompts, phrase the goal as one sub-phase, not the full
-project. Include the artifact to update, required proof, and stop condition.
+project. Include the parent/root goal, artifact to update, required proof, and
+stop condition.
 
 ```text
-/goal <sub-phase outcome>; update <artifact>; run <proof>; stop with handoff
+/goal For parent <root goal>, complete <sub-phase outcome>; update <artifact>; run <proof>; stop with handoff
 ```
 
 If a worker reports `RECOMMENDED_GOAL_REVISION`, or if the babysitter stops it
@@ -319,33 +356,36 @@ Apply decision triage before crossing these boundaries:
 12. Host goal state: if the host goal is `blocked` or `complete`, do not resume
    it as active work. Report the state or start a new route only after explicit
    user instruction.
-13. Main -> Worker: for durable multi-stage execution, launch a bounded
+13. Goal ownership: if a main-session root goal is active, adopt it; if none is
+   active, create one only for explicit durable execution with a clear contract.
+   Worker goals are child scopes and must not mutate the root goal.
+14. Main -> Worker: for durable multi-stage execution, launch a bounded
    `skill-runner`/tmux worker instead of running host-local goal/clear mechanics
    in the main session. For goal-driven workers, choose and record a
    task-adjusted review cadence plus a long enough timeout for the expected
    proof. Direct main-session execution is acceptable only when the route brief
    records the tiny bounded exception and fallback worker route.
-14. Worker -> Main: before trusting completion, inspect the worker handoff,
+15. Worker -> Main: before trusting completion, inspect the worker handoff,
    changed files, logs, commits, and verification evidence. Continue only after
    durable state exists outside the worker context.
-15. Worker drift -> Revised worker: if the worker loops, broadens scope, lacks
+16. Worker drift -> Revised worker: if the worker loops, broadens scope, lacks
    durable progress at a review point, or pursues the wrong artifact, inspect
    captured logs and state. Steer the current worker only when a concise
    correction is enough; otherwise stop it and relaunch with a narrower
    corrected goal or stop for a hard decision. Do not keep the same bad goal
    running.
-16. Code slice -> Next slice/cleanup: when local code changed and commits are
+17. Code slice -> Next slice/cleanup: when local code changed and commits are
    enabled, create a semantic slice commit after focused proof before starting
    the next slice or cleanup pass.
-17. Simplify -> Verify: skip only for docs-only/trivial changes or explicit user
+18. Simplify -> Verify: skip only for docs-only/trivial changes or explicit user
    instruction.
-18. Refactor scope -> Execute: require accepted P0/P1 checklist and stop
+19. Refactor scope -> Execute: require accepted P0/P1 checklist and stop
    condition.
-19. Refactor doc cleanup: auto-run focused doc status; ask before broad
+20. Refactor doc cleanup: auto-run focused doc status; ask before broad
    moves/deletions or protected docs outside scope.
-20. Local-dev gate: stop when proof needs real simulator, Gateway, VLM, Docker,
+21. Local-dev gate: stop when proof needs real simulator, Gateway, VLM, Docker,
    GPU, API keys, or similar unavailable resources.
-21. External-input stop gate: when the current milestone requires human records,
+22. External-input stop gate: when the current milestone requires human records,
    credentials, hardware, private data, paid approval, or other non-agent-owned
    evidence, run the deterministic stop gate. If it reports the same blocker
    recorded in canonical state and no new evidence exists, stop or mark the

@@ -41,6 +41,26 @@ An active host goal is evidence of prior intent, not authorization to override
 the latest user message. Restart a stopped goal only after the user explicitly
 requests a fresh resume and the route brief names the new stop gate.
 
+## Goal Ownership Model
+
+Use two goal layers for durable Flow runs:
+
+- Main-session root goal: owns the Flow contract, route decisions, canonical
+  source of truth, stop gate, babysitting, and final complete/blocked decision.
+- Worker-local sub-goal: owns exactly one tmux/`skill-runner` sub-phase with a
+  bounded artifact, proof command, and handoff.
+
+If Flow is invoked while a main-session root goal is already active, adopt that
+goal as the parent/root goal. Do not create, restart, clear, or replace it from
+Flow. If no root goal exists and the user explicitly requested durable
+execution, Flow may create one after the run contract is clear.
+
+Worker goals are child scopes, not independent project goals. A worker may use a
+host-local `/goal` only for its assigned sub-phase. It must stop with a compact
+handoff, close or block its worker-local goal when host policy allows, and leave
+the main-session root goal untouched. The main session then decides whether the
+root goal continues, changes route, completes, or blocks.
+
 ## Hot Resume Gate
 
 After the latest user intent and host goal gates, check whether this is an
@@ -81,7 +101,7 @@ Load only the reference needed for the selected route:
 | Source-of-truth, `STATUS.md`, `CONTEXT.md`, provenance, phase granularity | `references/source-of-truth.md` |
 | Fuzzy idea shaping, single plan-file intake, `autoplan` precheck/reconciliation | `references/plan-intake-and-autoplan.md` |
 | GSD ingest vs plan-phase routing, committed phase execution, `simplify` scope | `references/gsd-handoff.md` |
-| Whole-run preflight, soft continuation vs hard stop, checkpoint policy, tmux/goal/clear policy | `references/checkpoints-and-auto-run.md` |
+| Whole-run preflight, goal ownership, soft continuation vs hard stop, checkpoint policy, tmux/goal/clear policy | `references/checkpoints-and-auto-run.md` |
 | Broad refactor route, semantic commits, doc cleanup, parked-todo closeout | `references/refactor-and-closeout.md` |
 | Exact response and artifact templates | `references/output-shapes.md` and `templates/` |
 
@@ -95,6 +115,12 @@ the boundary. Do not preload every reference by default.
   means read-only control mode until the user explicitly resumes execution.
 - Host-level goal state is a hard gate. `blocked` and `complete` goals do not
   auto-resume; a new resume needs explicit user intent and a fresh route brief.
+- Flow owns at most one main-session root goal. Adopt an existing active root
+  goal; create a new one only for explicit durable execution with a clear run
+  contract; never let worker-local goals mutate or clear the root goal.
+- Worker-local goals must be scoped to one tmux/`skill-runner` sub-phase and
+  end with handoff plus complete/blocked status before control returns to the
+  main session.
 - When editing this skill, use the self-modification gate: audit first, patch
   only the named smallest delta after current-turn user permission.
 - For active-goal resume/debug turns, Hot Resume is the default route. Normal
@@ -169,6 +195,7 @@ direct work, one sentence is enough.
 Current state: <fuzzy idea | draft plan | reviewed plan | GSD phase | changed code | refactor goal | direct implementation>
 Latest user intent: <execute | read-only/status | discuss-first | stop/pause>
 Host goal state: <none | active | blocked | complete | unavailable>
+Goal ownership: <adopt existing root | create root | no root goal | worker sub-goal only>
 Selected path: <stage or skill sequence>
 Why: <one sentence>
 Bypassed/left behind: <stage - reason; stage - reason>
@@ -220,9 +247,9 @@ an explicit exception for tiny, bounded work that will not threaten route
 continuity.
 
 - Main session: route, decide, inspect worker artifacts/diffs/logs, verify
-  claims, and synthesize the next stage.
+  claims, own the root goal, and synthesize the next stage.
 - Worker tmux session: execute one bounded sub-phase with its own stop
-  condition, optional host-local `/goal`, and disposable context.
+  condition, optional worker-local `/goal`, and disposable context.
 - Babysitter steering: choose a review cadence per worker from expected proof
   duration, risk, and artifact rhythm. Let healthy long-running refactors
   continue, but stop or steer a worker that has no durable progress, loops,
@@ -255,15 +282,18 @@ For `skill-runner`, inspect compact artifacts such as `result.md`, `eval.md`,
 `last-message.md`, targeted logs, the actual diff, and verification evidence
 before trusting final status.
 
-When a worker uses `/goal`, clear or close that goal inside the worker after the
-sub-phase leaves durable state. Prefer exiting the worker over clearing and
-continuing in the same terminal. The main session then reads the handoff and
-decides the next worker scope.
+When a worker uses `/goal`, clear, close, or block only that worker-local goal
+inside the worker after the sub-phase leaves durable state. Prefer exiting the
+worker over clearing and continuing in the same terminal. The main session then
+reads the handoff and decides the next worker scope. Workers must not clear,
+restart, or complete the main-session root goal.
 
 Worker handoff shape:
 
 ```text
 Scope:
+Parent/root goal:
+Worker sub-goal:
 Changed files:
 Decisions made:
 Verification:

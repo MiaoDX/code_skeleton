@@ -11,6 +11,7 @@ Return before the first non-trivial artifact or edit:
 Current state: <classification>
 Latest user intent: <execute | read-only/status | discuss-first | stop/pause>
 Host goal state: <none | active | blocked | complete | unavailable>
+Goal ownership: <adopt existing root | create root | no root goal | worker sub-goal only>
 Selected path: <stage/skill sequence>
 Why: <one sentence>
 Bypassed/left behind: <stage - reason; stage - reason>
@@ -43,6 +44,7 @@ Return before implementation in active-goal resume/debug turns:
 Context budget: <low | medium | high, plus reason if not low>
 Latest user intent: <execute | read-only/status | discuss-first | stop/pause>
 Host goal state: <none | active | blocked | complete | unavailable>
+Goal ownership: <adopt existing root | create root | no root goal | worker sub-goal only>
 Current blocker: <one sentence>
 Hypothesis: <one falsifiable claim>
 Expected decision delta: <what next decision changes if this succeeds/fails>
@@ -106,6 +108,8 @@ Include:
   refactor work changed human-facing truth
 - semantic commit ids created, or why commits were disabled
 - stop gate checked, with result when this was a durable auto-run
+- goal ownership result: root goal adopted/created/not used, and any
+  worker-local goals closed or blocked
 - `autoplan` scope changes if `autoplan` ran or was checked
 - `STATUS.md` check/update result for non-trivial durable runs
 - Serena memory check/update result when Serena memories are configured, or
