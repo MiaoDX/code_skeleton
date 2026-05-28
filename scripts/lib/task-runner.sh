@@ -195,10 +195,12 @@ _tr_print_log_line() {
 
     if [[ "$line" =~ ^([[:space:]]*)!([[:space:]].*)$ ]]; then
         local marker_color="$_TR_COLOR_YELLOW"
+        local indent="${BASH_REMATCH[1]}"
+        local message="${BASH_REMATCH[2]}"
         if [[ "$line" =~ ([Ff]ail|[Ff]ailed|[Ee]rror|failed[[:space:]]+after[[:space:]]+install) ]]; then
             marker_color="$_TR_COLOR_RED"
         fi
-        printf '%s%s!%s%s\n' "${BASH_REMATCH[1]}" "$marker_color" "$_TR_COLOR_RESET" "${BASH_REMATCH[2]}"
+        printf '%s%s!%s%s\n' "$indent" "$marker_color" "$_TR_COLOR_RESET" "$message"
     elif [[ "$line" =~ ^(npm[[:space:]]+error|error:|Error:) ]]; then
         printf '%s%s%s\n' "$_TR_COLOR_RED" "$line" "$_TR_COLOR_RESET"
     elif [[ "$line" =~ ^(npm[[:space:]]+warn|warn:) ]]; then
