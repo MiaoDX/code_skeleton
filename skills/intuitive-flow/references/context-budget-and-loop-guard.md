@@ -6,7 +6,14 @@ growth is itself becoming a risk.
 
 ## Hot Resume
 
-Hot Resume is the default route when all are true:
+Before Hot Resume, apply the latest user intent gate and host goal gate:
+
+- if the latest user message asks to stop, pause, discuss first, avoid changes,
+  or inspect status only, stay read-only and do not resume execution;
+- if the host-level goal is `blocked` or `complete`, treat that as a stop gate
+  unless the user explicitly asks for a fresh resume.
+
+Hot Resume is the default route only when all are true:
 
 - an active durable run, thread goal, worker handoff, or canonical status file
   already exists;
@@ -29,6 +36,20 @@ Read only:
 If no capsule exists and the run is non-trivial, create or request a capsule
 before implementation. Continue in the same turn only when the experiment
 contract is trivial and the next command is low-risk.
+
+## Latest User Intent And Host Goal Gates
+
+The latest user message beats older durable-run state. Stop/pause/discuss-first
+phrases are not soft continuation; they convert the turn into read-only control
+mode. In that mode, the agent may read compact status, summarize the goal, and
+offer next options, but must not launch workers, run tests, modify files, or
+commit.
+
+Host-level goals are stop gates when they are no longer active. A `blocked`
+goal means the flow has reached a blocker under host policy; a `complete` goal
+means the objective has already closed. Do not reinterpret either as permission
+to keep making adjacent progress. If the user later asks to resume, start with a
+fresh route brief and a new stop gate.
 
 ## Context Budgets
 
@@ -108,6 +129,31 @@ but the main session should receive a compact result:
 
 Do not stream full local logs into the main context unless a short summary is
 insufficient to decide the next action.
+
+## Self-Modification
+
+When the target is this skill or its bundled references/templates, avoid
+implementing from inherited momentum. First perform a compact self-audit:
+
+- what existing rule already covers the problem;
+- what behavior is still missing;
+- the smallest files/sections that need to change;
+- how the change will prevent a different future decision.
+
+Patch only after current-turn user permission to make that change. If the user
+asked to discuss, inspect, or explain, stop after the audit.
+
+## Execution Surface Guard
+
+For durable implementation, the main session is the control plane. It should
+choose routes, inspect artifacts, babysit worker progress, and decide stops.
+The execution plane should be a bounded `skill-runner`/tmux worker by default.
+
+Main-session direct implementation is allowed only for tiny direct edits,
+read-only probes, or local repairs whose route brief explains why context
+continuity is not at risk. Otherwise, launch or steer a worker and consume a
+compact handoff instead of pulling long logs or full files into the main
+session.
 
 ## Capsule
 

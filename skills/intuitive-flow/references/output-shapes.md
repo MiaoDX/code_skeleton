@@ -9,10 +9,12 @@ Return before the first non-trivial artifact or edit:
 
 ```text
 Current state: <classification>
+Latest user intent: <execute | read-only/status | discuss-first | stop/pause>
+Host goal state: <none | active | blocked | complete | unavailable>
 Selected path: <stage/skill sequence>
 Why: <one sentence>
 Bypassed/left behind: <stage - reason; stage - reason>
-Execution surface: <main session direct | tmux worker per sub-phase | native subagents if stable/non-Codex>
+Execution surface: <read-only main session | main session direct with exception reason | tmux worker per sub-phase | native subagents if stable/non-Codex>
 Babysitter cadence: <none | every N min based on task risk/proof duration>
 Commit rhythm: <semantic commits enabled | disabled because ...>
 Stop gate: <repo command/artifact deciding complete | blocked | continue, or "none">
@@ -22,12 +24,25 @@ Stop/continue point: <what happens before the next checkpoint>
 For tiny direct work, one sentence is enough, but still name the selected path
 when heavier routing was plausible.
 
+When choosing main-session direct execution for durable work, include:
+
+```text
+Exception reason: <why this is tiny, bounded, and safe for main-session context>
+Fallback worker route: <worker scope if it expands, loops, or needs long proof>
+```
+
+If the latest user intent is read-only, discuss-first, stop, or pause, use
+`Execution surface: read-only main session` and do not include implementation
+steps.
+
 ## Hot Resume Experiment Contract
 
 Return before implementation in active-goal resume/debug turns:
 
 ```text
 Context budget: <low | medium | high, plus reason if not low>
+Latest user intent: <execute | read-only/status | discuss-first | stop/pause>
+Host goal state: <none | active | blocked | complete | unavailable>
 Current blocker: <one sentence>
 Hypothesis: <one falsifiable claim>
 Expected decision delta: <what next decision changes if this succeeds/fails>
@@ -40,6 +55,9 @@ No-touch scope: <files, subsystems, services, or workflows not touched>
 If `Expected decision delta` is empty, continue read-only inspection only long
 enough to form a decision-changing contract. Do not make an observability edit
 that preserves the same next decision.
+
+Do not emit an implementation contract when latest user intent or host goal
+state says to stop. Emit a read-only status/decision summary instead.
 
 ## Pre-Plan
 

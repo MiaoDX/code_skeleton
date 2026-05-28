@@ -43,6 +43,38 @@ what should change?
 Start only after the user confirms/corrects the contract, or when their latest
 message explicitly supplied the full contract and told you to use it as-is.
 
+## Latest User Intent Gate
+
+At the start of every whole-flow, resume, worker-babysitting, or closeout turn,
+classify the latest user message before reading prior goal state.
+
+| Latest intent | Action |
+| --- | --- |
+| Execute / continue / resume | Continue through the normal gates. |
+| Status / inspect only | Read compact status only; do not execute, edit, or commit. |
+| Discuss / plan first | Discuss options and tradeoffs; do not patch or launch workers. |
+| Stop / pause / why are you implementing | Stop execution, inspect or update host goal state only when appropriate, and do not resume the prior run. |
+
+This gate has higher priority than auto-continue, worker handoffs, capsules,
+GSD phase state, and old run contracts. If the message is ambiguous, choose the
+read-only interpretation until the user explicitly asks for execution.
+
+## Host Goal State Gate
+
+When the host exposes a persistent goal tool or equivalent state, check it
+before treating a durable run as active:
+
+- `active`: continue only if the latest user intent permits execution;
+- `blocked`: do not resume or broaden scope; report the blocker or start a new
+  route only after explicit user resume;
+- `complete`: do not continue the old objective; treat further work as a fresh
+  request;
+- unavailable: rely on canonical artifacts and latest user intent.
+
+If the latest user asks to stop/pause and the host policy allows marking the
+goal blocked, do that once and then stop. Do not clear or restart the main
+session goal just to make progress.
+
 ## Deterministic Stop Gates
 
 Durable auto-runs need a machine-readable way to stop. Otherwise a goal can keep
@@ -128,6 +160,7 @@ for new planning/review scope.
 
 For durable runs that may cross multiple stages, keep the main session as the
 control plane and use `skill-runner`/tmux workers as the execution plane by
+default. Main-session direct durable implementation is an exception, not the
 default.
 
 Main session responsibilities:
@@ -146,6 +179,18 @@ Worker session responsibilities:
 - leave durable state before exit: artifact update, verification output, commit,
   or handoff summary
 - clear the worker-local goal and exit or stop after the handoff
+
+Before choosing main-session direct implementation for anything durable, record
+the exception in the route brief:
+
+```text
+Execution surface: main session direct
+Exception reason: <tiny bounded edit/read-only probe/local repair>
+Context risk: <why this will not threaten supervision history>
+Fallback: <worker route if it expands or loops>
+```
+
+If that exception reason cannot be written plainly, use a worker.
 
 Do not use `/goal clear` or `/clear` in the main session during an active
 durable flow. Those commands can remove the route memory and active goal the
@@ -268,34 +313,39 @@ Apply decision triage before crossing these boundaries:
 9. GSD plan -> Execute: continue only when execution is covered by request or
    run contract.
 10. Many phases: ask before creating more than three phases.
-11. Main -> Worker: for durable multi-stage execution, launch a bounded
+11. Latest user intent: before every resume, closeout, or worker-babysitting
+   turn, classify the newest user message. Stop/status/discuss-first language
+   keeps the turn read-only until explicit execution permission returns.
+12. Host goal state: if the host goal is `blocked` or `complete`, do not resume
+   it as active work. Report the state or start a new route only after explicit
+   user instruction.
+13. Main -> Worker: for durable multi-stage execution, launch a bounded
    `skill-runner`/tmux worker instead of running host-local goal/clear mechanics
    in the main session. For goal-driven workers, choose and record a
    task-adjusted review cadence plus a long enough timeout for the expected
-   proof. Direct main-session execution is acceptable only for tiny direct
-   edits, read-only probes, or local repairs that do not threaten route
-   continuity.
-12. Worker -> Main: before trusting completion, inspect the worker handoff,
+   proof. Direct main-session execution is acceptable only when the route brief
+   records the tiny bounded exception and fallback worker route.
+14. Worker -> Main: before trusting completion, inspect the worker handoff,
    changed files, logs, commits, and verification evidence. Continue only after
    durable state exists outside the worker context.
-13. Worker drift -> Revised worker: if the worker loops, broadens scope, lacks
+15. Worker drift -> Revised worker: if the worker loops, broadens scope, lacks
    durable progress at a review point, or pursues the wrong artifact, inspect
    captured logs and state. Steer the current worker only when a concise
    correction is enough; otherwise stop it and relaunch with a narrower
    corrected goal or stop for a hard decision. Do not keep the same bad goal
    running.
-14. Code slice -> Next slice/cleanup: when local code changed and commits are
+16. Code slice -> Next slice/cleanup: when local code changed and commits are
    enabled, create a semantic slice commit after focused proof before starting
    the next slice or cleanup pass.
-15. Simplify -> Verify: skip only for docs-only/trivial changes or explicit user
+17. Simplify -> Verify: skip only for docs-only/trivial changes or explicit user
    instruction.
-16. Refactor scope -> Execute: require accepted P0/P1 checklist and stop
+18. Refactor scope -> Execute: require accepted P0/P1 checklist and stop
    condition.
-17. Refactor doc cleanup: auto-run focused doc status; ask before broad
+19. Refactor doc cleanup: auto-run focused doc status; ask before broad
    moves/deletions or protected docs outside scope.
-18. Local-dev gate: stop when proof needs real simulator, Gateway, VLM, Docker,
+20. Local-dev gate: stop when proof needs real simulator, Gateway, VLM, Docker,
    GPU, API keys, or similar unavailable resources.
-19. External-input stop gate: when the current milestone requires human records,
+21. External-input stop gate: when the current milestone requires human records,
    credentials, hardware, private data, paid approval, or other non-agent-owned
    evidence, run the deterministic stop gate. If it reports the same blocker
    recorded in canonical state and no new evidence exists, stop or mark the

@@ -14,13 +14,40 @@ Route work through the smallest staged workflow that preserves a clear source of
 truth. This skill is an orchestrator: use downstream skills for their own
 mechanics, and keep canonical route decisions in the main session.
 
+## Latest User Intent Gate
+
+Before Hot Resume, Read First, route discovery, worker relaunch, or any edit,
+treat the latest user message as authoritative.
+
+If the latest message asks to stop, pause, avoid changes, discuss first, inspect
+status only, or challenges why implementation is happening, enter read-only
+control mode. Do not resume the previous goal, launch workers, run tests, edit
+files, or create commits. Allowed actions are limited to reporting current
+goal/worktree state, reading small status artifacts, and proposing the next
+decision. Resume execution only after a later user message explicitly asks to
+implement, run, continue, or resume.
+
+This gate overrides durable-run auto-continue, Hot Resume, GSD execution,
+worker babysitting, and inherited handoff instructions.
+
+## Host Goal Gate
+
+When the host exposes persistent goal state, check it before treating an active
+run as resumable. A host-level goal that is `blocked` or `complete` is a stop
+gate, not a cue to continue. If the latest user message asks to stop or pause,
+close or block the goal when host policy allows, then treat the run as stopped.
+
+An active host goal is evidence of prior intent, not authorization to override
+the latest user message. Restart a stopped goal only after the user explicitly
+requests a fresh resume and the route brief names the new stop gate.
+
 ## Hot Resume Gate
 
-Before Read First, check whether this is an active-goal resume/debug turn.
-Hot Resume applies when an active durable run or goal already exists, a
-canonical plan/status source already exists, the user asks to continue, resume,
-inspect status, debug a repeated blocker, or prevent looping, and no new
-product/scope decision is requested.
+After the latest user intent and host goal gates, check whether this is an
+active-goal resume/debug turn. Hot Resume applies when an active durable run or
+goal already exists, a canonical plan/status source already exists, the user
+asks to continue, resume, inspect status, debug a repeated blocker, or prevent
+looping, and no new product/scope decision is requested.
 
 When Hot Resume applies, do not run normal route discovery first. Read only:
 
@@ -34,6 +61,15 @@ exists and the run is not trivial, create or request one as the first action
 instead of expanding into the full workflow. Normal route discovery is an
 escalation for ambiguous routes, missing canonical state, new planning/review
 requests, or a contract that explains why low-context resume is insufficient.
+
+## Self-Modification Gate
+
+When changing `intuitive-flow` itself, default to a read-only self-audit before
+patching: inspect the existing guard, identify the smallest missing behavior,
+and state the intended delta. Do not edit the skill merely because an older
+durable goal is active. A direct user request such as "do it", "apply this
+delta", or "change the skill" is enough permission to patch the named files;
+otherwise stop after the audit and ask for confirmation.
 
 ## Read First
 
@@ -54,6 +90,13 @@ the boundary. Do not preload every reference by default.
 
 ## Core Invariants
 
+- The latest user message has priority over any prior goal, capsule, worker
+  handoff, plan, or auto-run instruction. Stop/discuss/status-only language
+  means read-only control mode until the user explicitly resumes execution.
+- Host-level goal state is a hard gate. `blocked` and `complete` goals do not
+  auto-resume; a new resume needs explicit user intent and a fresh route brief.
+- When editing this skill, use the self-modification gate: audit first, patch
+  only the named smallest delta after current-turn user permission.
 - For active-goal resume/debug turns, Hot Resume is the default route. Normal
   route discovery is an escalation, not the default.
 - For Hot Resume, default to a low context budget: no large files, full plans,
@@ -87,6 +130,10 @@ the boundary. Do not preload every reference by default.
   Route stateful execution through `skill-runner`/tmux workers by default so
   host-local `/goal`, `/compact`, `/clear`, or equivalent context controls stay
   isolated from route decisions and supervision history.
+- Durable implementation in the main session is an exception. Use it only when
+  the route brief explicitly explains why the work is tiny, bounded, and safe
+  for main-session context; otherwise launch a bounded `skill-runner`/tmux
+  worker and babysit from the main session.
 - On Codex, avoid native subagents by default until the upstream subagent
   lifecycle is stable again. Prefer main-session direct work for small probes
   and `skill-runner`/tmux workers for durable parallelism unless the user
@@ -120,10 +167,12 @@ direct work, one sentence is enough.
 
 ```text
 Current state: <fuzzy idea | draft plan | reviewed plan | GSD phase | changed code | refactor goal | direct implementation>
+Latest user intent: <execute | read-only/status | discuss-first | stop/pause>
+Host goal state: <none | active | blocked | complete | unavailable>
 Selected path: <stage or skill sequence>
 Why: <one sentence>
 Bypassed/left behind: <stage - reason; stage - reason>
-Execution surface: <main session direct | tmux worker per sub-phase | native subagents if stable/non-Codex>
+Execution surface: <read-only main session | main session direct with exception reason | tmux worker per sub-phase | native subagents if stable/non-Codex>
 Babysitter cadence: <none | every N min based on task risk/proof duration>
 Commit rhythm: <semantic commits enabled | disabled because ...>
 Stop gate: <repo command/artifact that decides complete | blocked | continue, or "none">
@@ -165,7 +214,10 @@ stop with the exact gate result.
 Keep the main session responsible for route decisions, canonical artifact edits,
 integration, and final synthesis.
 
-For durable multi-stage runs, default to a control-plane split:
+For durable multi-stage runs, default to a control-plane split. The main session
+does not directly execute durable implementation unless the route brief records
+an explicit exception for tiny, bounded work that will not threaten route
+continuity.
 
 - Main session: route, decide, inspect worker artifacts/diffs/logs, verify
   claims, and synthesize the next stage.
@@ -178,10 +230,12 @@ For durable multi-stage runs, default to a control-plane split:
   logs/diff/artifacts before relaunching with a corrected goal or stopping for a
   hard decision.
 
-Tiny direct edits and read-only probes may stay in the main session. Do not use
-`/goal clear` or `/clear` in the main session while an active flow depends on
-conversation context. If context pressure appears in the main session, prefer a
-handoff-style `/compact` and keep canonical artifacts current.
+Tiny direct edits and read-only probes may stay in the main session only when
+the latest user intent permits execution and the route brief names the
+main-session exception. Do not use `/goal clear` or `/clear` in the main session
+while an active flow depends on conversation context. If context pressure
+appears in the main session, prefer a handoff-style `/compact` and keep
+canonical artifacts current.
 
 Codex host caveat: native Codex subagents are currently treated as an unstable
 execution surface. Do not select them for routine probes, verification, or
