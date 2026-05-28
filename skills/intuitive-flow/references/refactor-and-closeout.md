@@ -72,6 +72,43 @@ criteria, re-check relevant `CONTEXT.md` or `CONTEXT-MAP.md`. Update it through
 `grill-with-docs` semantics when terms changed; otherwise report it was checked
 and left unchanged.
 
+## Serena Memory Maintenance
+
+After canonical docs/status/plans are updated, check Serena memories when the
+target repo appears configured for them. Treat Serena as an agent acceleration
+layer, not the source of truth.
+
+Configuration signals:
+
+- Serena memory tools are available in the session, such as `list_memories`,
+  `read_memory`, `write_memory`, or `edit_memory`;
+- `serena memories list .` succeeds in the target repo;
+- `.serena/project.yml` exists, even when `.serena/` is ignored by Git.
+
+If configured, inspect existing memory names and only read likely impacted
+memories. Update memories when this flow changed stable, non-obvious facts that
+future agents would otherwise rediscover incorrectly, such as:
+
+- canonical commands, test wrappers, or setup routes;
+- repo-specific conventions, source-of-truth rules, or durable architecture
+  boundaries;
+- stable package/module ownership or public contract names.
+
+Do not put volatile current status, active phase progress, one-off decisions,
+logs, secrets, API keys, local artifact paths, or large copied docs into
+memories. If a memory would merely duplicate `README.md`, `ARCHITECTURE.md`,
+`STATUS.md`, `AGENTS.md`, or `docs/human/**`, prefer a short pointer to the
+canonical doc instead of copying the content.
+
+Run `serena memories check . --include-unmarked --fuzzy-matching` when the CLI
+is available and memory references changed. This catches broken `mem:`
+references, not semantic drift; still manually compare stale operational facts.
+
+If memories are ignored by Git, memory updates are local-only unless the repo
+explicitly tracks curated `.serena/project.yml` or `.serena/memories/**`. Do not
+fail closeout merely because Serena is unavailable or unconfigured; report
+`Serena memories: not configured/not available`.
+
 ## Semantic Commits
 
 For durable implementation or refactor runs that change local code, semantic

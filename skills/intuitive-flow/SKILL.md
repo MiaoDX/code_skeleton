@@ -67,6 +67,10 @@ the boundary. Do not preload every reference by default.
 - Verify before completion. For implementation/refactor work, report tests or
   verification run, doc-status result when human-facing truth changed, and parked
   todos even when none were found.
+- If Serena project memories are configured, treat them as an optional
+  acceleration layer after canonical docs are correct. Check/update only durable
+  memory facts that changed during the flow; never use memories as canonical
+  status, active plan, or secret storage.
 
 ## Route Brief
 
@@ -240,6 +244,8 @@ closeout must include:
 - semantic commit ids created, or why commits were disabled
 - `autoplan` scope changes if `autoplan` ran or was checked
 - `STATUS.md` check/update result for non-trivial durable runs
+- Serena memory check/update result when Serena memories are configured, or
+  `not configured/not available`
 - parked todos, always, including `none found`
 
 ## Anti-Patterns

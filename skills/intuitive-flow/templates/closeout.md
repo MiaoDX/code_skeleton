@@ -16,5 +16,8 @@ Autoplan scope changes:
 STATUS.md:
 - <checked and updated | checked and left unchanged | not applicable>
 
+Serena memories:
+- <updated mem:name | checked and left unchanged | not configured/not available>
+
 Parked todos:
 - <item> - parked because <reason>; source: <plan/review/doc>; unpark when <trigger>

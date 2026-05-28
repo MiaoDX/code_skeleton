@@ -69,6 +69,8 @@ Include:
 - semantic commit ids created, or why commits were disabled
 - `autoplan` scope changes if `autoplan` ran or was checked
 - `STATUS.md` check/update result for non-trivial durable runs
+- Serena memory check/update result when Serena memories are configured, or
+  `not configured/not available`
 - parked todos, always, including `none found`
 - verification explicitly not run
 - worker handoff inspected when execution ran in tmux
