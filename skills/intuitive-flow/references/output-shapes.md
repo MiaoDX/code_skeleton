@@ -15,6 +15,7 @@ Bypassed/left behind: <stage - reason; stage - reason>
 Execution surface: <main session direct | tmux worker per sub-phase | native subagents if stable/non-Codex>
 Babysitter cadence: <none | every N min based on task risk/proof duration>
 Commit rhythm: <semantic commits enabled | disabled because ...>
+Stop gate: <repo command/artifact deciding complete | blocked | continue, or "none">
 Stop/continue point: <what happens before the next checkpoint>
 ```
 
@@ -67,6 +68,7 @@ Include:
 - documentation status check and any doc updates/moves/removals when code or
   refactor work changed human-facing truth
 - semantic commit ids created, or why commits were disabled
+- stop gate checked, with result when this was a durable auto-run
 - `autoplan` scope changes if `autoplan` ran or was checked
 - `STATUS.md` check/update result for non-trivial durable runs
 - Serena memory check/update result when Serena memories are configured, or

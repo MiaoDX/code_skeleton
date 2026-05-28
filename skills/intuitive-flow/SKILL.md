@@ -67,6 +67,12 @@ the boundary. Do not preload every reference by default.
 - Verify before completion. For implementation/refactor work, report tests or
   verification run, doc-status result when human-facing truth changed, and parked
   todos even when none were found.
+- For durable auto-runs, make stop conditions executable whenever possible.
+  Prefer a repo-local gate such as `npm run goal:status`,
+  `npm run validate:<gate>`, or a documented phase verifier that returns a
+  machine-readable `complete`, `blocked`, or `failed` result. If such a gate says
+  the next required evidence is owned by the human or another external actor,
+  stop the flow instead of looking for adjacent cleanup work.
 - If Serena project memories are configured, treat them as an optional
   acceleration layer after canonical docs are correct. Check/update only durable
   memory facts that changed during the flow; never use memories as canonical
@@ -85,6 +91,7 @@ Bypassed/left behind: <stage - reason; stage - reason>
 Execution surface: <main session direct | tmux worker per sub-phase | native subagents if stable/non-Codex>
 Babysitter cadence: <none | every N min based on task risk/proof duration>
 Commit rhythm: <semantic commits enabled | disabled because ...>
+Stop gate: <repo command/artifact that decides complete | blocked | continue, or "none">
 Stop/continue point: <where work pauses or what will run now>
 ```
 
@@ -111,6 +118,12 @@ For whole-flow or durable auto-runs, first read
 `references/checkpoints-and-auto-run.md` and confirm the run contract unless the
 latest user message already supplied goal, success criteria, stop condition, and
 boundaries and told you to use them as-is.
+
+When resuming a durable auto-run, check the stop gate before doing new work. If
+canonical state already says the current phase is blocked and the gate still
+reports the same external-input blocker, do not create extra scaffolding just to
+make progress; close the goal as blocked when the host goal rules allow it, or
+stop with the exact gate result.
 
 ## Delegation
 

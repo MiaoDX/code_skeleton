@@ -20,6 +20,8 @@ Required run contract:
 - Success criteria: observable done signals and required verification when known
 - Stop condition: reviewed plan, GSD plan, implemented and verified code,
   PR-ready branch, or another boundary
+- Stop gate: repo-local command or canonical artifact that can decide
+  `complete`, `blocked`, or `continue` when available
 - Boundaries/non-goals: only when needed to prevent scope, cost, safety, or
   compatibility drift
 
@@ -31,6 +33,7 @@ Before I start the whole run, I want to lock the run contract.
 Goal: <inferred or missing>
 Success criteria: <inferred or missing>
 Stop condition: <inferred or missing>
+Stop gate: <inferred command/artifact or "none found">
 Boundaries/non-goals: <inferred or "none stated">
 
 Is this the goal and success criteria you want me to execute against? If not,
@@ -39,6 +42,63 @@ what should change?
 
 Start only after the user confirms/corrects the contract, or when their latest
 message explicitly supplied the full contract and told you to use it as-is.
+
+## Deterministic Stop Gates
+
+Durable auto-runs need a machine-readable way to stop. Otherwise a goal can keep
+resuming after the work has reached an external-input boundary.
+
+At the start of every whole-flow turn and before moving to a new milestone,
+discover and run the strongest available stop gate:
+
+1. A command explicitly named in `STATUS.md`, `.planning/STATE.md`, or the
+   active phase plan, such as `npm run goal:status`,
+   `npm run validate:human`, `make verify-goal`, or a phase-specific verifier.
+2. A package/script command whose name suggests final gate status, such as
+   `goal:status`, `validate:<milestone>`, `verify:<milestone>`, or
+   `check:<milestone>`.
+3. A canonical artifact that records current phase status when no command
+   exists, such as `.planning/STATE.md`, `.planning/ROADMAP.md`, or
+   `STATUS.md`.
+
+Treat the gate as authoritative when it reports a structured result like:
+
+```json
+{
+  "ok": false,
+  "status": "blocked",
+  "next_action_owner": "human",
+  "required_input": "5 passing human attempt records"
+}
+```
+
+Also accept the common verifier shape where a non-zero command prints JSON with
+`status: "blocked"` or errors that clearly name missing external evidence.
+
+When the stop gate says `blocked`:
+
+- Verify the blocker is truly external: human records, API keys, hardware,
+  real-device access, account approval, missing private data, paid service
+  approval, or another input the agent cannot honestly create.
+- Verify canonical state and current files do not already contain the required
+  evidence.
+- Record the gate result in canonical state if it is missing or stale.
+- Do not continue by inventing adjacent docs, validators, scaffolding, cleanup,
+  or extra tests once the mechanical gate and handoff already exist. That kind
+  of progress keeps the run alive while preserving the same blocked end state.
+- If a host-level persistent goal is active and its blocked-policy threshold is
+  satisfied, call the goal status tool with `blocked`. If the host policy does
+  not yet allow that, stop the turn with the exact gate result and do not ask the
+  user to confirm the obvious external blocker.
+
+When the stop gate says `complete`, perform the completion audit against the
+original objective before marking the goal complete. When it says `continue`, or
+when it fails for an agent-fixable reason, continue with the smallest aligned
+next slice.
+
+Good stop gates are deterministic and cheap. Prefer adding or using them over
+model judgment for milestones that end at human review, human testing, physical
+world proof, credentials, or other external-state boundaries.
 
 ## Control Plane And Worker Sessions
 
@@ -106,6 +166,7 @@ During a confirmed durable run, classify each question or downstream gate:
 | Soft continuation | Auto-answer the recommended/default option, log briefly, continue |
 | Hard stop | Stop and ask once with concrete impact |
 | Unclear impact | Investigate repo/docs context; if still materially risky, hard stop; otherwise choose the smallest reversible default |
+| External-input blocker | Run/record the deterministic stop gate, then stop or mark the active goal blocked when host policy allows |
 
 Soft continuation examples:
 
@@ -124,6 +185,8 @@ Hard-stop examples:
 - security/privacy posture, paid infrastructure, external service, API key use
 - destructive action, real-device/local-dev requirement, or unavailable proof
 - locked-doc/ADR conflict, multiple plausible phases, or user intent override
+- human/physical-world evidence, credentials, hardware, private data, or paid
+  service approval that the agent cannot honestly produce
 
 For `autoplan` premise gates, auto-confirm only when premises restate the plan
 or add low-risk assumptions needed for review. Stop when a premise is new,
@@ -208,3 +271,9 @@ Apply decision triage before crossing these boundaries:
    moves/deletions or protected docs outside scope.
 18. Local-dev gate: stop when proof needs real simulator, Gateway, VLM, Docker,
    GPU, API keys, or similar unavailable resources.
+19. External-input stop gate: when the current milestone requires human records,
+   credentials, hardware, private data, paid approval, or other non-agent-owned
+   evidence, run the deterministic stop gate. If it reports the same blocker
+   recorded in canonical state and no new evidence exists, stop or mark the
+   active goal blocked according to host goal rules. Do not keep the flow alive
+   with tangential cleanup.

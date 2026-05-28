@@ -10,6 +10,9 @@ Documentation status:
 Commits:
 - <commit id or why commits were disabled>
 
+Stop gate:
+- <checked command/artifact and result | not applicable>
+
 Autoplan scope changes:
 - <none | accepted changes | hard-stop changes>
 
