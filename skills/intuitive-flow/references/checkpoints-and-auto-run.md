@@ -100,6 +100,30 @@ Good stop gates are deterministic and cheap. Prefer adding or using them over
 model judgment for milestones that end at human review, human testing, physical
 world proof, credentials, or other external-state boundaries.
 
+## Resume Capsule
+
+For durable local-debug or active-goal work, maintain a compact capsule under a
+project-local status surface such as `docs/status/active/<task>.md` when the
+repo has one. Use an equivalent task-owned file when it does not.
+
+The capsule exists to avoid replaying the full workflow on every resume. It
+should contain only:
+
+- current blocker;
+- blocker fingerprint;
+- last proven evidence;
+- next hypothesis;
+- next command/artifact;
+- stop condition;
+- no-touch scope;
+- parked work.
+
+On resume/debug turns, check the capsule before normal route discovery. If the
+capsule and stop gate are enough to choose the next action, stay in Hot Resume
+with a low context budget. Escalate to normal route discovery only when the
+capsule is missing, stale, contradicted by current evidence, or the user asks
+for new planning/review scope.
+
 ## Control Plane And Worker Sessions
 
 For durable runs that may cross multiple stages, keep the main session as the

@@ -22,6 +22,25 @@ Stop/continue point: <what happens before the next checkpoint>
 For tiny direct work, one sentence is enough, but still name the selected path
 when heavier routing was plausible.
 
+## Hot Resume Experiment Contract
+
+Return before implementation in active-goal resume/debug turns:
+
+```text
+Context budget: <low | medium | high, plus reason if not low>
+Current blocker: <one sentence>
+Hypothesis: <one falsifiable claim>
+Expected decision delta: <what next decision changes if this succeeds/fails>
+Command/artifact: <exact command or artifact summary path>
+Success means: <observable outcome>
+Failure means: <observable outcome and next stop/route>
+No-touch scope: <files, subsystems, services, or workflows not touched>
+```
+
+If `Expected decision delta` is empty, continue read-only inspection only long
+enough to form a decision-changing contract. Do not make an observability edit
+that preserves the same next decision.
+
 ## Pre-Plan
 
 Write to:

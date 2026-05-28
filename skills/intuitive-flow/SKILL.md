@@ -14,12 +14,34 @@ Route work through the smallest staged workflow that preserves a clear source of
 truth. This skill is an orchestrator: use downstream skills for their own
 mechanics, and keep canonical route decisions in the main session.
 
+## Hot Resume Gate
+
+Before Read First, check whether this is an active-goal resume/debug turn.
+Hot Resume applies when an active durable run or goal already exists, a
+canonical plan/status source already exists, the user asks to continue, resume,
+inspect status, debug a repeated blocker, or prevent looping, and no new
+product/scope decision is requested.
+
+When Hot Resume applies, do not run normal route discovery first. Read only:
+
+1. the task capsule, if one exists;
+2. `git status --short`;
+3. `git log -3 --oneline`;
+4. at most one focused machine-readable artifact summary.
+
+Then emit a Hot Resume experiment contract before implementation. If no capsule
+exists and the run is not trivial, create or request one as the first action
+instead of expanding into the full workflow. Normal route discovery is an
+escalation for ambiguous routes, missing canonical state, new planning/review
+requests, or a contract that explains why low-context resume is insufficient.
+
 ## Read First
 
 Load only the reference needed for the selected route:
 
 | Need | Read |
 | --- | --- |
+| Active-goal resume/debug, context budget, loop breaker, experiment contract | `references/context-budget-and-loop-guard.md` |
 | Source-of-truth, `STATUS.md`, `CONTEXT.md`, provenance, phase granularity | `references/source-of-truth.md` |
 | Fuzzy idea shaping, single plan-file intake, `autoplan` precheck/reconciliation | `references/plan-intake-and-autoplan.md` |
 | GSD ingest vs plan-phase routing, committed phase execution, `simplify` scope | `references/gsd-handoff.md` |
@@ -32,6 +54,19 @@ the boundary. Do not preload every reference by default.
 
 ## Core Invariants
 
+- For active-goal resume/debug turns, Hot Resume is the default route. Normal
+  route discovery is an escalation, not the default.
+- For Hot Resume, default to a low context budget: no large files, full plans,
+  full status docs, full logs, full JSON, or additional skill references unless
+  the experiment contract states why low budget cannot decide the next action.
+- A change is not aligned progress if it only records more details about the
+  same blocker without changing the next decision. Observability edits require
+  an explicit expected decision delta.
+- If the same blocker kind appears in two consecutive resume/debug turns
+  without a changed root-cause classification, the next turn must run a
+  root-cause comparison experiment, mark/defer the capability in canonical
+  state and continue a different requirement, or ask the user for a hard
+  decision. Do not keep making low-information tweaks.
 - Keep one source of truth per stage: `docs/plans/*.md` or GitHub issues before
   committed execution, `.planning/STATE.md` and `.planning/phases/*` during GSD,
   and verification/summary artifacts after shipping.
