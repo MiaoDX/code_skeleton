@@ -125,15 +125,21 @@ print_npm_failure_hint() {
 print_tool_version() {
     local label="$1"
     local binary="$2"
-    local version
+    local path version
 
-    if ! command -v "$binary" >/dev/null 2>&1; then
+    path=$(command -v "$binary" 2>/dev/null) || {
         echo "  ! $label failed after install:"
         echo "$binary: command not found"
         return 1
+    }
+
+    if [ ! -x "$path" ]; then
+        echo "  ! $label failed after install:"
+        echo "$path: Permission denied"
+        return 1
     fi
 
-    version=$("$binary" --version 2>&1) || {
+    version=$("$path" --version 2>&1) || {
         echo "  ! $label failed after install:"
         echo "$version"
         return 1
@@ -150,6 +156,14 @@ global_cli_package_binary() {
         pyright)                   printf '%s\n' "pyright" ;;
         *)                         return 1 ;;
     esac
+}
+
+global_cli_binary_available() {
+    local binary="$1"
+    local path
+
+    path=$(command -v "$binary" 2>/dev/null) || return 1
+    [ -x "$path" ]
 }
 
 append_if_package_needs_update() {
@@ -172,8 +186,8 @@ append_if_package_needs_update() {
         echo "  ! global package update available: $package $installed → $latest"
         GLOBAL_CLI_INSTALL_PACKAGES+=("$install_spec")
     elif binary=$(global_cli_package_binary "$package"); then
-        if ! command -v "$binary" >/dev/null 2>&1; then
-            echo "  ! global package binary missing: $package@$installed should provide $binary"
+        if ! global_cli_binary_available "$binary"; then
+            echo "  ! global package binary unavailable: $package@$installed should provide executable $binary"
             GLOBAL_CLI_INSTALL_PACKAGES+=("$install_spec")
         fi
     fi
@@ -251,6 +265,7 @@ run_global_cli_tools() {
         task_notice "Global CLI tools: installing ${GLOBAL_CLI_INSTALL_PACKAGES[*]} via $registry"
     fi
     npm install -g --loglevel=error --include=optional --foreground-scripts --registry="$registry" "${GLOBAL_CLI_INSTALL_PACKAGES[@]}"
+    hash -r
 
     print_tool_version claude claude
     print_tool_version codex codex
