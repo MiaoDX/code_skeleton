@@ -102,7 +102,7 @@ Load only the reference needed for the selected route:
 | Fuzzy idea shaping, single plan-file intake, `autoplan` precheck/reconciliation | `references/plan-intake-and-autoplan.md` |
 | GSD ingest vs plan-phase routing, committed phase execution, `simplify` scope | `references/gsd-handoff.md` |
 | Whole-run preflight, goal ownership, soft continuation vs hard stop, checkpoint policy, tmux/goal/clear policy | `references/checkpoints-and-auto-run.md` |
-| Broad refactor route, semantic commits, doc cleanup, parked-todo closeout | `references/refactor-and-closeout.md` |
+| Broad refactor route, semantic commits, final `$intuitive-doc` doc-alignment sub-phase, parked-todo closeout | `references/refactor-and-closeout.md` |
 | Exact response and artifact templates | `references/output-shapes.md` and `templates/` |
 
 If a route crosses multiple concerns, read the relevant references just before
@@ -173,8 +173,14 @@ the boundary. Do not preload every reference by default.
   commit the owned verified slice, and leave unrelated files exactly as they
   are. A dirty worktree is not by itself a reason to skip commits.
 - Verify before completion. For implementation/refactor work, report tests or
-  verification run, doc-status result when human-facing truth changed, and parked
-  todos even when none were found.
+  verification run, final `$intuitive-doc` doc-alignment result for significant
+  changes/refactors, and parked todos even when none were found.
+- Before closing a significant implementation or big refactor, run one explicit
+  final `$intuitive-doc` sub-phase after code/simplify/verification and before
+  parked-todo closeout. It must check `README.md`, `ARCHITECTURE.md`,
+  `STATUS.md`, and `docs/human/**`, update drifted human truth, and move or
+  remove obsolete legacy docs when they are no longer needed, especially stale
+  files under `docs/human/`.
 - Before marking a durable implementation/refactor complete, run parked-todo
   triage. If a parked item is still inside the original objective and is either
   required for completion or a bounded high-value follow-up with an explicit
@@ -226,8 +232,8 @@ and run the shortest safe route.
 | Fuzzy idea | `grill-me` or auto-guided shaping -> `docs/plans/<slug>.md`; add `office-hours` when product/wedge/demand is unclear | `plan-intake-and-autoplan.md` |
 | Draft plan exists | single plan-file intake if needed -> `gstack-autoplan docs/plans/<slug>.md` -> reconcile accepted decisions into the plan | `plan-intake-and-autoplan.md` |
 | Reviewed plan, not under GSD | pass `autoplan` precheck -> optional `to-issues` -> `gsd-plan-phase --prd` or manifest + `gsd-ingest-docs` then `gsd-plan-phase` | `gsd-handoff.md` |
-| Committed GSD phase | `gsd-execute-phase <phase>` -> `simplify <changed-scope>` -> `gsd-verify-work <phase>` | `gsd-handoff.md` |
-| Architecture/refactor goal | create/read refactor scope gate -> execute accepted P0/P1 slices -> doc-status cleanup -> parked-todo closeout | `refactor-and-closeout.md` |
+| Committed GSD phase | `gsd-execute-phase <phase>` -> `simplify <changed-scope>` -> `gsd-verify-work <phase>` -> final `$intuitive-doc` doc-alignment sub-phase when significant human truth may have changed | `gsd-handoff.md` |
+| Architecture/refactor goal | create/read refactor scope gate -> execute accepted P0/P1 slices -> final `$intuitive-doc` doc-alignment sub-phase -> parked-todo closeout | `refactor-and-closeout.md` |
 | Changed code cleanup | `simplify <changed-scope>` -> rerun relevant proof | `gsd-handoff.md` |
 | Direct concrete edit | implement locally -> focused verification -> closeout; bypass planning stages with reason | `output-shapes.md` as needed |
 
@@ -378,7 +384,8 @@ closeout must include:
 
 - what changed
 - verification run and result, or what was not run
-- documentation status check when human-facing truth changed
+- final `$intuitive-doc` sub-phase result for significant implementation/refactor
+  work, including doc updates, moves, removals, or checked-and-left-unchanged
 - semantic commit ids created, or why commits were disabled
 - `autoplan` scope changes if `autoplan` ran or was checked
 - `STATUS.md` check/update result for non-trivial durable runs
@@ -400,5 +407,5 @@ closeout must include:
   `gsd-plan-phase <phase> --prd docs/plans/<slug>.md`.
 - Do not create an ADR for routine implementation progress.
 - Do not use `simplify` as a broad architecture scanner.
-- Do not close significant implementation/refactor work without verification and
-  parked-todo visibility.
+- Do not close significant implementation/refactor work without verification,
+  final `$intuitive-doc` doc alignment, and parked-todo visibility.

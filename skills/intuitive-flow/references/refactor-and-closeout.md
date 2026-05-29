@@ -1,7 +1,8 @@
 # Refactor And Closeout
 
 Use this reference for architecture/refactor routes, semantic commit boundaries,
-documentation status checks, and final parked-todo reporting.
+the final `$intuitive-doc` documentation-alignment sub-phase, and final
+parked-todo reporting.
 
 ## Architecture Or Refactor Goal
 
@@ -16,7 +17,7 @@ create or read refactor scope gate
 architecture scan               # report-only unless gate accepts P0/P1 items
 TDD or diagnosis                 # only when accepted checklist needs proof first
 execute accepted P0/P1 slices
-check doc status and run intuitive-doc cleanup when human docs drift
+run one final $intuitive-doc doc-alignment sub-phase
 record P2/Parked ideas instead of implementing them
 ```
 
@@ -51,21 +52,36 @@ If status is `DONE` and evidence remains green, stop instead of rescanning for
 fresh cleanup. Park P2-only taste or "could be cleaner" findings unless the user
 expands scope or real usage shows repeated failure in that area.
 
-## Documentation Status
+## Final Documentation Alignment Sub-Phase
 
-For significant code changes and every big refactor, compare the changed
-implementation surface to `README.md`, `ARCHITECTURE.md`, `STATUS.md`, and
-`docs/human/**` before closeout.
+For significant code changes and every big refactor, run one explicit final
+`$intuitive-doc` sub-phase after implementation, simplify, and verification, and
+before parked-todo closeout. This is part of the flow, not an optional cleanup
+note. The goal is to leave the human-facing documentation surface aligned after
+a large code change.
 
-Use `$intuitive-doc guard` for focused changed-file checks, or
-`$intuitive-doc cleanup <scope>` when the refactor changed public contracts,
-commands, package/module layout, examples, proof artifacts, or human docs.
+The sub-phase must compare the changed implementation surface to `README.md`,
+`ARCHITECTURE.md`, `STATUS.md`, and `docs/human/**`.
+
+Use `$intuitive-doc guard` for focused changed-file checks only when the change
+is small. Use `$intuitive-doc cleanup <scope>` for big refactors and whenever
+the refactor changed public contracts, commands, package/module layout,
+examples, proof artifacts, or human docs.
 
 If human-surface docs drifted, update them to match current implementation. If
-human docs became AI coding guidance, process history, or obsolete detail, move
-or remove them according to `$intuitive-doc` cleanup rules. Ask before broad
-moves/deletions, ambiguous external consumers, or protected docs outside the
-accepted scope.
+legacy human docs became AI coding guidance, process history, duplicated
+material, or obsolete detail, move or remove them according to `$intuitive-doc`
+cleanup rules. Look especially at stale files under `docs/human/**`, because
+that folder is part of the default human truth and should not accumulate old
+refactor-era instructions. Ask before broad moves/deletions, ambiguous external
+consumers, or protected docs outside the accepted scope.
+
+The sub-phase closeout must report one of:
+
+- `$intuitive-doc`: updated `<paths>` and removed/moved `<paths>`
+- `$intuitive-doc`: checked and left unchanged, with the checked doc set
+- `$intuitive-doc`: skipped only because the flow was tiny/no human-facing truth
+  could have changed, with that reason
 
 If work touched domain terms, durable boundaries, or context-backed acceptance
 criteria, re-check relevant `CONTEXT.md` or `CONTEXT-MAP.md`. Update it through

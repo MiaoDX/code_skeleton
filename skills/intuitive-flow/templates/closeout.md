@@ -4,8 +4,8 @@ What changed:
 Verification:
 - <command/check> - <result>
 
-Documentation status:
-- <checked/updated/not applicable>
+Intuitive-doc alignment:
+- <updated/moved/removed/checked-left-unchanged/skipped with reason; include doc paths>
 
 Commits:
 - <commit id or why commits were disabled>
