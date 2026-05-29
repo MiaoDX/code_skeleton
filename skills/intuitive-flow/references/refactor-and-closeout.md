@@ -221,6 +221,36 @@ Parked todos:
 - <item> - parked because <reason>; source: <plan/review/doc>; unpark when <trigger>
 ```
 
+Before final closeout, classify each parked item:
+
+| Class | Meaning | Action |
+| --- | --- | --- |
+| `in-scope-required` | Original objective is not actually complete without this item. | Continue before marking complete. |
+| `in-scope-high-value` | Same objective/scope, bounded, likely useful, and has a clear verification gate. | Run at most one automatic parked-follow-up slice. |
+| `deferred-by-policy` | Explicitly excluded by user, plan, safety rule, or acceptance boundary. | Report only. |
+| `scope-expansion` | New product/architecture direction or materially broader than the original goal. | Report only. |
+| `needs-human-decision` | Technically plausible, but changes authority, UX, product promise, dependency policy, or risk profile. | Ask before execution. |
+
+Automatic parked-follow-up rules:
+
+- Run automatic follow-up only for `in-scope-required`, or for one
+  `in-scope-high-value` item when the current flow already has verified commits
+  or no-file-change evidence.
+- The follow-up must be a coherent slice with an explicit verification command
+  or durable evidence artifact.
+- Do not auto-run `scope-expansion`, `deferred-by-policy`, or
+  `needs-human-decision` items.
+- Do not run more than one automatic parked-follow-up slice during a closeout.
+  After that slice, list remaining parked work and stop unless the user
+  explicitly asks to continue.
+- If the follow-up would require a new plan, new dependency policy, baseline
+  blessing, broad migration, or external/human-owned evidence, classify it as
+  `needs-human-decision` or `scope-expansion` instead of auto-running it.
+
+When an automatic parked-follow-up runs, treat it as part of the same root flow:
+update the plan, implement the slice, verify it, commit if files changed, and
+then perform closeout again with auto-follow-up disabled for that closeout pass.
+
 If `autoplan` ran, include the autoplan scope-change hint. Keep accepted scope
 changes separate from parked/deferred work: accepted changes are now in the
 implemented plan, parked items are not done.

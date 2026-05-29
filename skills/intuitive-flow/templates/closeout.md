@@ -22,5 +22,8 @@ STATUS.md:
 Serena memories:
 - <updated mem:name | checked and left unchanged | not configured/not available>
 
+Parked todo triage:
+- <classification summary; automatic follow-up ran/not applicable/skipped because ...>
+
 Parked todos:
 - <item> - parked because <reason>; source: <plan/review/doc>; unpark when <trigger>

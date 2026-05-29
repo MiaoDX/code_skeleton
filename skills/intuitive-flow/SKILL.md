@@ -175,6 +175,12 @@ the boundary. Do not preload every reference by default.
 - Verify before completion. For implementation/refactor work, report tests or
   verification run, doc-status result when human-facing truth changed, and parked
   todos even when none were found.
+- Before marking a durable implementation/refactor complete, run parked-todo
+  triage. If a parked item is still inside the original objective and is either
+  required for completion or a bounded high-value follow-up with an explicit
+  verification gate, continue one additional parked-follow-up slice instead of
+  closing. Run at most one automatic parked-follow-up slice per flow closeout;
+  after that, report remaining parked work and wait for explicit user direction.
 - For durable auto-runs, make stop conditions executable whenever possible.
   Prefer a repo-local gate such as `npm run goal:status`,
   `npm run validate:<gate>`, or a documented phase verifier that returns a
@@ -378,6 +384,8 @@ closeout must include:
 - `STATUS.md` check/update result for non-trivial durable runs
 - Serena memory check/update result when Serena memories are configured, or
   `not configured/not available`
+- parked todo triage result, including whether an automatic follow-up slice was
+  run or skipped
 - parked todos, always, including `none found`
 
 ## Anti-Patterns

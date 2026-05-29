@@ -114,6 +114,8 @@ Include:
 - `STATUS.md` check/update result for non-trivial durable runs
 - Serena memory check/update result when Serena memories are configured, or
   `not configured/not available`
+- parked todo triage: classification summary and whether one automatic
+  parked-follow-up slice ran, was not applicable, or was skipped with reason
 - parked todos, always, including `none found`
 - verification explicitly not run
 - worker handoff inspected when execution ran in tmux
