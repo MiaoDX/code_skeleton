@@ -166,6 +166,56 @@ global_cli_binary_available() {
     [ -x "$path" ]
 }
 
+stale_npm_rename_dest() {
+    local output="$1"
+
+    grep -q '^npm error ENOTEMPTY: directory not empty, rename ' <<< "$output" || return 1
+    sed -n 's/^npm error dest //p' <<< "$output" | tail -1
+}
+
+safe_stale_npm_dest() {
+    local dest="$1"
+    local base
+
+    [ -n "$dest" ] || return 1
+    [ -d "$dest" ] || return 1
+    [[ "$dest" == */node_modules/* ]] || return 1
+    base="${dest##*/}"
+    [[ "$base" == .* ]]
+}
+
+run_global_cli_npm_install() {
+    local registry="$1"
+    shift
+
+    local output status dest backup
+
+    output=$(npm install -g --loglevel=error --include=optional --foreground-scripts --registry="$registry" "$@" 2>&1) && {
+        [ -z "$output" ] || printf '%s\n' "$output"
+        return 0
+    }
+    status=$?
+
+    dest=$(stale_npm_rename_dest "$output") || dest=""
+    if ! safe_stale_npm_dest "$dest"; then
+        printf '%s\n' "$output"
+        return "$status"
+    fi
+
+    backup="${dest}.bak.$(date +%Y%m%d_%H%M%S).$$"
+    echo "  ! npm install hit stale rename destination:"
+    echo "    $dest"
+    echo "  ! moving stale npm temp package aside:"
+    echo "    $backup"
+    mv "$dest" "$backup" || {
+        printf '%s\n' "$output"
+        return "$status"
+    }
+
+    echo "  → retrying npm install after stale temp cleanup"
+    npm install -g --loglevel=error --include=optional --foreground-scripts --registry="$registry" "$@"
+}
+
 append_if_package_needs_update() {
     local registry="$1"
     local package="$2"
@@ -264,7 +314,7 @@ run_global_cli_tools() {
     else
         task_notice "Global CLI tools: installing ${GLOBAL_CLI_INSTALL_PACKAGES[*]} via $registry"
     fi
-    npm install -g --loglevel=error --include=optional --foreground-scripts --registry="$registry" "${GLOBAL_CLI_INSTALL_PACKAGES[@]}"
+    run_global_cli_npm_install "$registry" "${GLOBAL_CLI_INSTALL_PACKAGES[@]}"
     hash -r
 
     print_tool_version claude claude
