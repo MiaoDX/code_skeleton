@@ -127,6 +127,12 @@ print_tool_version() {
     local binary="$2"
     local version
 
+    if ! command -v "$binary" >/dev/null 2>&1; then
+        echo "  ! $label failed after install:"
+        echo "$binary: command not found"
+        return 1
+    fi
+
     version=$("$binary" --version 2>&1) || {
         echo "  ! $label failed after install:"
         echo "$version"
@@ -136,11 +142,21 @@ print_tool_version() {
     echo "  ✓ $label $version"
 }
 
+global_cli_package_binary() {
+    case "$1" in
+        @anthropic-ai/claude-code) printf '%s\n' "claude" ;;
+        claude-fetch-setup)        printf '%s\n' "claude-fetch-setup" ;;
+        @openai/codex)             printf '%s\n' "codex" ;;
+        pyright)                   printf '%s\n' "pyright" ;;
+        *)                         return 1 ;;
+    esac
+}
+
 append_if_package_needs_update() {
     local registry="$1"
     local package="$2"
     local install_spec="${3:-$2}"
-    local latest installed
+    local latest installed binary
 
     task_notice "Global CLI tools: checking $package"
     latest=$(npm_package_version "$package" "$registry") || latest=""
@@ -155,6 +171,11 @@ append_if_package_needs_update() {
     elif [ "$installed" != "$latest" ]; then
         echo "  ! global package update available: $package $installed → $latest"
         GLOBAL_CLI_INSTALL_PACKAGES+=("$install_spec")
+    elif binary=$(global_cli_package_binary "$package"); then
+        if ! command -v "$binary" >/dev/null 2>&1; then
+            echo "  ! global package binary missing: $package@$installed should provide $binary"
+            GLOBAL_CLI_INSTALL_PACKAGES+=("$install_spec")
+        fi
     fi
 }
 
