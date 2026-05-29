@@ -387,13 +387,21 @@ closeout must include:
 - final `$intuitive-doc` sub-phase result for significant implementation/refactor
   work, including doc updates, moves, removals, or checked-and-left-unchanged
 - semantic commit ids created, or why commits were disabled
-- `autoplan` scope changes if `autoplan` ran or was checked
+- scope changes, always, including `none`; include accepted scope changes from
+  `autoplan`, plan reconciliation, GSD handoff, refactor gates, or execution
+  discoveries
 - `STATUS.md` check/update result for non-trivial durable runs
 - Serena memory check/update result when Serena memories are configured, or
   `not configured/not available`
 - parked todo triage result, including whether an automatic follow-up slice was
   run or skipped
 - parked todos, always, including `none found`
+
+At the very end of any completed Flow implementation/refactor, explicitly list
+`What changed`, `Scope changes`, and `Parked todos` as visible headings or
+clearly labeled bullets in the final user-facing response. Do not rely on a
+brief prose summary, commit message, worker handoff, or verification log to
+imply them. If any category is empty, still print the category with `none`.
 
 ## Anti-Patterns
 
@@ -409,3 +417,5 @@ closeout must include:
 - Do not use `simplify` as a broad architecture scanner.
 - Do not close significant implementation/refactor work without verification,
   final `$intuitive-doc` doc alignment, and parked-todo visibility.
+- Do not finish a completed Flow with only a narrative summary; final responses
+  must explicitly enumerate what changed, scope changes, and parked todos.

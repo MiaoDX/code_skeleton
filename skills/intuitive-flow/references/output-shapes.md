@@ -110,7 +110,9 @@ Include:
 - stop gate checked, with result when this was a durable auto-run
 - goal ownership result: root goal adopted/created/not used, and any
   worker-local goals closed or blocked
-- `autoplan` scope changes if `autoplan` ran or was checked
+- scope changes, always, including `none`; include accepted scope changes from
+  `autoplan`, plan reconciliation, GSD handoff, refactor gates, or execution
+  discoveries, and keep them separate from parked/deferred work
 - `STATUS.md` check/update result for non-trivial durable runs
 - Serena memory check/update result when Serena memories are configured, or
   `not configured/not available`
@@ -122,7 +124,11 @@ Include:
 - worker drift or timeout intervention, including revised goal, when one
   occurred
 
-Do not bury parked work behind "follow-ups available"; make it visible.
+The final user-facing response after completed implementation/refactor work must
+visibly enumerate `What changed`, `Scope changes`, and `Parked todos`. Do not
+bury these categories inside prose, verification logs, commit messages, worker
+handoffs, or "follow-ups available" language. If a category is empty, print it
+with `none`.
 
 ## Repo Guidance Updates
 

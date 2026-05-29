@@ -267,6 +267,8 @@ When an automatic parked-follow-up runs, treat it as part of the same root flow:
 update the plan, implement the slice, verify it, commit if files changed, and
 then perform closeout again with auto-follow-up disabled for that closeout pass.
 
-If `autoplan` ran, include the autoplan scope-change hint. Keep accepted scope
-changes separate from parked/deferred work: accepted changes are now in the
-implemented plan, parked items are not done.
+Always include the final `Scope changes` closeout category, even when no
+`autoplan` step ran. Keep accepted scope changes separate from parked/deferred
+work: accepted changes are now in the implemented plan, parked items are not
+done. Scope-change sources can include `autoplan`, plan reconciliation, GSD
+handoff, refactor gates, or execution discoveries.

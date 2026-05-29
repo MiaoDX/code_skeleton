@@ -13,8 +13,8 @@ Commits:
 Stop gate:
 - <checked command/artifact and result | not applicable>
 
-Autoplan scope changes:
-- <none | accepted changes | hard-stop changes>
+Scope changes:
+- <none | accepted changes from autoplan/plan reconciliation/GSD handoff/refactor gate/execution discoveries>
 
 STATUS.md:
 - <checked and updated | checked and left unchanged | not applicable>
