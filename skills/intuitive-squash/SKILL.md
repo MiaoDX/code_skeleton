@@ -1,6 +1,6 @@
 ---
 name: intuitive-squash
-description: Squash local GSD or agent-generated commit history into a clean, reviewable story while preserving important fixes. Use when the user asks to squash commits, clean git history, compress phase commits, prepare a branch before PR, or preserve hotfix/security commits during squash in Claude Code or Codex.
+description: Squash local GSD or agent-generated commit history into a clean, reviewable story while preserving important fixes. Use when the user asks to squash commits, clean git history, compress phase commits, prepare a branch before PR, compare aggressive vs moderate squash options, or preserve hotfix/security commits during squash in Claude Code or Codex.
 ---
 
 # Intuitive Squash
@@ -27,7 +27,7 @@ the user explicitly confirms it.
    `backup-before-intuitive-squash-YYYYMMDD-HHMMSS`.
 4. Tell the user the backup branch name.
 5. Analyze commits from base to `HEAD` in chronological order.
-6. Present a squash plan and ask for confirmation.
+6. Present squash plan options and ask for confirmation.
 7. Only after confirmation, run the history rewrite.
 8. Verify the final tree matches the backup branch.
 9. Restore any temporary stash.
@@ -47,13 +47,36 @@ Never squash these commits into a generic milestone:
   `preserve_paths`, when present.
 - Commits from an external author relative to the main local committer.
 
-Preserved commits stay as standalone `pick` commits. Follow-up fixups that
-clearly target a preserved commit may be squashed into that preserved commit,
-but not into a milestone group.
+Preserved commits stay as standalone `pick` commits in every proposed plan.
+Follow-up fixups that clearly target a preserved commit may be squashed into
+that preserved commit, but not into a milestone group.
+
+## Plan Options
+
+Default to two proposed plans unless the user asks for one exact strategy:
+
+- **Aggressive**: compress the branch into the fewest reviewable commits. This
+  is useful for agent noise, but it must still keep preserved commits separate
+  and avoid mixing unrelated runtime, docs, tests, and dependency changes into
+  a vague mega-commit.
+- **Moderate**: keep semantic review boundaries while still removing fixup and
+  phase-churn noise. This should usually be the recommended plan for large or
+  high-risk branches, especially when the history spans multiple subsystems,
+  runtime behavior, tests, docs, or dependency changes.
+
+For small stacks, the two plans may differ only slightly. Say that explicitly
+instead of inventing artificial splits.
+
+For large stacks, a moderate plan often lands around 12-18 commits. Treat that
+as a reviewability target, not a hard rule: use fewer commits for a narrow
+feature and more only when the branch genuinely has independent semantic
+surfaces.
 
 ## Grouping Heuristics
 
-Aim for at most three final commits per coherent phase.
+Build commits that a reviewer can understand, test, and revert as a coherent
+unit. Prefer semantic commits over purely date-based, phase-number-based, or
+prefix-based grouping.
 
 Group squashable commits by:
 
@@ -63,9 +86,23 @@ Group squashable commits by:
   `refactor:`, and `chore:`
 - changed paths and conceptual intent
 
+Separate commits when they represent different review or rollback surfaces:
+
+- dependency or environment changes
+- public API or contract changes
+- runtime behavior changes
+- tests, harnesses, and validation gates
+- documentation-only truth updates
+- mechanical moves or renames
+- experimental probes versus promoted production behavior
+
 Merge tiny related phases. Split very large phases into implementation and
 tests/docs commits when that makes review clearer. Keep breaking changes
 separate when the commit message or config asks for it.
+
+Avoid over-aggressive groups with generic names such as `feat: update project`
+or `refactor: cleanup`. If a proposed commit needs several unrelated clauses in
+the subject to explain itself, split it in the moderate plan.
 
 ## Plan Format
 
@@ -73,10 +110,11 @@ Before rewriting, show:
 
 - base ref and commit count
 - backup branch name
-- proposed final commits, in order
+- proposed final commits, in order, for both `Aggressive` and `Moderate`
 - original commits included in each final commit
 - preserved commits with `[PRESERVED]` and the reason
 - any dirty-worktree stash that will be restored
+- recommended option and why
 
 Ask: `Any other commits you want to preserve or squash?`
 
