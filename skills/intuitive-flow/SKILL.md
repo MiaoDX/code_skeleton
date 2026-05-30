@@ -128,6 +128,13 @@ the boundary. Do not preload every reference by default.
 - For Hot Resume, default to a low context budget: no large files, full plans,
   full status docs, full logs, full JSON, or additional skill references unless
   the experiment contract states why low budget cannot decide the next action.
+- If the current stop gate proves the next required evidence is blocked on a
+  human action, local hardware, paid account, external service, or another
+  outside actor, stop the Flow before route discovery, parked-todo triage,
+  cleanup, or alternate-slice selection. Report the exact gate result and, when
+  host policy allows, mark the root goal `blocked`. Do not keep progress alive
+  with convenience patches, observability-only edits, or "one more small"
+  adjacent task.
 - A change is not aligned progress if it only records more details about the
   same blocker without changing the next decision. Observability edits require
   an explicit expected decision delta.
@@ -192,7 +199,10 @@ the boundary. Do not preload every reference by default.
   `npm run validate:<gate>`, or a documented phase verifier that returns a
   machine-readable `complete`, `blocked`, or `failed` result. If such a gate says
   the next required evidence is owned by the human or another external actor,
-  stop the flow instead of looking for adjacent cleanup work.
+  stop the flow instead of looking for adjacent cleanup work. This rule outranks
+  parked-todo follow-up and broad "continue one by one" instructions unless the
+  user explicitly names a different requirement to pursue while the external
+  blocker remains.
 - If Serena project memories are configured, treat them as an optional
   acceleration layer after canonical docs are correct. Check/update only durable
   memory facts that changed during the flow; never use memories as canonical
@@ -247,6 +257,12 @@ canonical state already says the current phase is blocked and the gate still
 reports the same external-input blocker, do not create extra scaffolding just to
 make progress; close the goal as blocked when the host goal rules allow it, or
 stop with the exact gate result.
+
+If the current gate newly reports a required external-input blocker, treat that
+as an immediate stop as well. Do not first search parked todos, cleanup tasks,
+or a smaller adjacent implementation slice. Continue only after the user either
+removes the external blocker or explicitly chooses a separate requirement whose
+completion does not pretend to satisfy the blocked gate.
 
 ## Delegation
 

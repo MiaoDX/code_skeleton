@@ -37,6 +37,12 @@ If no capsule exists and the run is non-trivial, create or request a capsule
 before implementation. Continue in the same turn only when the experiment
 contract is trivial and the next command is low-risk.
 
+If that low-context check or stop gate says the next required evidence is
+blocked on a human action, local hardware, paid account, external service, or
+another outside actor, stop immediately with that gate result. Do not expand
+context, run route discovery, inspect parked todos, launch workers, or create
+small convenience patches to keep the run moving.
+
 ## Latest User Intent And Host Goal Gates
 
 The latest user message beats older durable-run state. Stop/pause/discuss-first
@@ -111,7 +117,9 @@ Choose one:
 
 - run a root-cause comparison experiment that can change the classification;
 - mark/defer the capability as blocked in canonical state and continue a
-  different requirement;
+  different requirement only when the blocker is not the current stop gate's
+  next required evidence, or the user explicitly picked that separate
+  requirement;
 - ask the user for a hard decision.
 
 A change is not aligned progress if it only records more details about the same
@@ -135,6 +143,11 @@ but the main session should receive a compact result:
 
 Do not stream full local logs into the main context unless a short summary is
 insufficient to decide the next action.
+
+When the compact result is `blocked` and its decision says the proof depends on
+external input, treat it as an auto-stop condition for the root Flow. Report
+what must change externally and, when host policy allows, mark the root goal
+`blocked`; do not route into adjacent cleanup or parked follow-up work.
 
 ## Self-Modification
 
